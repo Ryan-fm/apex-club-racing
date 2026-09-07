@@ -16,7 +16,7 @@ test('holding W before GO accelerates; release clears it; actions wait for GO',(
  for(let i=0;i<60;i++)stepHandling(state,{throttle:keys.has('KeyW'),steer:0,brake:false},kart,1/60);
  assert(state.speed>90);assert(state.z>20);
  listeners.keydown(event('KeyS'));
- for(let i=0;i<60;i++)stepHandling(state,{throttle:keys.has('KeyW'),brake:keys.has('KeyS'),steer:0},kart,1/60);
+ for(let i=0;i<15;i++)stepHandling(state,{throttle:keys.has('KeyW'),brake:keys.has('KeyS'),steer:0},kart,1/60);
  assert.equal(state.speed,0);
  listeners.keyup(event('KeyW'));listeners.keyup(event('KeyS'));assert.equal(keys.size,0);
  listeners.keydown(event('ShiftLeft'));assert(actions.has('ShiftLeft'));
