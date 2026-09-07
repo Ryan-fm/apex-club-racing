@@ -59,7 +59,7 @@ npm run build
 
 Publish the contents of `dist/` to a static HTTPS host. There is no server, database, login or API key. The build adds a content revision to local JavaScript and CSS URLs to prevent stale modules after an update. The included `_headers` file sets conservative response headers on hosts that support it; configure equivalent headers elsewhere. Do not publish the project root, test artifacts or `output/`.
 
-The supported game platform is a modern desktop browser with WebGL 2 and a keyboard. Phone touch controls and online multiplayer are not included. Resize support does not imply mobile gameplay support.
+Requires a modern browser with WebGL 2. Desktop keyboard and mobile touch controls are supported; tilt steering depends on device sensors and permission. No online multiplayer.
 
 ## Handling and accessibility
 
@@ -81,3 +81,9 @@ Open `garage.html` for the 360-degree model showroom: front, side, rear and top 
 The original procedural model follows the supplied heavy off-road racing reference: deep-tread tires, layered armor, double-wishbone suspension with coil springs, a bucket seat and roll hoop, intake stacks, rear cooling fans, twin exhausts and detailed front/rear lighting.
 
 Run `npm run export:model` to generate `output/titan-armored-buggy.glb`. The portable GLB includes the full static vehicle with PBR materials and individual wheel/structural nodes; runtime flames and the optional driver are excluded. Instanced tire blocks are expanded for compatibility. Wheel animation remains controlled by the game.
+
+## Mobile controls
+
+Play in landscape on a WebGL 2 phone browser. Left/right arrows, brake, throttle, held drift, nitro and EMP support simultaneous touches. Auto acceleration is recommended. Fullscreen/landscape is best effort; on iPhone, rotate manually and disable rotation lock.
+
+Enable tilt steering in Phone controls, grant motion permission if prompted, hold the phone comfortably to calibrate, then lean left/right. Center steering resets neutral; touch arrows override tilt. Permission denial, missing sensors or stale readings fall back to touch. Rotation pauses racing so you can resume safely. Real-device iOS/Android sensor testing is still recommended; automated checks validate screen-axis mapping and dead zone, not hardware.
