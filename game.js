@@ -1,4 +1,4 @@
-import {createMobileControls} from './mobile-controls.js';
+import {createMobileControls,isHandheldDevice} from './mobile-controls.js';
 import {createArmoredKart} from './armored-kart.js';
 import {stepHandling, projectTrack, resolveTrackContact, progressDelta, DISTANCE_SCALE, DISPLAY_SPEED} from './driving-model.js';
 import {createRaceEffects} from './race-effects.js';
@@ -19,7 +19,7 @@ scene.background = new THREE.Color(0x83bed8);
 scene.fog = new THREE.FogExp2(0x9bcadb, 0.00030);
 
 const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 9000);
-const mobileDevice=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;
+const mobileDevice=isHandheldDevice();
 const renderer = new THREE.WebGLRenderer({antialias:!mobileDevice,powerPreference:mobileDevice?'default':'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio, mobileDevice?1:1.8));
 renderer.setSize(innerWidth, innerHeight);
@@ -68,7 +68,12 @@ addEventListener('keydown', e => {
     e.preventDefault();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length].focus();return;
   }
   if((e.code==='KeyH'||e.code==='Escape')&&!e.repeat){toggleControls();return;}
-  if(helpOpen||!race||race.phase!=='racing')return;
+  if(helpOpen||!race||!['countdown','racing'].includes(race.phase))return;
+  // Keep held driving keys through the countdown; one-shot actions still wait for GO.
+  if(['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){
+    e.preventDefault();keys.add(e.code);
+  }
+  if(race.phase!=='racing')return;
   if(['KeyA','ArrowLeft'].includes(e.code))lastSteer=-1;
   if(['KeyD','ArrowRight'].includes(e.code))lastSteer=1;
   if(e.code==='Space'&&!e.repeat&&document.querySelector('#toggleDrift').checked)driftLatched=!driftLatched;
@@ -356,7 +361,8 @@ function updatePlayer(dt,time){
   const throttle=racing&&(document.querySelector('#autoThrottle').checked||keys.has('KeyW')||keys.has('ArrowUp')||mobile.down('throttle'));
   const brake=racing&&(keys.has('KeyS')||keys.has('ArrowDown')||mobile.down('brake'));
   const keyboardSteer=Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
-  const steer=racing?(keyboardSteer||mobile.steer(dt)):0;
+  const keyboardTurning=['KeyA','KeyD','ArrowLeft','ArrowRight'].some(code=>keys.has(code));
+  const steer=racing?(keyboardTurning?keyboardSteer:mobile.steer(dt)):0;
   const toggleDrift=document.querySelector('#toggleDrift').checked;
   const air=racing&&(mobile.down('drift')||(toggleDrift?driftLatched:keys.has('Space')));
   const driftSteer=steer||(!state.drift.active&&toggleDrift?lastSteer:0);
