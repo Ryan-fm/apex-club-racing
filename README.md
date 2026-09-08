@@ -2,6 +2,12 @@
 
 A browser-based Three.js arcade kart racer with a race lobby, 3-lap races, solo and 4v4 AI team competition, charged drifting and mini turbos.
 
+[Play APEX CLUB](https://apex-club-racing.vercel.app/) · [Explore the 3D garage](https://apex-club-racing.vercel.app/garage.html)
+
+## Deploy to Vercel
+
+Import `Ryan-fm/apex-club-racing` with the repository root as the Root Directory. The included `vercel.json` configures the static build: `npm run build`, output `dist`. No environment variables are required.
+
 ## Run
 
 ```sh
@@ -22,8 +28,8 @@ Open http://localhost:8080. Three.js 0.179.1 is included locally under `vendor/t
 
 ## Controls
 
-- Automatic acceleration is enabled by default and can be disabled in the lobby.
-- W / Up: accelerate; S / Down: brake (also overrides automatic acceleration).
+- Automatic acceleration is enabled by default and can be disabled in Settings.
+- W / Up: accelerate; S / Down: brake, then hold at rest to reverse (also overrides automatic acceleration).
 - A / D or Left / Right: steer.
 - **Space + direction at speed:** start a drift. Keep Space held to maintain the slide, including while countersteering or briefly straightening. Release Space to convert charge into a mini turbo; wall contact cancels charge.
 - Release Space at 32% charge for a short mini turbo or 78% for a super mini turbo. Drifting also refills the nitro reservoir.
