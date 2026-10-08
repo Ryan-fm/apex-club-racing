@@ -7,7 +7,7 @@ import {loadBindings,createKeyboardState,formatKeys} from './keyboard-controls.j
 import {mountKeyboardSettings} from './keyboard-settings.js';
 import {setupLanguage,tr,getLanguage,onLanguageChange,rememberTranslation} from './localization.js';
 import {circuitPoints,roadHalfWidth} from './track-layout.js';
-import {createLesson,stepLesson,createLapRecord,recordLap,ghostPose,medals,empTargets,assistedInput} from './race-experience.js';
+import {createLesson,stepLesson,createLapRecord,recordLap,canSubmitRace,ghostPose,medals,empTargets,assistedInput} from './race-experience.js';
 import {createPickupFactory} from './pickup-design.js';
 import {JUMP_RAMPS,RAMP_LENGTH,rampHeight,createStunts,boostOpportunity} from './stunt-model.js';
 import {createShowroom,createCitadel} from './scene-design.js';
@@ -88,7 +88,7 @@ document.querySelector('#controlsToggle').addEventListener('click',()=>toggleCon
 document.querySelector('#startDriving').addEventListener('click',()=>toggleControls(false));
 document.querySelector('#recoverCar').addEventListener('click',()=>{
   if(!race||race.racers[0].finishTime!==null)return;
-  lapRecord.invalid=true;runStats.collisions++;
+  lapRecord.invalid=true;raceValid=false;runStats.collisions++;
   Object.assign(stunts,createStunts());
   const f=trackFrame(state.t);Object.assign(state,{x:f.p.x,z:f.p.z,heading:Math.atan2(f.tan.x,f.tan.z),vx:0,vz:0,speed:0,reverseHold:0,wallContact:0,lane:0,laneVel:0,nitro:0,miniTurbo:0});
   state.drift={active:false,charge:0,direction:0};race.racers[0].lane=0;cameraReady=false;
@@ -646,6 +646,11 @@ function updateRaceHUD(){
 
 function finishRace(){
  finishExperience();
+  const finishTime=race.racers[0].finishTime;
+  if(!replayData&&canSubmitRace(finishTime,raceLaps,raceValid)&&onlineClub.configured&&club.profile())
+    onlineClub.submit({scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps})
+      .then(saved=>{if(saved)club.message('New global race record submitted.');})
+      .catch(error=>club.message(`Race upload failed: ${error.message}`));
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();document.querySelector('#results').hidden=false;document.querySelector('#raceAgain').focus();
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
@@ -719,14 +724,14 @@ function loop(){
   perf.endFrame({phase:race?.phase || 'none',uiWrites:uiWritesThisFrame});
 }
 let lesson=null,lessonFired=false,lessonFinished=false,smoothedSteer=0,lastOpportunity=null,empCooldown=0,empPulse=0;
-let runStats,lapRecord,lapNumber=0,bestLap=null,recordKey='',lastBoosting=false,lapAssisted=false;
+let runStats,lapRecord,lapNumber=0,bestLap=null,recordKey='',lastBoosting=false,lapAssisted=false,raceAssisted=false,raceValid=true,raceLaps=[];
 const ghost=makeCraft(0x9dd8ff,.9);ghost.name='Personal best ghost';ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.22;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
 const empRing=new THREE.Mesh(new THREE.RingGeometry(148,150,96),new THREE.MeshBasicMaterial({color:0xff729c,transparent:true,opacity:.5,depthWrite:false,side:THREE.DoubleSide}));empRing.rotation.x=-Math.PI/2;empRing.visible=false;scene.add(empRing);
 function resetExperience(){
  lesson=null;lessonFired=false;lessonFinished=false;smoothedSteer=0;lastOpportunity=null;empCooldown=0;empPulse=0;lastBoosting=false;
  document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');
- runStats={collisions:0,boosts:0,drifts:0,recoveries:[],recoveryStart:null};lapRecord=createLapRecord();lapNumber=0;
- lapAssisted=document.querySelector('#beginnerSetting').checked;
+ runStats={collisions:0,boosts:0,drifts:0,recoveries:[],recoveryStart:null};lapRecord=createLapRecord();lapNumber=0;raceLaps=[];raceValid=true;
+ lapAssisted=document.querySelector('#beginnerSetting').checked;raceAssisted=lapAssisted;
  recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene==='harbor'?'harbor-v2':requestedScene}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
@@ -756,11 +761,11 @@ function updateExperience(dt){
  if(lesson){ghost.visible=false;return;}
  if(gateSlice){ghost.visible=false;updateSprintHUD();return;}
  if(race.phase!=='racing')return;
- if(document.querySelector('#beginnerSetting').checked!==lapAssisted)lapRecord.invalid=true;
+ if(document.querySelector('#beginnerSetting').checked!==raceAssisted){lapRecord.invalid=true;raceValid=false;}
  const progress=race.racers[0].progress-lapNumber;
  if(race.racers[0].finishTime===null||progress>=1){
  const result=recordLap(lapRecord,progress,race.elapsed,{x:state.x,y:player.position.y,z:state.z,heading:state.heading});
- if(result){if(result.valid){if(!bestLap||result.time<bestLap.time){bestLap=result;try{localStorage.setItem(recordKey,JSON.stringify(result));}catch{}ping('NEW PERSONAL BEST','#a8ebdc');}if(onlineClub.configured&&club.profile())onlineClub.submit({scene:requestedScene,assisted:lapAssisted,craft:craftIndex,lap:result}).then(saved=>{if(saved)club.message('New global best lap submitted.');}).catch(error=>club.message(`Lap upload failed: ${error.message}`));}lapNumber++;lapRecord=createLapRecord();lapRecord.started=true;lapRecord.startTime=race.elapsed;lapAssisted=document.querySelector('#beginnerSetting').checked;}
+ if(result){if(result.valid){raceLaps.push(result);if(!bestLap||result.time<bestLap.time){bestLap=result;try{localStorage.setItem(recordKey,JSON.stringify(result));}catch{}ping('NEW PERSONAL BEST','#a8ebdc');}}else raceValid=false;lapNumber++;lapRecord=createLapRecord();lapRecord.started=true;lapRecord.startTime=race.elapsed;lapAssisted=document.querySelector('#beginnerSetting').checked;}
  }
  const ghostState=bestLap&&document.querySelector('#ghostSetting').checked?ghostPose(bestLap.samples,race.elapsed-lapRecord.startTime):null;
  ghost.visible=!!ghostState&&lapRecord.started&&race.racers[0].finishTime===null;

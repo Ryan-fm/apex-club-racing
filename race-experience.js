@@ -10,6 +10,7 @@ export function stepLesson(s,input,dt){
 }
 export function medals({finished,collisions,boosts,drifts}){return finished?Math.max(1,collisions<=3?2:1,collisions<=3&&boosts>=6&&drifts>=6?3:1):0;}
 export function createLapRecord(){return {started:false,startTime:0,nextSector:1,splits:[],samples:[],lastSample:-1,invalid:false};}
+export function canSubmitRace(finishTime,laps,valid){return valid&&Number.isFinite(finishTime)&&finishTime>0&&laps.length===3&&laps.every(lap=>lap.valid&&lap.splits.length===6&&lap.samples.length>=100);}
 export function recordLap(s,progress,time,pose){
  if(!s.started){if(progress<0)return null;s.started=true;s.startTime=time;if(progress>.01)s.invalid=true;}
  const elapsed=time-s.startTime;

@@ -32,11 +32,11 @@ export const onlineClub={
   },
   async logout(){try{if(token)await rpc('club_logout',{p_token:token});}finally{save(null);}},
   async leaderboard(scene,assisted){
-    return request(`/rest/v1/club_leaderboard?select=player_name,time_ms,craft,achieved_at&scene=eq.${scene}&assisted=eq.${assisted}&rules_version=eq.${ONLINE_CONFIG.rulesVersion}&order=time_ms.asc,achieved_at.asc&limit=50`);
+    return request(`/rest/v1/club_race_leaderboard?select=player_name,time_ms,craft,achieved_at&scene=eq.${scene}&assisted=eq.${assisted}&rules_version=eq.${ONLINE_CONFIG.rulesVersion}&order=time_ms.asc,achieved_at.asc&limit=50`);
   },
-  async submit({scene,assisted,craft,lap}){
-    if(!token)throw Error('Sign in to submit a lap.');
-    return rpc('submit_best_lap',{p_token:token,p_scene:scene,p_assisted:assisted,p_craft:craft,p_rules_version:ONLINE_CONFIG.rulesVersion,p_time_ms:Math.round(lap.time*1000),p_splits_ms:lap.splits.map(v=>Math.round(v*1000)),p_samples:lap.samples});
+  async submit({scene,assisted,craft,time,laps}){
+    if(!token)throw Error('Sign in to submit a race.');
+    return rpc('submit_best_race',{p_token:token,p_scene:scene,p_assisted:assisted,p_craft:craft,p_rules_version:ONLINE_CONFIG.rulesVersion,p_time_ms:Math.round(time*1000),p_laps:laps.map(lap=>({time_ms:Math.round(lap.time*1000),splits_ms:lap.splits.map(v=>Math.round(v*1000)),samples:lap.samples}))});
   },
 };
 
@@ -50,8 +50,8 @@ export function mountOnlineClub({scene,assisted,onProfile}){
   const format=ms=>`${String(Math.floor(ms/60000)).padStart(2,'0')}:${((ms%60000)/1000).toFixed(2).padStart(5,'0')}`;
   async function load(){
     if(!configured){message('Online club needs Supabase configuration.');return;}
-    message('Loading global best laps…');rows.replaceChildren();
-    try{const data=await onlineClub.leaderboard(scene(),assisted());for(const [i,row] of data.entries()){const tr=document.createElement('tr');for(const value of [i+1,row.player_name,format(row.time_ms),row.craft+1]){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}rows.append(tr);}message(data.length?'Top 50 · Best lap per player':'No laps yet. Set the first time!');}
+    message('Loading global race records…');rows.replaceChildren();
+    try{const data=await onlineClub.leaderboard(scene(),assisted());for(const [i,row] of data.entries()){const tr=document.createElement('tr');for(const value of [i+1,row.player_name,format(row.time_ms),row.craft+1]){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}rows.append(tr);}message(data.length?'Top 50 · Best race per player':'No races yet. Set the first time!');}
     catch(error){message(error.message);}
   }
   document.querySelector('#openClub').addEventListener('click',()=>{dialog.showModal();load();});

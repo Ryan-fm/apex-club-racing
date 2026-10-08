@@ -1,7 +1,15 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {createLesson,stepLesson,medals,recordLap,createLapRecord,ghostPose,empTargets,assistedInput} from '../race-experience.js';
+import {createLesson,stepLesson,medals,recordLap,createLapRecord,canSubmitRace,ghostPose,empTargets,assistedInput} from '../race-experience.js';
 import {circuitPoints,roadHalfWidth} from '../track-layout.js';
 import {stepHandling} from '../driving-model.js';
+test('global race record requires a finished valid three-lap race',()=>{
+ const lap={valid:true,splits:[1,2,3,4,5,6],samples:Array(100).fill([0,0,0,0,0])};
+ assert.equal(canSubmitRace(180,[lap,lap,lap],true),true);
+ assert.equal(canSubmitRace(null,[lap,lap,lap],true),false);
+ assert.equal(canSubmitRace(180,[lap],true),false);
+ assert.equal(canSubmitRace(180,[lap,lap,lap],false),false);
+ assert.equal(canSubmitRace(180,[lap,{...lap,valid:false},lap],true),false);
+});
 test('lesson requires real steering, deceleration, charged drift and a fired boost in order',()=>{
  const s=createLesson(),input={steer:0,speed:150,brake:false,charge:0,fired:false};
  stepLesson(s,input,1);assert.equal(s.step,0);stepLesson(s,{...input,steer:1},.4);assert.equal(s.step,1);
