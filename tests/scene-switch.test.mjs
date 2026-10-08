@@ -69,3 +69,19 @@ test('harbor remains cached across all three maps and restores daylight material
  assert.equal(h.run('roadBuilds'),3);
  assert.equal(h.buttons[2]['aria-pressed'],'true');
 });
+
+test('technical harbor has continuous drivable bends and separated road sections',()=>{
+ const h=harness();h.run("selectScene('harbor')");const c=h.run('curve'),n=1200,points=Array.from({length:n},(_,i)=>c.getPointAt(i/n));
+ let minRadius=Infinity,maxGrade=0,minGap=Infinity;
+ for(let i=0;i<n;i++){
+  const a=points[(i+n-1)%n],b=points[i],d=points[(i+1)%n],u=b.clone().sub(a),v=d.clone().sub(b);
+  minRadius=Math.min(minRadius,u.length()/Math.max(1e-8,u.angleTo(v)));
+  maxGrade=Math.max(maxGrade,Math.abs(v.y)/Math.hypot(v.x,v.z));
+  for(let j=i+1;j<n;j++){if(Math.min(j-i,n-j+i)*c.getLength()/n<200)continue;minGap=Math.min(minGap,Math.hypot(b.x-points[j].x,b.z-points[j].z));}
+ }
+ assert(minRadius>55,`road folds at radius ${minRadius}`);
+ assert(minGap>90,`nonadjacent roads overlap: ${minGap}`);
+ assert(maxGrade<.25,`unclimbable grade ${maxGrade}`);
+ assert(Math.max(...points.map(p=>p.y))-Math.min(...points.map(p=>p.y))>160);
+ assert(c.getPointAt(0).distanceTo(c.getPointAt(1))<.001);
+});

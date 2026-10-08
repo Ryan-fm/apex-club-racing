@@ -22,7 +22,10 @@ Object.assign(dictionary,{
 'GATE SPRINT / SOLO PRACTICE':'城门冲刺 / 单人练习','SPRINT':'冲刺','Gate run · Three-turn practice ↗':'城门冲刺 · 三弯练习 ↗','Launch gate sprint':'开始城门冲刺','Three turns, one jump. Your controls. Separate challenge records.':'三处连续弯，一次飞跃。手动驾驶，成绩单独保存。','GATE RUN COMPLETE':'城门冲刺完成','Three turns, one jump.':'三弯一跃。','Challenge saved separately. Race records unchanged.':'练习成绩已单独保存，正式比赛纪录不受影响。','Challenge complete. Race records unchanged.':'练习完成，正式比赛纪录不受影响。',
 'BUILD SPEED · SPACE + STEER TO DRIFT':'提速 · 按住漂移键并转向','TURN 1 · COUNTERSTEER, RELEASE, THEN E':'第一弯 · 反打方向，松漂移，再按 E','TURN 2 · CHARGE A DRIFT':'第二弯 · 漂移蓄力','TURN 3 · RELEASE, THEN E':'第三弯 · 松开漂移，再按 E','GOLD RAMP · PRESS E AFTER TAKE-OFF':'金色跳台 · 离地后按 E 飞喷','LAND · PRESS E, THEN FINISH':'落地 · 按 E 落地喷，然后冲线'});
 export const LANGUAGE_KEY='apex-language';
-let language='en';try{language=localStorage.getItem(LANGUAGE_KEY)==='zh'?'zh':'en';}catch{}
+Object.assign(dictionary,{
+ 'Global laps':'全球圈速','Global best laps':'全球最佳单圈','Close':'关闭','Sign in or register':'登录或注册','Player name':'玩家名','Password':'密码','Sign in':'登录','Register':'注册','Signed in as':'当前账号','Sign out':'退出登录','Refresh':'刷新','Top 50':'前 50 名','Player':'玩家','Lap':'圈速','Car':'赛车','Selected track and assist setting · each player\'s fastest valid lap':'当前赛道与辅助设置 · 每位玩家最快有效圈速','3–16 English letters, numbers, _ or -':'3–16 位英文字母、数字、_ 或 -','Loading global best laps…':'正在加载全球榜单…','Top 50 · Best lap per player':'前 50 名 · 每位玩家最佳圈速','No laps yet. Set the first time!':'暂无成绩，来创造第一条纪录！','Signing in…':'正在登录…','Signed in.':'登录成功。','Creating account…':'正在创建账号…','Account ready.':'注册成功。','Signed out.':'已退出登录。'
+});
+let language='zh';try{language=localStorage.getItem(LANGUAGE_KEY)==='en'?'en':'zh';}catch{}
 let refreshLanguage=()=>{},initialized=false;
 const sourceByTranslation=new Map();
 export function getLanguage(){return language;}

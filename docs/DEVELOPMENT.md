@@ -60,7 +60,7 @@ The lobby includes an articulated helmeted 3D driver with a fitted racing suit, 
 npm run build
 ```
 
-Publish the contents of `dist/` to a static HTTPS host. There is no server, database, login or API key. The build adds a content revision to local JavaScript and CSS URLs to prevent stale modules after an update. The included `_headers` file sets conservative response headers on hosts that support it; configure equivalent headers elsewhere. Do not publish the project root, test artifacts or `output/`.
+Publish the contents of `dist/` to a static HTTPS host. Optional online accounts and global best laps use Supabase; see [Online club setup](ONLINE-CLUB.md). The build adds a content revision to local JavaScript and CSS URLs to prevent stale modules after an update. The included `_headers` file sets conservative response headers on hosts that support it; configure equivalent headers elsewhere. Do not publish the project root, test artifacts or `output/`.
 
 Requires a modern browser with WebGL 2. Desktop keyboard and mobile touch controls are supported; tilt steering depends on device sensors and permission. No online multiplayer.
 

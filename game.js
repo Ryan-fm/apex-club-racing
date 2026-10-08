@@ -24,6 +24,7 @@ import {chaseHeading,createSuspension,stepSuspension} from './runtime/race-prese
 import {createInputFrame} from './runtime/input-frame.js';
 import {createPerformanceProbe,frameTiming} from './runtime/performance.js';
 import {cacheRaceNodes,createDomWriter} from './runtime/race-ui.js';
+import {onlineClub,mountOnlineClub} from './online-club.js';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -94,7 +95,7 @@ document.querySelector('#recoverCar').addEventListener('click',()=>{
   toggleControls(false);ping('CAR RECOVERED / NO PROGRESS GAIN','#ffd38b');
 });
 addEventListener('keydown', e => {
-  if(document.querySelector('#settingsDialog').open)return;
+  if(document.querySelector('#settingsDialog').open||document.querySelector('#clubDialog').open)return;
   if(e.code==='Tab'&&(helpOpen||race?.phase==='finished')){
     const dialog=document.querySelector(helpOpen?'#controlsPanel':'#results');
     const buttons=[...dialog.querySelectorAll('button')];const i=buttons.indexOf(document.activeElement);
@@ -123,7 +124,8 @@ let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor'].includes(new 
 let curve,trackLength,roadSamples;
 function setRouteGeometry(name){
  requestedScene=name;
- curve=new THREE.CatmullRomCurve3(circuitPoints(name).map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35);
+ curve=new THREE.CatmullRomCurve3(circuitPoints(name).map(p=>new THREE.Vector3(...p)),true,'catmullrom',name==='harbor'?.65:.35);
+ if(name==='harbor')curve.arcLengthDivisions=2400;
  trackLength=curve.getLength();
  roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};});
 }
@@ -521,8 +523,9 @@ for(let i=0;i<22;i++){
 }
 const startFrame=trackFrame(0),startGate=new THREE.Group();startGate.position.copy(startFrame.p);
 startGate.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(startFrame.side.clone().negate(),startFrame.normal,startFrame.tan));
-for(const x of [-44,44]){const post=new THREE.Mesh(new THREE.BoxGeometry(3,35,3),structureMat);post.position.set(x,17,0);startGate.add(post);}
-const banner=new THREE.Mesh(new THREE.BoxGeometry(90,19,2),new THREE.MeshStandardMaterial({map:signTexture('APEX CLUB',requestedScene==='harbor'?'NEON HARBOR / START — FINISH':requestedScene==='citadel'?'JADE CITADEL / START — FINISH':'BAY CIRCUIT / START — FINISH'),roughness:.6}));banner.position.y=35;startGate.add(banner);
+const startHeight=requestedScene==='harbor'?65:35;
+for(const x of [-44,44]){const post=new THREE.Mesh(new THREE.BoxGeometry(3,startHeight,3),structureMat);post.position.set(x,startHeight/2,0);startGate.add(post);}
+const banner=new THREE.Mesh(new THREE.BoxGeometry(90,19,2),new THREE.MeshStandardMaterial({map:signTexture('APEX CLUB',requestedScene==='harbor'?'NEON HARBOR / START — FINISH':requestedScene==='citadel'?'JADE CITADEL / START — FINISH':'BAY CIRCUIT / START — FINISH'),roughness:.6}));banner.position.y=startHeight;startGate.add(banner);
 const gridWhite=new THREE.MeshStandardMaterial({color:0xfff5d8}),gridDark=new THREE.MeshStandardMaterial({color:0x213841});
 for(let x=0;x<12;x++)for(let z=0;z<2;z++){const tile=new THREE.Mesh(new THREE.BoxGeometry(6.3,.12,3),((x+z)%2)?gridWhite:gridDark);tile.position.set((x-5.5)*6.3,.1,z*3);startGate.add(tile);}startGate.userData.sharedTrack=true;scene.add(startGate);
 for(let i=0;i<34;i++){
@@ -716,13 +719,14 @@ function loop(){
   perf.endFrame({phase:race?.phase || 'none',uiWrites:uiWritesThisFrame});
 }
 let lesson=null,lessonFired=false,lessonFinished=false,smoothedSteer=0,lastOpportunity=null,empCooldown=0,empPulse=0;
-let runStats,lapRecord,lapNumber=0,bestLap=null,recordKey='',lastBoosting=false;
+let runStats,lapRecord,lapNumber=0,bestLap=null,recordKey='',lastBoosting=false,lapAssisted=false;
 const ghost=makeCraft(0x9dd8ff,.9);ghost.name='Personal best ghost';ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.22;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
 const empRing=new THREE.Mesh(new THREE.RingGeometry(148,150,96),new THREE.MeshBasicMaterial({color:0xff729c,transparent:true,opacity:.5,depthWrite:false,side:THREE.DoubleSide}));empRing.rotation.x=-Math.PI/2;empRing.visible=false;scene.add(empRing);
 function resetExperience(){
  lesson=null;lessonFired=false;lessonFinished=false;smoothedSteer=0;lastOpportunity=null;empCooldown=0;empPulse=0;lastBoosting=false;
  document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');
  runStats={collisions:0,boosts:0,drifts:0,recoveries:[],recoveryStart:null};lapRecord=createLapRecord();lapNumber=0;
+ lapAssisted=document.querySelector('#beginnerSetting').checked;
  recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene==='harbor'?'harbor-v2':requestedScene}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
@@ -752,10 +756,11 @@ function updateExperience(dt){
  if(lesson){ghost.visible=false;return;}
  if(gateSlice){ghost.visible=false;updateSprintHUD();return;}
  if(race.phase!=='racing')return;
+ if(document.querySelector('#beginnerSetting').checked!==lapAssisted)lapRecord.invalid=true;
  const progress=race.racers[0].progress-lapNumber;
  if(race.racers[0].finishTime===null||progress>=1){
  const result=recordLap(lapRecord,progress,race.elapsed,{x:state.x,y:player.position.y,z:state.z,heading:state.heading});
- if(result){if(result.valid&&(!bestLap||result.time<bestLap.time)){bestLap=result;try{localStorage.setItem(recordKey,JSON.stringify(result));}catch{}ping('NEW PERSONAL BEST','#a8ebdc');}lapNumber++;lapRecord=createLapRecord();lapRecord.started=true;lapRecord.startTime=race.elapsed;}
+ if(result){if(result.valid){if(!bestLap||result.time<bestLap.time){bestLap=result;try{localStorage.setItem(recordKey,JSON.stringify(result));}catch{}ping('NEW PERSONAL BEST','#a8ebdc');}if(onlineClub.configured&&club.profile())onlineClub.submit({scene:requestedScene,assisted:lapAssisted,craft:craftIndex,lap:result}).then(saved=>{if(saved)club.message('New global best lap submitted.');}).catch(error=>club.message(`Lap upload failed: ${error.message}`));}lapNumber++;lapRecord=createLapRecord();lapRecord.started=true;lapRecord.startTime=race.elapsed;lapAssisted=document.querySelector('#beginnerSetting').checked;}
  }
  const ghostState=bestLap&&document.querySelector('#ghostSetting').checked?ghostPose(bestLap.samples,race.elapsed-lapRecord.startTime):null;
  ghost.visible=!!ghostState&&lapRecord.started&&race.racers[0].finishTime===null;
@@ -812,7 +817,7 @@ function updateScenePreview(){
 function setupClubLobby(){
  showroom.scene.environment=scene.environment;
  for(const type of ['bay','citadel','harbor']){
-  const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35);
+  const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',type==='harbor'?.65:.35);
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
   try{const cached=localStorage.getItem(`apex-lobby-preview-v2-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
  }
@@ -857,6 +862,7 @@ if(gateSlice)document.querySelector('#autoThrottle').checked=true;
 setupClubLobby();
 mountKeyboardSettings({getBindings:()=>bindings,setBindings:next=>{bindings=next;keyboard.clear();actions.clear();driftLatched=false;updateKeyboardDescription();try{localStorage.setItem('apex-keybindings',JSON.stringify(next));return true;}catch{return false;}}});
 setupLanguage();
+const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
 loop();
 
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer?.setSize(innerWidth,innerHeight)});
