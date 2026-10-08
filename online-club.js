@@ -40,26 +40,11 @@ export const onlineClub={
   },
 };
 
-export function mountOnlineClub({scene,assisted,onProfile}){
-  const dialog=document.querySelector('#clubDialog'),status=document.querySelector('#clubStatus'),rows=document.querySelector('#globalRows');
-  const name=document.querySelector('#clubPlayerName'),password=document.querySelector('#clubPassword');
-  const authPane=document.querySelector('#clubAuth'),accountPane=document.querySelector('#clubAccount');
+export function mountOnlineClub({onProfile}){
   let current=null;
-  const message=value=>{status.textContent=tr(value||'');};
-  const renderProfile=value=>{current=value;document.querySelector('#clubAccountName').textContent=value?.player_name||'';authPane.hidden=!!value;accountPane.hidden=!value;onProfile(value);};
-  const format=ms=>`${String(Math.floor(ms/60000)).padStart(2,'0')}:${((ms%60000)/1000).toFixed(2).padStart(5,'0')}`;
-  async function load(){
-    if(!configured){message('Online club needs Supabase configuration.');return;}
-    message('Loading global race records…');rows.replaceChildren();
-    try{const data=await onlineClub.leaderboard(scene(),assisted());for(const [i,row] of data.entries()){const tr=document.createElement('tr');for(const value of [i+1,row.player_name,format(row.time_ms),row.craft+1]){const td=document.createElement('td');td.textContent=String(value);tr.append(td);}rows.append(tr);}message(data.length?'Top 50 · Best race per player':'No races yet. Set the first time!');}
-    catch(error){message(error.message);}
-  }
-  document.querySelector('#openClub').addEventListener('click',()=>{dialog.showModal();load();});
-  document.querySelector('#closeClub').addEventListener('click',()=>dialog.close());
-  document.querySelector('#clubRefresh').addEventListener('click',load);
-  document.querySelector('#clubLogin').addEventListener('click',async()=>{message('Signing in…');try{renderProfile(await onlineClub.login(name.value.trim(),password.value));password.value='';message('Signed in.');load();}catch(error){message(error.message);}});
-  document.querySelector('#clubRegister').addEventListener('click',async()=>{message('Creating account…');try{renderProfile(await onlineClub.register(name.value.trim(),password.value));password.value='';message('Account ready.');load();}catch(error){message(error.message);}});
-  document.querySelector('#clubLogout').addEventListener('click',async()=>{try{await onlineClub.logout();message('Signed out.');}catch(error){message(error.message);}finally{renderProfile(null);}});
+  const notice=document.querySelector('#onlineNotice');
+  const message=value=>{if(notice)notice.textContent=tr(value||'');};
+  const renderProfile=value=>{current=value;onProfile(value);};
   if(configured)onlineClub.current().then(renderProfile).catch(error=>message(error.message));
-  return {refresh:load,profile:()=>current,message};
+  return {profile:()=>current,message};
 }

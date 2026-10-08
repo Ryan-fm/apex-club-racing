@@ -1,0 +1,11 @@
+/* Keep the selection screen readable over the moving 3D garage. */
+body:not(.in-race) .lobby-tools a,
+body:not(.in-race) .lobby-tools button{background:#102432e8;border:1px solid #8ca8b04d;font-size:12px}
+#lobby .race-setup{background:#0e2030f5;backdrop-filter:none;box-shadow:0 22px 60px #0008}
+#lobby .setup-heading>span,#lobby .step-label,#lobby .scene-options button>span{font-size:10px}
+#lobby .scene-options button>small,#lobby .scene-best,#lobby .mode-options small{font-size:10px}
+#lobby .scene-options button>strong{font-size:18px}
+#lobby .mode-options strong,#lobby .team-options button{font-size:12px}
+#lobby .fleet-heading,#lobby .kart-options button>span,#lobby .kart-options small{font-size:10px}
+#lobby .kart-options strong{font-size:12px}
+@media(max-width:1024px){#lobby .race-setup{background:#0e2030f5}#lobby .scene-options button>strong{font-size:16px}}

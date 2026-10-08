@@ -18,7 +18,7 @@ const query=new URLSearchParams(location.search);let selected=/^[0-5]$/.test(que
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fields={paint:'#bodyColor',finish:'#paintFinish',livery:'#paintLivery',accent:'#accentColor',exhaust:'#exhaustStyle',flame:'#flameColor'};
 const status=document.querySelector('#customStatus');
-function updateLinks(){const sceneName=['bay','citadel','harbor'].includes(query.get('scene'))?query.get('scene'):'bay';document.querySelectorAll('a[href*="index.html"]').forEach(a=>a.href=`./index.html?craft=${selected}&scene=${sceneName}`);}
+function updateLinks(){const sceneName=['bay','citadel','harbor'].includes(query.get('scene'))?query.get('scene'):'bay';document.querySelectorAll('a[data-race-link]').forEach(a=>a.href=`./race.html?craft=${selected}&scene=${sceneName}`);}
 function refreshCar(){
  const d=craftDefs[selected];applyCustomization(car,config,d.style==='rally'?0x1497a0:d.color);
  car.traverse(o=>{if(o.isMesh){o.castShadow=!o.material?.isShaderMaterial&&!o.userData.cosmeticDecal;o.receiveShadow=!o.userData.cosmeticDecal;if(o.material&&!o.material.isShaderMaterial)o.material.wireframe=document.querySelector('#wireframe').checked;}});

@@ -45,7 +45,7 @@ scene.fog = new THREE.FogExp2(0x9bcadb, 0.00030);
 const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 9000);
 const mobileDevice=isHandheldDevice();
 const renderer = new THREE.WebGLRenderer({antialias:!mobileDevice,powerPreference:mobileDevice?'default':'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio, mobileDevice?1:1.8));
+renderer.setPixelRatio(Math.min(devicePixelRatio, mobileDevice?1.25:2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -57,7 +57,7 @@ let composer=null,bloom=null;
 function ensureComposer(){
  if(composer)return;
  composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
- bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.38,.35,.85);composer.addPass(bloom);composer.addPass(new OutputPass());
+ bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.18,.12,.92);composer.addPass(bloom);composer.addPass(new OutputPass());
 }
 const world = new THREE.Group(); scene.add(world);
 const up = new THREE.Vector3(0,1,0);
@@ -95,7 +95,7 @@ document.querySelector('#recoverCar').addEventListener('click',()=>{
   toggleControls(false);ping('CAR RECOVERED / NO PROGRESS GAIN','#ffd38b');
 });
 addEventListener('keydown', e => {
-  if(document.querySelector('#settingsDialog').open||document.querySelector('#clubDialog').open)return;
+  if(document.querySelector('#settingsDialog').open||document.querySelector('#clubDialog')?.open)return;
   if(e.code==='Tab'&&(helpOpen||race?.phase==='finished')){
     const dialog=document.querySelector(helpOpen?'#controlsPanel':'#results');
     const buttons=[...dialog.querySelectorAll('button')];const i=buttons.indexOf(document.activeElement);
@@ -298,7 +298,7 @@ function colorKart(kart,color){if(kart===player&&selectedMode==='solo'&&document
 function setCraft(i){
   if(race&&race.phase!=='finished')return;
   if(!Number.isInteger(i)||!craftDefs[i]||(replayData&&i!==replayData.craft))return;
-  craftIndex=i;document.querySelector('.lobby-tools a').href=`./garage.html?craft=${i}&scene=${requestedScene}`;const d=craftDefs[i];configureKart(player,d);showroom.select();
+  craftIndex=i;document.querySelector('.lobby-tools a[href*="garage.html"]').href=`./garage.html?craft=${i}&scene=${requestedScene}`;const d=craftDefs[i];configureKart(player,d);showroom.select();
   document.querySelector('#heroKartName').textContent=d.name;document.querySelector('#heroKartType').textContent=d.title;updateLobbyRecord();
   colorKart(player,selectedMode==='team'?TEAM_COLORS[selectedTeam]:d.color);
   document.querySelectorAll('[data-craft]').forEach(el=>{const active=Number(el.dataset.craft)===i;el.classList.toggle('active',active);el.setAttribute('aria-pressed',String(active));});
@@ -458,7 +458,7 @@ function updateCamera(dt,meta){
   dir.position.copy(player.position).add(new THREE.Vector3(-110,220,90));dir.target.position.copy(player.position);
   chaseLight.position.copy(camera.position).addScaledVector(f.normal,20);chaseLight.target.position.copy(player.position);
   camera.fov=lerp(camera.fov,60+(reducedMotion?0:speedN*4+(state.nitro>0?6:state.miniTurbo>0?3:0)),1-Math.pow(.002,dt));camera.updateProjectionMatrix();
-  if(bloom)bloom.strength=.22+(meta.boosting?.08:0);
+  if(bloom)bloom.strength=.16+(meta.boosting?.06:0);
   document.body.classList.toggle('boosting',meta.boosting);
 }
 
@@ -598,7 +598,7 @@ function selectScene(name,{historyMode='push'}={}){
   try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}
   const url=new URL(location.href);url.searchParams.set('scene',name);
   if(historyMode==='push')history.pushState(null,'',url);
-  document.querySelector('.lobby-tools a').href=`./garage.html?craft=${craftIndex}&scene=${requestedScene}`;
+  document.querySelector('.lobby-tools a[href*="garage.html"]').href=`./garage.html?craft=${craftIndex}&scene=${requestedScene}`;
   updateScenePreview();updateLobbyRecord();
  }
 
@@ -839,7 +839,7 @@ function showDriver(){if(driverMounted)return;try{mountDriverStudio(document.que
 
 document.querySelector('#motionSetting').checked=reducedMotion;
 function saveSettings(){try{localStorage.setItem('apex-settings',JSON.stringify({toggleDrift:document.querySelector('#toggleDrift').checked,motion:reducedMotion,audio:document.querySelector('#audioSetting').checked,quality:document.querySelector('#qualitySetting').value}));}catch{}}
-function applyQuality(){const low=document.querySelector('#qualitySetting').value==='performance';renderer.shadowMap.enabled=!low;renderer.setPixelRatio(Math.min(devicePixelRatio,low?1:1.6));renderer.setSize(innerWidth,innerHeight);if(!low)ensureComposer();composer?.setPixelRatio(renderer.getPixelRatio());composer?.setSize(innerWidth,innerHeight);if(bloom)bloom.enabled=!low;saveSettings();}
+function applyQuality(){const low=document.querySelector('#qualitySetting').value==='performance';renderer.shadowMap.enabled=!low;renderer.setPixelRatio(Math.min(devicePixelRatio,low?1:(mobileDevice?1.25:2)));renderer.setSize(innerWidth,innerHeight);if(!low)ensureComposer();composer?.setPixelRatio(renderer.getPixelRatio());composer?.setSize(innerWidth,innerHeight);if(bloom)bloom.enabled=!low;saveSettings();}
 if(mobileDevice)document.querySelector('#qualitySetting').value='performance';
 try{const saved=JSON.parse(localStorage.getItem('apex-settings')||'null');if(saved){document.querySelector('#toggleDrift').checked=!!saved.toggleDrift;reducedMotion=!!saved.motion;document.querySelector('#motionSetting').checked=reducedMotion;document.querySelector('#audioSetting').checked=saved.audio!==false;document.querySelector('#qualitySetting').value=saved.quality==='performance'?'performance':'quality';}}catch{}
 audio.setEnabled(document.querySelector('#audioSetting').checked);
@@ -882,5 +882,5 @@ document.querySelectorAll('[data-settings]').forEach(button=>button.addEventList
  if(button.dataset.settings==='driver')showDriver();
 }));
 
-document.querySelector('.lobby-tools a').addEventListener('click',()=>{try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}});
+document.querySelector('.lobby-tools a[href*="garage.html"]').addEventListener('click',()=>{try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}});
 addEventListener('storage',e=>{if(e.key===GARAGE_KEY&&!race)setCraft(craftIndex);});
