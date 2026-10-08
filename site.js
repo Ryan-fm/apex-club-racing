@@ -36,7 +36,7 @@ if(page==='home'){
     toggle.querySelector('[aria-hidden]').textContent=playing?'Ⅱ':'▶';
   };
   const stop=()=>{video.pause();video.hidden=true;toggle.hidden=true;};
-  const loadPromo=()=>{if(!video.src){video.src='./assets/home-promo.mp4';video.preload='metadata';}};
+  const loadPromo=()=>{if(!video.src){video.src=matchMedia('(max-width: 600px)').matches?'./assets/home-promo-vertical.mp4':'./assets/home-promo.mp4';video.preload='metadata';}};
   video.addEventListener('loadeddata',()=>{ready=true;if(reduceMotion.matches||navigator.connection?.saveData)return;video.hidden=false;toggle.hidden=false;video.play().catch(stop);});
   video.addEventListener('play',renderHeroToggle);
   video.addEventListener('pause',renderHeroToggle);
