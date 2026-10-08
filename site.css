@@ -17,3 +17,4 @@
   .site-nav a{white-space:nowrap}
 }
 @media(max-width:380px){.site-nav a[href="./garage.html"]{display:none}}
+.page-intro .board-access{margin-top:14px;color:var(--mint);font-size:12px}
