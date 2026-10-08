@@ -9,3 +9,72 @@ body:not(.in-race) .lobby-tools button{background:#102432e8;border:1px solid #8c
 #lobby .fleet-heading,#lobby .kart-options button>span,#lobby .kart-options small{font-size:10px}
 #lobby .kart-options strong{font-size:12px}
 @media(max-width:1024px){#lobby .race-setup{background:#0e2030f5}#lobby .scene-options button>strong{font-size:16px}}
+
+/* Thumb-first mobile layout: stable targets, contextual boost, quiet HUD. */
+.lobby-more{position:relative}.lobby-more summary{cursor:pointer;list-style:none;padding:12px;font-size:12px}.lobby-more summary::-webkit-details-marker{display:none}.lobby-more nav{position:absolute;right:0;top:100%;min-width:150px;padding:8px;background:#102634;border:1px solid #89bcc044;border-radius:12px;box-shadow:0 12px 35px #0006;z-index:30}.lobby-more nav a{display:block;white-space:nowrap;min-height:44px}
+
+@media(max-width:1024px){.lobby-tools{gap:4px}.lobby-tools>a,.lobby-tools>button,.lobby-more summary{min-height:44px;padding:12px 10px!important}.lobby-tools .language-switch button{min-height:44px}.lobby-more nav a{padding:12px!important}#lobby .scene-options button{min-height:92px}#lobby .kart-options{scrollbar-width:none}#lobby .kart-options::-webkit-scrollbar{display:none}}
+html.handheld-input .in-race #touchControls{--control-scale:1}
+html.handheld-input #touchControls .steering-caption,html.handheld-input #touchControls .auto-drive,html.handheld-input #touchControls #mobileCenter{display:none!important}
+html.handheld-input .in-race #driftMeter,html.handheld-input .in-race #empStatus{display:none}
+html.handheld-input #touchControls button{box-shadow:inset 0 1px 0 #ffffff24,0 3px 12px #00121e30}
+html.handheld-input #touchControls .touch-left{width:172px;height:150px;left:max(16px,env(safe-area-inset-left))}
+html.handheld-input #touchControls .steering-pair{gap:8px}
+html.handheld-input #touchControls .steering-pair button{width:76px;height:76px;border-radius:24px}
+html.handheld-input #touchControls .steering-pair span{display:none}
+html.handheld-input #touchControls .brake-control{left:0;bottom:90px;width:54px;height:54px}
+html.handheld-input #touchControls .throttle-control{left:68px;bottom:90px;width:54px;height:54px}
+html.handheld-input #touchControls .touch-right{width:208px;height:186px;right:max(16px,env(safe-area-inset-right))}
+html.handheld-input #touchControls .drift-control{width:100px;height:100px}
+html.handheld-input #touchControls .drift-control>span,html.handheld-input #touchControls .nitro-control>span{display:none}
+html.handheld-input #touchControls .nitro-control{right:112px;bottom:0;width:80px;height:88px;border-radius:26px}
+html.handheld-input #touchControls .mini-control{right:112px;bottom:100px;width:80px;height:60px;border-radius:20px;visibility:hidden;opacity:0;pointer-events:none}
+html.handheld-input #touchControls .mini-control.ready{visibility:visible;opacity:1;pointer-events:auto}
+html.handheld-input #touchControls .mini-control small{font-size:8px}
+html.handheld-input #touchControls .emp-control{right:20px;bottom:120px;width:54px;height:54px}
+html.handheld-input .in-race #stuntPrompt{bottom:185px;font-size:11px;max-width:48vw}
+html.handheld-input .in-race .telemetry{bottom:22px}
+@media(orientation:portrait){html.handheld-input .in-race #touchControls{--control-scale:.86}html.handheld-input .in-race .telemetry{bottom:190px}html.handheld-input .in-race #stuntPrompt{bottom:250px;max-width:85vw}html.handheld-input .in-race #rotateHint{top:180px}html.handheld-input .in-race #touchControls .touch-left{left:max(12px,env(safe-area-inset-left))}html.handheld-input .in-race #touchControls .touch-right{right:max(12px,env(safe-area-inset-right))}}
+@media(orientation:landscape) and (max-height:420px){html.handheld-input .in-race #touchControls{--control-scale:.9}html.handheld-input .in-race #stuntPrompt{bottom:170px}}
+
+#landscapeGate{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:24px;background:#07121bf5;touch-action:manipulation}
+#landscapeGate[hidden]{display:none}.landscape-card{width:min(360px,100%);text-align:center;color:#f1f4ed}.rotate-device{display:block;font-size:72px;color:#edbb7b;line-height:1}.landscape-card h2{font-size:25px;margin:22px 0 12px}.landscape-card p{font-size:14px;line-height:1.8;color:#a9bcc8;margin-bottom:28px}.landscape-card button{display:block;width:100%;min-height:48px;margin-top:12px;border-radius:10px}.landscape-card .secondary{background:transparent;border:1px solid #728e9b66;color:#bccbd1}
+@media (orientation:landscape) and (max-height:550px) and (max-width:1100px){
+ body:not(.in-race) .masthead{height:52px;top:0;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));border-color:#ffffff12}
+ body:not(.in-race) .brand{font-size:17px}
+ body:not(.in-race) .lobby-tools>a,body:not(.in-race) .lobby-tools>button{background:transparent;border:0;color:#bbc9d0}
+ #lobby{display:block;padding:0!important;overflow:hidden!important;background:linear-gradient(0deg,#08121bea,transparent 45%),linear-gradient(90deg,#08121b22 50%,#08121bf2 68%)}
+ #lobby .club-profile,#lobby .showroom-caption{display:none}
+ #lobby .lobby-copy{display:block;top:73px;left:max(24px,env(safe-area-inset-left));max-width:50%}
+ #lobby .lobby-copy .eyebrow{display:block;font-size:8px;color:#edbb7b;letter-spacing:.18em}
+ #lobby .lobby-copy h1,html[lang=zh-CN] #lobby .lobby-copy h1{font-size:37px;font-style:normal;font-weight:600;letter-spacing:.04em;margin:8px 0 5px}
+ #lobby .lobby-copy p{font-size:11px;color:#b2c1c8}
+ #lobby .fleet-dock{position:absolute;left:max(20px,env(safe-area-inset-left));right:38%;bottom:17px;width:auto;max-width:none;margin:0;padding:0;overflow:visible}
+ #lobby .fleet-heading{margin-bottom:9px}.fleet-heading>b{font-size:10px;letter-spacing:.1em;color:#9cafba}
+ #lobby .kart-options{display:flex;overflow-x:auto;gap:5px;padding:0 0 3px;scrollbar-width:none}
+ #lobby .kart-options button{flex:0 0 calc((100% - 25px)/6);min-height:67px;padding:0 3px 7px;border-radius:3px;background:#14222ba6;border:1px solid #ffffff12;box-shadow:none;text-align:center}
+ #lobby .kart-options button.active{background:#edbb7b14;border-color:#edbb7b;box-shadow:inset 0 -2px #edbb7b}
+ #lobby .kart-options img{height:40px;margin:0;object-fit:contain}#lobby .kart-options strong{font-size:8px;font-weight:500;letter-spacing:.02em}
+ #lobby .kart-options button>span,#lobby .kart-options small,#lobby .kart-detail h2{display:none}
+ #lobby .kart-detail{margin-top:5px;justify-content:flex-end}#lobby .kart-specs summary{color:#8fa3b0;font-size:9px}
+ #lobby .race-setup{position:absolute!important;top:67px!important;right:max(22px,env(safe-area-inset-right))!important;left:auto!important;bottom:16px!important;width:32%!important;max-height:none;margin:0!important;padding:0 0 0 20px!important;border:0;border-left:1px solid #ffffff14;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;overflow-y:auto;scrollbar-width:none;display:flex!important;flex-direction:column;gap:8px}
+ #lobby .setup-heading{margin:0;text-align:left;align-items:flex-start;gap:4px}#lobby .setup-heading>span{font-size:8px;color:#b09979}#lobby .setup-heading>b{font-size:19px;font-weight:500}
+ #lobby .scene-options{display:flex;flex-direction:column;gap:5px}
+ #lobby .scene-options button{height:38px;min-height:38px;padding:0 12px;border:1px solid #ffffff15;border-radius:3px;background:#14232e;text-align:left;overflow:hidden;flex-shrink:0}
+ #lobby .scene-options button.active{border-color:#edbb7b;background:#edbb7b12;box-shadow:none}
+ #lobby .scene-options button>strong{font-size:11px;font-weight:500;position:relative;z-index:1}
+ #lobby .scene-options button>span,#lobby .scene-options button>small{display:none}
+ #lobby .scene-options .route-outline{display:block;position:absolute;right:12px;top:3px;width:44px;height:30px;opacity:.35;color:#b7d8d4}
+ #lobby .scene-options .scene-preview{position:absolute;inset:0 auto 0 0;width:100%;height:100%;object-fit:cover;opacity:.12;mask-image:none}
+ #lobby .scene-options button:after{display:none}
+ #lobby .scene-best,#lobby #sceneCaption,#lobby .step-label{display:none}
+ #lobby .mode-options{display:flex;gap:0;border-bottom:1px solid #ffffff18;margin:0;flex-shrink:0}
+ #lobby .mode-options button{flex:1;min-height:36px;padding:8px 0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#879ba8}
+ #lobby .mode-options button.active{color:#edbb7b;border-bottom:2px solid #edbb7b;background:transparent}
+ #lobby .mode-options strong{font-size:11px;font-weight:500}#lobby .mode-options small{display:none}
+ #lobby .team-options{gap:6px}#lobby .team-options button{min-height:30px;padding:5px;font-size:10px;border-radius:3px;background:transparent;box-shadow:none}
+ #lobby .launch-dock{position:relative;left:auto;right:auto;bottom:auto;width:auto;margin:auto 0 0;padding:0;background:transparent;border:0;backdrop-filter:none;flex-shrink:0}
+ #lobby #raceStart{min-height:44px;height:44px;padding:10px 14px;margin:0;border-radius:3px;font-size:13px;background:#edbb7b;color:#14202b;box-shadow:none}
+ #lobby .gate-practice,#lobby #practiceStart{display:none}
+ .controls-card,.results-card{max-height:calc(100dvh - 24px);overflow-y:auto}
+}

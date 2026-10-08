@@ -24,3 +24,19 @@
 .hero-motion-toggle:hover{color:var(--gold)}
 @media(max-width:900px){.hero-video{object-position:65% center}}
 @media(max-width:600px){.hero-video{object-position:67% center}}
+
+/* A phone held sideways gets a complete first screen, not the portrait stack. */
+@media (orientation:landscape) and (max-height:550px) and (max-width:1100px){
+ .shell{width:calc(100% - max(32px,env(safe-area-inset-left) + env(safe-area-inset-right)))}
+ .site-header{height:56px;gap:16px}.site-nav{gap:22px}
+ .home-hero{height:calc(100svh - 56px);min-height:270px;max-height:none}
+ .hero-copy{left:4%;top:47%;width:52%;transform:translateY(-50%)}
+ .hero-copy h1{font-size:clamp(30px,5vw,48px);margin:12px 0;line-height:1.12}
+ .hero-description{font-size:12px;line-height:1.6;margin-bottom:16px;max-width:340px}
+ .hero-actions{gap:20px;flex-wrap:nowrap}.hero-actions .button-primary{min-width:145px;padding:12px 15px;font-size:13px}
+ .hero-actions .button-text{padding:10px 0;font-size:12px;gap:14px}
+ .hero-rail{bottom:10px;font-size:8px}.eyebrow{font-size:8px}
+ .hero-video,.hero-art{object-position:center right}
+ .hero-shade{background:linear-gradient(90deg,#080e17ee,#080e1799 47%,transparent 80%)}
+ .home-facts{min-height:110px}
+}

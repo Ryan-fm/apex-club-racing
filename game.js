@@ -788,13 +788,16 @@ function setupExperience(){
  try{const saved=JSON.parse(localStorage.getItem('apex-experience')||'{}');for(const id of ids)if(saved[id]!==undefined){const el=document.getElementById(id);if(el.type==='checkbox')el.checked=!!saved[id];else el.value=saved[id];}}catch{}
  const save=()=>{const values={};for(const id of ids){const el=document.getElementById(id);values[id]=el.type==='checkbox'?el.checked:el.value;}try{localStorage.setItem('apex-experience',JSON.stringify(values));}catch{}for(const kind of ['music','engine','prompt'])audio.setVolume(kind,Number(document.getElementById(kind+'Volume').value)/100);};
  ids.forEach(id=>document.getElementById(id).addEventListener('change',()=>{save();if(id==='liverySetting')setCraft(craftIndex);}));save();
- document.querySelector('#practiceStart').addEventListener('click',startLesson);document.querySelector('#practiceSettings').addEventListener('click',()=>{document.querySelector('#settingsDialog').close();startLesson();});
+ document.querySelector('#practiceStart').addEventListener('click',()=>beginLaunch(startLesson));document.querySelector('#practiceSettings').addEventListener('click',()=>{document.querySelector('#settingsDialog').close();beginLaunch(startLesson);});
  document.querySelector('#skipLesson').addEventListener('click',()=>{try{localStorage.setItem('apex-trained','yes');}catch{}reset();});document.querySelector('#retryLesson').addEventListener('click',startLesson);
  const rules=document.createElement('p');rules.className='challenge-rules';rules.textContent=tr('Bronze: finish. Silver: finish with ≤3 collisions. Gold: also complete 6 drifts and 6 mini boosts.');document.querySelector('[data-settings-panel="controls"]').append(rules);
 }
 
 let launchElapsed=null,launchAction=null;
 function beginLaunch(action){
+ mobile.prepareLaunch(()=>launchPrepared(action));
+}
+function launchPrepared(action){
  if(launchElapsed!==null)return;
  if(reducedMotion){action();return;}
  launchElapsed=0;launchAction=action;document.body.classList.add('is-launching');document.querySelector('#raceStart').disabled=true;audio.start();audio.cue('complete');

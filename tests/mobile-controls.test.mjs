@@ -13,14 +13,15 @@ test('calibrated tilt has a dead zone and bounded steering',()=>{
 
 import {createMobileControls} from '../mobile-controls.js';
 test('multi-touch steering slides independently of drift and clears on cancellation',()=>{
- const saved=new Map(['document','screen','window','addEventListener'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
- const make=()=>({listeners:{},attrs:{},dataset:{},checked:true,classList:{toggle(){},remove(){}},style:{setProperty(){}},addEventListener(t,f){this.listeners[t]=f;},setAttribute(k,v){this.attrs[k]=v;},getAttribute(k){return this.attrs[k];},setPointerCapture(id){this.capture=id;},hasPointerCapture(id){return this.capture===id;}});
+ const saved=new Map(['document','screen','window','addEventListener','matchMedia'].map(k=>[k,Object.getOwnPropertyDescriptor(globalThis,k)]));
+ const make=()=>({focus(){},listeners:{},attrs:{},dataset:{},checked:true,classList:{toggle(){},remove(){}},style:{setProperty(){}},addEventListener(t,f){this.listeners[t]=f;},setAttribute(k,v){this.attrs[k]=v;},getAttribute(k){return this.attrs[k];},setPointerCapture(id){this.capture=id;},hasPointerCapture(id){return this.capture===id;}});
  const drive=['left','right','drift','nitro','emp','throttle','brake'].map(name=>Object.assign(make(),{dataset:{drive:name},parentElement:{getBoundingClientRect:()=>({left:0,right:180,top:100,bottom:190})}}));
  const nodes=new Map(),get=s=>{if(!nodes.has(s))nodes.set(s,make());return nodes.get(s);};
  const query=s=>s.startsWith('[data-drive=')?drive.find(b=>s.includes('"'+b.dataset.drive+'"')):get(s);
- let actions=[];const documentEvents={};
+ let actions=[];const documentEvents={};const orientation={matches:false,addEventListener(t,f){this.change=f;}};const gate=Object.assign(make(),{querySelector:query,querySelectorAll:()=>[],focus(){}});
+ Object.defineProperty(globalThis,'matchMedia',{configurable:true,value:()=>orientation});
  try{
-  Object.defineProperty(globalThis,'document',{configurable:true,value:{querySelector:query,querySelectorAll:s=>s==='[data-drive]'?drive:[],addEventListener(t,f){documentEvents[t]=f;}}});
+  Object.defineProperty(globalThis,'document',{configurable:true,value:{documentElement:{lang:'zh-CN',classList:{toggle(){}}},body:{append(){}},createElement:()=>gate,querySelector:query,querySelectorAll:s=>s==='[data-drive]'?drive:[],addEventListener(t,f){documentEvents[t]=f;}}});
   Object.defineProperty(globalThis,'screen',{configurable:true,value:{orientation:{angle:90,addEventListener(){}}}});
   Object.defineProperty(globalThis,'window',{configurable:true,value:{}});Object.defineProperty(globalThis,'addEventListener',{configurable:true,value:()=>{}});
   const controls=createMobileControls({handheld:true,active:()=>true,action:x=>actions.push(x),pause(){}});
@@ -35,6 +36,7 @@ test('multi-touch steering slides independently of drift and clears on cancellat
   controls.update({boost:1,nitro:0,weapon:1,drift:{active:false,charge:0}});
   fire('nitro','pointerdown',4);assert.deepEqual(actions,['nitro']);
   controls.clear();assert(!controls.down('drift'));assert.equal(controls.steer(.016),0);
+  let launches=0;controls.prepareLaunch(()=>launches++);assert.equal(launches,0);assert.equal(gate.hidden,false);orientation.matches=true;orientation.change();assert.equal(launches,1);assert.equal(gate.hidden,true);orientation.change();assert.equal(launches,1);
  }finally{for(const [k,d] of saved){if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];}}
 });
 

@@ -44,8 +44,10 @@ export function createClubShowroom(){
   door.position.y=launch*23;
   const {width,height}=renderer.domElement.getBoundingClientRect(),desktop=width>1024,landscape=width/height>1.5;
   const entrance=reduced||!desktop?1:Math.min(1,time/1.5),ease=1-(1-entrance)**3;
-  camera.aspect=width/height;camera.fov=desktop?43:landscape?55:70;
+  const phoneLandscape=!desktop&&landscape&&height<=550;
+  camera.aspect=width/height;camera.fov=desktop?43:phoneLandscape?35:landscape?55:70;
   camera.position.set(28+ease*3,12+ease*5,35+ease*8-launch*3).multiplyScalar(player.userData.fx?1:.86);camera.lookAt(0,0,-launch*5);
+  if(phoneLandscape){camera.position.multiplyScalar(.56);camera.lookAt(0,1,-launch*5);}
   camera.setViewOffset(width,height,desktop?width*.15:landscape?width*.19:0,desktop?-height*.035:landscape?0:height*.20,width,height);camera.updateProjectionMatrix();
   renderer.render(scene,camera);
  }};

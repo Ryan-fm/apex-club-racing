@@ -14,7 +14,32 @@ export function tiltSteering(value,center=0){
 }
 export function createMobileControls({action,active,pause,handheld=isHandheldDevice()}){
   document.documentElement?.classList.toggle('handheld-input',handheld);
-  if(!handheld)return {clear(){},update(){},down:()=>false,steer:()=>0};
+  if(!handheld)return {clear(){},update(){},down:()=>false,steer:()=>0,prepareLaunch:go=>go()};
+  const landscape=matchMedia('(orientation: landscape)');
+  const gate=document.createElement('section');
+  gate.id='landscapeGate';gate.hidden=true;gate.setAttribute('role','dialog');gate.setAttribute('aria-modal','true');gate.setAttribute('aria-labelledby','landscapeGateTitle');
+  gate.innerHTML='<div class="landscape-card"><span class="rotate-device" aria-hidden="true">↻</span><h2 id="landscapeGateTitle"></h2><p></p><button type="button" class="primary"></button><button type="button" class="secondary"></button></div>';
+  document.body.append(gate);
+  let pendingLaunch=null,returnFocus=null;
+  const closeGate=()=>{gate.hidden=true;pendingLaunch=null;returnFocus?.focus();};
+  const requestLandscape=async()=>{
+    try{await document.documentElement.requestFullscreen?.();}catch{}
+    try{await screen.orientation?.lock?.('landscape');}catch{}
+  };
+  gate.querySelector('.primary').addEventListener('click',requestLandscape);
+  gate.querySelector('.secondary').addEventListener('click',closeGate);
+  gate.addEventListener('keydown',e=>{if(e.key==='Escape')closeGate();if(e.key==='Tab'){const buttons=[...gate.querySelectorAll('button')];e.preventDefault();(document.activeElement===buttons[0]?buttons[1]:buttons[0]).focus();}});
+  landscape.addEventListener('change',()=>{if(landscape.matches&&pendingLaunch){const go=pendingLaunch;pendingLaunch=null;gate.hidden=true;go();}});
+  const prepareLaunch=go=>{
+    if(landscape.matches){void requestLandscape();go();return;}
+    pendingLaunch=go;returnFocus=document.activeElement;
+    const zh=document.documentElement.lang.startsWith('zh');
+    gate.querySelector('h2').textContent=zh?'横过来，准备出发':'Turn sideways to race';
+    gate.querySelector('p').textContent=zh?'横屏后自动进入赛道。左手转向，右手漂移和加速。若屏幕没有旋转，请关闭手机的旋转锁定。':'Turn your phone sideways to begin. Steer on the left; drift and boost on the right. Disable rotation lock if needed.';
+    gate.querySelector('.primary').textContent=zh?'全屏并尝试横屏 ↗':'Fullscreen / landscape ↗';
+    gate.querySelector('.secondary').textContent=zh?'返回选车与赛道':'Back to race setup';
+    gate.hidden=false;gate.querySelector('.primary').focus();
+  };
   const editable=e=>e.target?.closest?.('input,textarea,[contenteditable="true"]');
   for(const type of ['contextmenu','selectstart','dragstart'])document.addEventListener(type,e=>{if(!editable(e))e.preventDefault();});
   const held=new Map();let enabled=false,center=null,reading=null,lastSample=0,filtered=0,request=0;
@@ -76,7 +101,7 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
     try{await document.documentElement.requestFullscreen?.();await screen.orientation?.lock?.('landscape');}catch{}
     document.querySelector('#screenHint').textContent='Rotate your phone sideways. If needed, turn off rotation lock.';
   });
-  return {clear,update({boost,nitro,weapon,drift,empCooldown=0}){
+  return {clear,prepareLaunch,update({boost,nitro,weapon,drift,empCooldown=0}){
     const count=Math.floor(boost*3+.01),ready=boost>=.333&&nitro<=0;
     nitroButton.classList.toggle('unavailable',!ready&&nitro<=0);nitroButton.classList.toggle('firing',nitro>0);
     nitroButton.setAttribute('aria-disabled',String(!ready));nitroButton.setAttribute('aria-label',`Nitro, ${count} charges${nitro>0?', boosting':''}`);
