@@ -6,11 +6,13 @@ const page=document.body.dataset.page;
 const local=(zh,en)=>getLanguage()==='zh'?zh:en;
 const sceneNames={bay:['晴湾赛道','Bay Circuit'],citadel:['玉城古道','Jade Citadel'],harbor:['霓虹港湾','Neon Harbor']};
 let renderPage=()=>{};
+let renderHeroToggle=()=>{};
 function renderLanguage(){
   document.documentElement.lang=getLanguage()==='zh'?'zh-CN':'en';
   document.querySelectorAll('[data-zh][data-en]').forEach(node=>{node.textContent=node.dataset[getLanguage()];});
   document.querySelectorAll('[data-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.language===getLanguage())));
   renderPage();
+  renderHeroToggle();
 }
 document.querySelectorAll('[data-language]').forEach(button=>button.addEventListener('click',()=>{setLanguage(button.dataset.language);renderLanguage();}));
 addEventListener('storage',event=>{if(event.key==='apex-language'||event.key===null){setLanguage(event.newValue,{persist:false});renderLanguage();}});
@@ -18,6 +20,30 @@ addEventListener('storage',event=>{if(event.key==='apex-language'||event.key===n
 async function loadNavAccount(){
   const nav=document.querySelector('#accountNav');if(!nav||!onlineClub.signedIn())return;
   try{const profile=await onlineClub.current();if(profile){nav.textContent=profile.player_name;nav.removeAttribute('data-zh');nav.removeAttribute('data-en');}}catch{}
+}
+
+if(page==='home'){
+  const video=document.querySelector('#homePromo');
+  const toggle=document.querySelector('#heroMotionToggle');
+  const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  let ready=false;
+  renderHeroToggle=()=>{
+    const playing=ready&&!video.paused;
+    const label=toggle.querySelector('[data-zh]');
+    label.dataset.zh=playing?'暂停动效':'播放动效';
+    label.dataset.en=playing?'Pause motion':'Play motion';
+    label.textContent=local(label.dataset.zh,label.dataset.en);
+    toggle.querySelector('[aria-hidden]').textContent=playing?'Ⅱ':'▶';
+  };
+  const stop=()=>{video.pause();video.hidden=true;toggle.hidden=true;};
+  const loadPromo=()=>{if(!video.src){video.src='./assets/home-promo.mp4';video.preload='metadata';}};
+  video.addEventListener('loadeddata',()=>{ready=true;if(reduceMotion.matches||navigator.connection?.saveData)return;video.hidden=false;toggle.hidden=false;video.play().catch(stop);});
+  video.addEventListener('play',renderHeroToggle);
+  video.addEventListener('pause',renderHeroToggle);
+  video.addEventListener('error',stop);
+  if(!reduceMotion.matches&&!navigator.connection?.saveData)loadPromo();
+  toggle.addEventListener('click',()=>{if(video.paused)video.play().catch(stop);else video.pause();});
+  reduceMotion.addEventListener('change',()=>{if(reduceMotion.matches)stop();else if(!navigator.connection?.saveData){if(ready){video.hidden=false;toggle.hidden=false;video.play().catch(stop);}else loadPromo();}});
 }
 
 if(page==='leaderboard'){

@@ -18,3 +18,9 @@
 }
 @media(max-width:380px){.site-nav a[href="./garage.html"]{display:none}}
 .page-intro .board-access{margin-top:14px;color:var(--mint);font-size:12px}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center right;pointer-events:none;user-select:none}
+.hero-video[hidden],.hero-motion-toggle[hidden]{display:none}
+.hero-motion-toggle{border:0;background:#08131eb3;color:#e5ebe8;padding:9px 11px;font-size:10px;letter-spacing:.11em;border-radius:3px}
+.hero-motion-toggle:hover{color:var(--gold)}
+@media(max-width:900px){.hero-video{object-position:65% center}}
+@media(max-width:600px){.hero-video{object-position:67% center}}
