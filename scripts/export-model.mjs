@@ -2,7 +2,9 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three/build/three.module.min.js';
 const runtime=new URL('../vendor/three/build/three.module.min.js',import.meta.url).href;
-async function localImport(relative){const source=(await readFile(new URL(relative,import.meta.url),'utf8')).replaceAll("from 'three'","from '"+runtime+"'");return import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));}
+const finishSource=(await readFile(new URL('../vehicle-finish.js',import.meta.url),'utf8')).replaceAll("from 'three'","from '"+runtime+"'");
+const finishModule='data:text/javascript;base64,'+Buffer.from(finishSource).toString('base64');
+async function localImport(relative){const source=(await readFile(new URL(relative,import.meta.url),'utf8')).replaceAll("from 'three'","from '"+runtime+"'");return import('data:text/javascript;base64,'+Buffer.from(source.replaceAll("'./vehicle-finish.js'",JSON.stringify(finishModule))).toString('base64'));}
 const {createArmoredKart}=await localImport('../armored-kart.js');
 const {GLTFExporter}=await localImport('../vendor/three/examples/jsm/exporters/GLTFExporter.js');
 globalThis.FileReader=class{readAsArrayBuffer(blob){blob.arrayBuffer().then(result=>{this.result=result;this.onloadend?.();});}readAsDataURL(blob){blob.arrayBuffer().then(result=>{this.result='data:application/octet-stream;base64,'+Buffer.from(result).toString('base64');this.onloadend?.();});}};

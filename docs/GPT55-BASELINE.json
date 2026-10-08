@@ -1,0 +1,849 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-09-15",
+  "project": "APEX CLUB",
+  "workspace": "/Users/mac/Downloads/antigrav_racer",
+  "buildRevision": "023596e1e060",
+  "threeRevision": "179",
+  "verifiedSourceCommit": "4eab813",
+  "verifiedSourceBranch": "codex/apex-language-toggle",
+  "sourcePR": "https://github.com/MartinDelophy/awesome-gpt-6-astra/pull/91",
+  "upstreamRepository": "https://github.com/MartinDelophy/awesome-gpt-6-astra",
+  "upstreamWorkPath": "works/apex-club",
+  "productionURL": "https://apex-club-racing.vercel.app/",
+  "runtimeCodeChangedByHandoff": false,
+  "verification": {
+    "tests": {
+      "total": 62,
+      "passed": 62,
+      "failed": 0
+    },
+    "staticBuild": "passed",
+    "titanExport": {
+      "passed": true,
+      "bytes": 2544956,
+      "meshes": 308,
+      "materials": 13
+    },
+    "matchesLanguagePRWorktree": true,
+    "matchedSourceFileCount": 44,
+    "performanceProfileRecorded": false,
+    "webgpuImplemented": false
+  },
+  "files": [
+    {
+      "path": "language.css",
+      "bytes": 1710,
+      "sha256": "f1ca811690328d0acb1574a882732f7bc800b009a17e2b23e25a45805e5a23d2"
+    },
+    {
+      "path": "kart-model.js",
+      "bytes": 8218,
+      "sha256": "2387933d80270185c0ecc124bc62bf67a2296826ca12433d93e786d926bb712f"
+    },
+    {
+      "path": "kart-customization.js",
+      "bytes": 3156,
+      "sha256": "c3082da4aebd96acae75805134a68680cef47d3e9e7aa18f05d4ad0d6f1bc2d1"
+    },
+    {
+      "path": "garage-config.js",
+      "bytes": 1382,
+      "sha256": "67f51eb838b9f97397113d24ec8fa611ef81a3435ac0227c8aa93c7a3bd12f21"
+    },
+    {
+      "path": "vehicle-finish.js",
+      "bytes": 4447,
+      "sha256": "2528a2629e2a25237c91008a7aaf7591520fa299b8fea8a877b67eb23aeaf734"
+    },
+    {
+      "path": "keyboard-controls.js",
+      "bytes": 3785,
+      "sha256": "73f894e95c05010411e008fb7bea3055dafed6594ff9618394fba58357f5409f"
+    },
+    {
+      "path": "keyboard-settings.js",
+      "bytes": 3489,
+      "sha256": "5d0f0aacc9c419852f4de6e18ab60afcb578503ebe66b4fedf1f7e80a9468b03"
+    },
+    {
+      "path": "showroom-design.js",
+      "bytes": 6075,
+      "sha256": "5246a873b3ad7e13436761ac0ba1768a2ec654017df6c5a4fabebf4fe29efd41"
+    },
+    {
+      "path": "lobby.css",
+      "bytes": 12755,
+      "sha256": "67c797b0c25863bba5a389e04eda7685c9f1ee73e86e86267c0c42581d8bbc6d"
+    },
+    {
+      "path": "race-experience.js",
+      "bytes": 2471,
+      "sha256": "5c86a17d7cd1a64a4213272eb9544ad48f2259fa1f850af7bebe80e17d16b678"
+    },
+    {
+      "path": "track-layout.js",
+      "bytes": 1038,
+      "sha256": "49502b07b02732b62cd8b5c9ffeb44f97628fc4b51b915b49b48be32e92993b5"
+    },
+    {
+      "path": "localization.js",
+      "bytes": 20076,
+      "sha256": "005352ec030cb3dc399f721ebadaaa4363eb7ec6b5ddab20f985de64f0c11b62"
+    },
+    {
+      "path": "pickup-design.js",
+      "bytes": 2843,
+      "sha256": "42150a43a0a215dd681508ea6e7c0a21745a2ac5f632ed8baa58aea279fed900"
+    },
+    {
+      "path": "citadel-gate.js",
+      "bytes": 4953,
+      "sha256": "47b46f01851423ba2be4050836cbcee32d89537fb1bf311e7e874de780040c43"
+    },
+    {
+      "path": "stunt-model.js",
+      "bytes": 1591,
+      "sha256": "37afc090e0c360898ed60c51d82b8d60f9a0af001a1d0dc527cd18de154b09fd"
+    },
+    {
+      "path": "scene-design.js",
+      "bytes": 4556,
+      "sha256": "b47d4701d6d2a51886a9a9c86a5420e2e1468b460fc8b3bc8bef0c37a2503f05"
+    },
+    {
+      "path": "index.html",
+      "bytes": 17714,
+      "sha256": "4deb38a87ae6adc0ff47e441a332d2223a3bc71c7bb9baf4513fb781c54642fa"
+    },
+    {
+      "path": "style.css",
+      "bytes": 52414,
+      "sha256": "3cc05baf8d87e946c03c1d542274a690b5a7ebfd353ef59d9102939b188a19b5"
+    },
+    {
+      "path": "bootstrap.js",
+      "bytes": 278,
+      "sha256": "9f82ec18999b7cd46d2b1170a2aa243de822024cffde0990ec20dec7798a779b"
+    },
+    {
+      "path": "game.js",
+      "bytes": 68700,
+      "sha256": "edaba6e705f3efaaf9e8f86d4e23d3132b305ccbeb1702de920f88fedd03afdb"
+    },
+    {
+      "path": "driver-studio.js",
+      "bytes": 10193,
+      "sha256": "a5caafa9b199a3f8b230ceac9107501300e2626b4cb0a84a97784623b8e3a774"
+    },
+    {
+      "path": "kart-catalog.js",
+      "bytes": 1610,
+      "sha256": "14f4392fcc9406c0c670267dfd55ec2396a8fe67d213dbedc0dd3aedfe04a0fc"
+    },
+    {
+      "path": "race-rules.js",
+      "bytes": 2569,
+      "sha256": "58ea08894483bd1e2743993fa7a7616a6626162349a35dbdad8cc40749a7d149"
+    },
+    {
+      "path": "driving-model.js",
+      "bytes": 3373,
+      "sha256": "65cdfcf30e8da64e3a6888a4cd03dae521aea5cf731f0892780b2a38de8fcf53"
+    },
+    {
+      "path": "race-effects.js",
+      "bytes": 5245,
+      "sha256": "5cf3aa40f565329920b9f338358cd6bb4022c278147a6b14b3ae68fd05f06cce"
+    },
+    {
+      "path": "race-audio.js",
+      "bytes": 3259,
+      "sha256": "d16bac9fa860ca707f16ba8eb088b4a2128277c7a777050c6b7a9a161e749231"
+    },
+    {
+      "path": "armored-kart.js",
+      "bytes": 12069,
+      "sha256": "cbc3d8fb2c5dacfc75f3616555d6accb96fb0aa511912c6ed7ed3cb23a867ff3"
+    },
+    {
+      "path": "garage.html",
+      "bytes": 6100,
+      "sha256": "c1d6c3454901afd9a9acf0f17d65ccce68aeb6010fb14190af2c384e4f77a074"
+    },
+    {
+      "path": "garage.js",
+      "bytes": 13347,
+      "sha256": "332dc5f53866161bb756b57cbb264e107d58b8e1606ba9f114c87688741a683e"
+    },
+    {
+      "path": "garage.css",
+      "bytes": 11049,
+      "sha256": "5455c0c6fa32fe586135dad663ed5c8da27277e3c425c6663559162bef8f0bee"
+    },
+    {
+      "path": "mobile-controls.js",
+      "bytes": 7733,
+      "sha256": "e275647ceb29ddf6c1c2422074bf2c7b800c176b787e56ac68eebaad84b0e815"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "bytes": 1489,
+      "sha256": "19bf33e4c98cbef35457451f970b6bb807f2aedb6cb002586eda797f8fcc7166"
+    },
+    {
+      "path": "scripts/export-model.mjs",
+      "bytes": 2934,
+      "sha256": "3d48c30f220c0ee0da9c95b0dc713483f65789c10fe176bab503694878143a03"
+    },
+    {
+      "path": "package.json",
+      "bytes": 325,
+      "sha256": "635b5c2cad3c7a4583bb5455a34d9607b7e024aa359729f825893d01d8bf6586"
+    },
+    {
+      "path": "tests/driving-model.test.mjs",
+      "bytes": 5518,
+      "sha256": "a0cf16003c18bb88985ef4f607311870223d48351e7ce8374cc0c3569c2d753d"
+    },
+    {
+      "path": "tests/garage-config.test.mjs",
+      "bytes": 1438,
+      "sha256": "af1153510acc84ac7583a3f1bdb53d7fe4b128a65857f66829091d76749797f2"
+    },
+    {
+      "path": "tests/kart-customization.test.mjs",
+      "bytes": 2862,
+      "sha256": "3c086ac3f9e8771b6eaf1b745df1d5eb0f497d7f2cf477f33aa85ff1b9d8a723"
+    },
+    {
+      "path": "tests/keyboard-controls.test.mjs",
+      "bytes": 5385,
+      "sha256": "841ac565c608beed06f4dbe21f9ed6c41412fc1b05e847544c23220d1a238e21"
+    },
+    {
+      "path": "tests/localization.test.mjs",
+      "bytes": 1763,
+      "sha256": "c2bb9a8ab1e647ac8edb8ef786aa29aa6ed83f34a10a811fe2069ac1006b4428"
+    },
+    {
+      "path": "tests/mobile-controls.test.mjs",
+      "bytes": 4777,
+      "sha256": "ab8ea48b769e4a8aff2078c2c01c91a21d5c6d2512dfa90cccb593f0aa4b340c"
+    },
+    {
+      "path": "tests/race-experience.test.mjs",
+      "bytes": 4680,
+      "sha256": "65dcd07d1029cf6f3dc48ed77b05fa1356788ea16ff792a7fe2c1f05f4007981"
+    },
+    {
+      "path": "tests/race-rules.test.mjs",
+      "bytes": 3652,
+      "sha256": "280cec89589eb0b1e4b3e5b524bdb2af9ddcdf0e464801f1df4928f8073db2cf"
+    },
+    {
+      "path": "tests/scene-switch.test.mjs",
+      "bytes": 4524,
+      "sha256": "705b3f539fa4f760d8d6938953dcaee79e9f6de757c68daf8292cb48a82b223b"
+    },
+    {
+      "path": "tests/stunt-model.test.mjs",
+      "bytes": 1893,
+      "sha256": "622ee57a8778df21f2c0924ff1f53a77cc162f2c08e79fd454046ee61db4e8a6"
+    }
+  ],
+  "vendorFiles": [
+    {
+      "path": "vendor/three/LICENSE",
+      "bytes": 1081,
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "path": "vendor/three/build/three.core.min.js",
+      "bytes": 380374,
+      "sha256": "79f2b4f58d3e99a9948a4d3b7f6d5c2daf705bdefe9fb82ebec715623966551c"
+    },
+    {
+      "path": "vendor/three/build/three.module.min.js",
+      "bytes": 338836,
+      "sha256": "06552c54e4071fbc7305117aafe6765d92c5d2a2a83507d4f05b9bf4f3d4d463"
+    },
+    {
+      "path": "vendor/three/examples/jsm/exporters/GLTFExporter.js",
+      "bytes": 86175,
+      "sha256": "3d91af558632f8ced2ac9bb4230f108c4004ef82966338ae001b9fa84be59550"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/EffectComposer.js",
+      "bytes": 8477,
+      "sha256": "4b8c855f28eed2570bed898adc0ab89c585a8a281ecb6d905c09d00697f9f50a"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/MaskPass.js",
+      "bytes": 4694,
+      "sha256": "7cd08eee9d5d6f5578beaddbdcbe9c384f6873810af27f22ab7db3ceeb127aa3"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/OutputPass.js",
+      "bytes": 4029,
+      "sha256": "f5b81c96e76b6b28b4b3ba8c41c4aeb982b1e03f3d82883242d951b2ab082fa2"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/Pass.js",
+      "bytes": 4218,
+      "sha256": "444b409c235ead986893c472e720da1b779a56985c7d10b279c7944b52bd61c5"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/RenderPass.js",
+      "bytes": 4112,
+      "sha256": "fd91229aacc5830e3984b0f2bdefcf566163ea028f4c1f1ab233fa6665a133ac"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/ShaderPass.js",
+      "bytes": 3228,
+      "sha256": "e2500a5913b26bbf5148ceaae644c6edcff06a18b01494ee37bf856353d2ab9d"
+    },
+    {
+      "path": "vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js",
+      "bytes": 14388,
+      "sha256": "d92742959879b461f25348b2abddc7ca0d48527e7718340bcfa29fa771e2799a"
+    },
+    {
+      "path": "vendor/three/examples/jsm/shaders/CopyShader.js",
+      "bytes": 729,
+      "sha256": "a33057d5ac91c43304c186ac0e8816e62bb2ed471d3a00ff3018dfd5c0389718"
+    },
+    {
+      "path": "vendor/three/examples/jsm/shaders/LuminosityHighPassShader.js",
+      "bytes": 1291,
+      "sha256": "5044f780b6e6cf863947f64c36fe1587132f7fbe395ada863cd1e5f0388dcf1e"
+    },
+    {
+      "path": "vendor/three/examples/jsm/shaders/OutputShader.js",
+      "bytes": 1876,
+      "sha256": "353479f77a8d7e2629d49ccac9fc2f5dbfdda5442e0adf867b00377a2fcb0cb2"
+    }
+  ],
+  "functions": {
+    "kart-model.js": [
+      {
+        "name": "makeCraft",
+        "line": 4
+      },
+      {
+        "name": "configureKart",
+        "line": 90
+      }
+    ],
+    "kart-customization.js": [
+      {
+        "name": "removeLivery",
+        "line": 4
+      },
+      {
+        "name": "applyCustomization",
+        "line": 5
+      },
+      {
+        "name": "animateExhaust",
+        "line": 28
+      }
+    ],
+    "garage-config.js": [
+      {
+        "name": "sanitizeCustomization",
+        "line": 7
+      },
+      {
+        "name": "readGarage",
+        "line": 8
+      },
+      {
+        "name": "saveCar",
+        "line": 9
+      }
+    ],
+    "vehicle-finish.js": [
+      {
+        "name": "vehicleMaterials",
+        "line": 4
+      },
+      {
+        "name": "bevelGeometry",
+        "line": 14
+      },
+      {
+        "name": "tireGeometry",
+        "line": 19
+      },
+      {
+        "name": "sportWheel",
+        "line": 23
+      },
+      {
+        "name": "createVehicleEnvironment",
+        "line": 46
+      }
+    ],
+    "keyboard-controls.js": [
+      {
+        "name": "keyLabel",
+        "line": 7
+      },
+      {
+        "name": "supportedKey",
+        "line": 8
+      },
+      {
+        "name": "loadBindings",
+        "line": 9
+      },
+      {
+        "name": "assignBinding",
+        "line": 15
+      },
+      {
+        "name": "resolveKey",
+        "line": 20
+      },
+      {
+        "name": "createKeyboardState",
+        "line": 25
+      },
+      {
+        "name": "formatKeys",
+        "line": 36
+      }
+    ],
+    "keyboard-settings.js": [
+      {
+        "name": "mountKeyboardSettings",
+        "line": 3
+      }
+    ],
+    "showroom-design.js": [
+      {
+        "name": "createClubShowroom",
+        "line": 3
+      }
+    ],
+    "race-experience.js": [
+      {
+        "name": "createLesson",
+        "line": 2
+      },
+      {
+        "name": "stepLesson",
+        "line": 3
+      },
+      {
+        "name": "medals",
+        "line": 11
+      },
+      {
+        "name": "createLapRecord",
+        "line": 12
+      },
+      {
+        "name": "recordLap",
+        "line": 13
+      },
+      {
+        "name": "ghostPose",
+        "line": 22
+      },
+      {
+        "name": "empTargets",
+        "line": 28
+      },
+      {
+        "name": "assistedInput",
+        "line": 29
+      }
+    ],
+    "track-layout.js": [
+      {
+        "name": "circuitPoints",
+        "line": 2
+      },
+      {
+        "name": "roadHalfWidth",
+        "line": 6
+      }
+    ],
+    "localization.js": [
+      {
+        "name": "getLanguage",
+        "line": 24
+      },
+      {
+        "name": "setLanguage",
+        "line": 25
+      },
+      {
+        "name": "translateChinese",
+        "line": 27
+      },
+      {
+        "name": "tr",
+        "line": 30
+      },
+      {
+        "name": "englishSource",
+        "line": 38
+      },
+      {
+        "name": "setupLanguage",
+        "line": 39
+      }
+    ],
+    "pickup-design.js": [
+      {
+        "name": "createPickupFactory",
+        "line": 3
+      }
+    ],
+    "citadel-gate.js": [
+      {
+        "name": "masonry",
+        "line": 4
+      },
+      {
+        "name": "createGateBuilder",
+        "line": 19
+      }
+    ],
+    "stunt-model.js": [
+      {
+        "name": "rampHeight",
+        "line": 3
+      },
+      {
+        "name": "createStunts",
+        "line": 7
+      },
+      {
+        "name": "offerDrift",
+        "line": 8
+      },
+      {
+        "name": "stepStunts",
+        "line": 9
+      },
+      {
+        "name": "boostOpportunity",
+        "line": 24
+      },
+      {
+        "name": "fireStunt",
+        "line": 25
+      }
+    ],
+    "scene-design.js": [
+      {
+        "name": "createCitadel",
+        "line": 6
+      }
+    ],
+    "game.js": [
+      {
+        "name": "ensureComposer",
+        "line": 44
+      },
+      {
+        "name": "toggleControls",
+        "line": 62
+      },
+      {
+        "name": "updateKeyboardDescription",
+        "line": 69
+      },
+      {
+        "name": "setRouteGeometry",
+        "line": 108
+      },
+      {
+        "name": "trackFrame",
+        "line": 116
+      },
+      {
+        "name": "createTrack",
+        "line": 125
+      },
+      {
+        "name": "buildRoad",
+        "line": 167
+      },
+      {
+        "name": "animateCraft",
+        "line": 224
+      },
+      {
+        "name": "updateSpeedFX",
+        "line": 259
+      },
+      {
+        "name": "ping",
+        "line": 272
+      },
+      {
+        "name": "colorKart",
+        "line": 273
+      },
+      {
+        "name": "setCraft",
+        "line": 274
+      },
+      {
+        "name": "reset",
+        "line": 287
+      },
+      {
+        "name": "updatePlayer",
+        "line": 306
+      },
+      {
+        "name": "updateAI",
+        "line": 362
+      },
+      {
+        "name": "density",
+        "line": 385
+      },
+      {
+        "name": "updateCombat",
+        "line": 388
+      },
+      {
+        "name": "updatePickups",
+        "line": 402
+      },
+      {
+        "name": "updateCamera",
+        "line": 418
+      },
+      {
+        "name": "updateHUD",
+        "line": 437
+      },
+      {
+        "name": "signTexture",
+        "line": 457
+      },
+      {
+        "name": "buildDecor",
+        "line": 465
+      },
+      {
+        "name": "cacheRoute",
+        "line": 514
+      },
+      {
+        "name": "activateRoute",
+        "line": 515
+      },
+      {
+        "name": "selectScene",
+        "line": 531
+      },
+      {
+        "name": "updateRaceHUD",
+        "line": 569
+      },
+      {
+        "name": "finishRace",
+        "line": 600
+      },
+      {
+        "name": "formatTime",
+        "line": 609
+      },
+      {
+        "name": "returnLobby",
+        "line": 610
+      },
+      {
+        "name": "loop",
+        "line": 616
+      },
+      {
+        "name": "resetExperience",
+        "line": 649
+      },
+      {
+        "name": "startLesson",
+        "line": 656
+      },
+      {
+        "name": "placeLesson",
+        "line": 661
+      },
+      {
+        "name": "updateLesson",
+        "line": 662
+      },
+      {
+        "name": "updateExperience",
+        "line": 674
+      },
+      {
+        "name": "finishExperience",
+        "line": 692
+      },
+      {
+        "name": "setupExperience",
+        "line": 697
+      },
+      {
+        "name": "beginLaunch",
+        "line": 709
+      },
+      {
+        "name": "updateLobbyRecord",
+        "line": 714
+      },
+      {
+        "name": "snapshot",
+        "line": 719
+      },
+      {
+        "name": "updateScenePreview",
+        "line": 728
+      },
+      {
+        "name": "setupClubLobby",
+        "line": 734
+      },
+      {
+        "name": "showDriver",
+        "line": 750
+      },
+      {
+        "name": "saveSettings",
+        "line": 753
+      },
+      {
+        "name": "applyQuality",
+        "line": 754
+      }
+    ],
+    "driver-studio.js": [
+      {
+        "name": "mountDriverStudio",
+        "line": 4
+      }
+    ],
+    "race-rules.js": [
+      {
+        "name": "createRace",
+        "line": 5
+      },
+      {
+        "name": "standings",
+        "line": 16
+      },
+      {
+        "name": "advanceRacer",
+        "line": 25
+      },
+      {
+        "name": "teamScores",
+        "line": 37
+      },
+      {
+        "name": "shouldFinish",
+        "line": 45
+      },
+      {
+        "name": "updateDrift",
+        "line": 50
+      }
+    ],
+    "driving-model.js": [
+      {
+        "name": "stepHandling",
+        "line": 5
+      },
+      {
+        "name": "projectTrack",
+        "line": 31
+      },
+      {
+        "name": "resolveTrackContact",
+        "line": 44
+      },
+      {
+        "name": "progressDelta",
+        "line": 59
+      }
+    ],
+    "race-effects.js": [
+      {
+        "name": "createRaceEffects",
+        "line": 3
+      }
+    ],
+    "race-audio.js": [
+      {
+        "name": "createRaceAudio",
+        "line": 2
+      }
+    ],
+    "armored-kart.js": [
+      {
+        "name": "createArmoredKart",
+        "line": 6
+      }
+    ],
+    "garage.js": [
+      {
+        "name": "updateLinks",
+        "line": 21
+      },
+      {
+        "name": "refreshCar",
+        "line": 22
+      },
+      {
+        "name": "persist",
+        "line": 32
+      },
+      {
+        "name": "selectCar",
+        "line": 33
+      },
+      {
+        "name": "frame",
+        "line": 71
+      },
+      {
+        "name": "resize",
+        "line": 80
+      }
+    ],
+    "mobile-controls.js": [
+      {
+        "name": "isHandheldDevice",
+        "line": 2
+      },
+      {
+        "name": "screenTilt",
+        "line": 6
+      },
+      {
+        "name": "tiltSteering",
+        "line": 12
+      },
+      {
+        "name": "createMobileControls",
+        "line": 15
+      }
+    ]
+  },
+  "notes": [
+    "Root git HEAD is old and does not represent current runtime. Do not reset the workspace.",
+    "Hash differences after handoff may reflect new user edits; inspect rather than overwrite.",
+    "Function lines reference this source snapshot only.",
+    "GPU draw calls are not the GLB exported mesh count."
+  ]
+}

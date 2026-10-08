@@ -1,8 +1,9 @@
 import {mkdir,copyFile,cp,readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-const files=['index.html','style.css','bootstrap.js','game.js','driver-studio.js','kart-catalog.js','race-rules.js','driving-model.js','race-effects.js','race-audio.js','armored-kart.js','garage.html','garage.js','garage.css','mobile-controls.js'];
+import {dirname} from 'node:path';
+const files=['harbor-scene.js','language.css','kart-model.js','kart-customization.js','garage-config.js','vehicle-finish.js','keyboard-controls.js','keyboard-settings.js','showroom-design.js','lobby.css','race-experience.js','track-layout.js','localization.js','pickup-design.js','citadel-gate.js','stunt-model.js','scene-design.js','index.html','style.css','bootstrap.js','game.js','driver-studio.js','kart-catalog.js','race-rules.js','driving-model.js','race-effects.js','race-audio.js','armored-kart.js','garage.html','garage.js','garage.css','mobile-controls.js','runtime/input-frame.js','runtime/performance.js','runtime/race-ui.js','runtime/player-simulation.js','runtime/gate-sprint.js','runtime/race-presenter.js','diagnostics/gate-replay.js'];
 await mkdir('dist',{recursive:true});
-for(const file of files)await copyFile(file,`dist/${file}`);
+for(const file of files){await mkdir(dirname(`dist/${file}`),{recursive:true});await copyFile(file,`dist/${file}`);}
 await cp('vendor','dist/vendor',{recursive:true});
 // Content-based release revision invalidates every local module after deployment.
 const hash=createHash('sha256');for(const file of files)hash.update(await readFile(file));const version=hash.digest('hex').slice(0,12);

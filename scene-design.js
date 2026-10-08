@@ -1,0 +1,59 @@
+import * as THREE from 'three';
+import {createGateBuilder} from './citadel-gate.js';
+
+export {createClubShowroom as createShowroom} from './showroom-design.js';
+
+export function createCitadel(trackFrame,trackLength,halfWidth=()=>38){
+ const group=new THREE.Group();group.name='Jade Citadel';
+ const buildGate=createGateBuilder();
+ const stone=new THREE.MeshStandardMaterial({color:0x687474,roughness:.95});
+ const cap=new THREE.MeshStandardMaterial({color:0xa4a18c,roughness:.9});
+ const red=new THREE.MeshStandardMaterial({color:0x8e352a,roughness:.65});
+ const roof=new THREE.MeshStandardMaterial({color:0x263e3d,metalness:.25,roughness:.55});
+ const gold=new THREE.MeshStandardMaterial({color:0xd6a55c,metalness:.5,roughness:.4});
+ const glow=new THREE.MeshStandardMaterial({color:0xf2451c,emissive:0xff5623,emissiveIntensity:.7,roughness:.6});
+ const cube=new THREE.BoxGeometry(1,1,1),pose=new THREE.Object3D();
+ const walls=new THREE.InstancedMesh(cube,stone,640),merlons=new THREE.InstancedMesh(cube,cap,1280),courses=new THREE.InstancedMesh(cube,cap,1920);
+ group.add(walls,merlons,courses);let wi=0,mi=0,ci=0;
+ const orient=new THREE.Matrix4();
+ for(let i=0;i<320;i++){
+  const f=trackFrame(i/320);orient.makeBasis(f.side.clone().negate(),f.normal,f.tan);pose.quaternion.setFromRotationMatrix(orient);
+  for(const side of [-1,1]){
+   pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.normal,-20);pose.scale.set(10,50,trackLength/320+2);pose.updateMatrix();walls.setMatrixAt(wi++,pose.matrix);
+   for(const offset of [-.25,.25]){pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.tan,offset*trackLength/320).addScaledVector(f.normal,9);pose.scale.set(10,8,trackLength/320*.23);pose.updateMatrix();merlons.setMatrixAt(mi++,pose.matrix);}
+   for(const y of [-34,-18,-2]){pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.normal,y);pose.scale.set(10.3,.6,trackLength/320+2);pose.updateMatrix();courses.setMatrixAt(ci++,pose.matrix);}
+  }
+ }
+ const box=(parent,mat,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(cube,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;};
+ // Four gently upturned eaves, built as a real roof mesh rather than a flat decal.
+ function eaves(parent,width,y){
+  const v=[],idx=[];for(let side=0;side<4;side++)for(let i=0;i<9;i++)for(let j=0;j<2;j++){
+   const u=i/8,a=side*Math.PI/2,x=(j?1:-1)*width*u,z=width*u;
+   v.push(x*Math.cos(a)-z*Math.sin(a),y+8*(1-u)**2+2*u**6,x*Math.sin(a)+z*Math.cos(a));
+  }
+  for(let s=0;s<4;s++)for(let i=0;i<8;i++){const a=s*18+i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,roof);m.material.side=THREE.DoubleSide;parent.add(m);
+ }
+ for(let i=0;i<12;i++){
+  const f=trackFrame((i+.3)/12),tower=new THREE.Group();tower.position.copy(f.p);tower.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(f.side.clone().negate(),f.normal,f.tan));group.add(tower);
+  for(const x of [-53,53]){
+   box(tower,stone,x,9,0,20,42,30);box(tower,cap,x,31,0,23,3,33);
+   const pavilion=new THREE.Group();pavilion.position.set(x,32,0);tower.add(pavilion);
+   for(const a of [-9,9])for(const b of [-12,12])box(pavilion,red,a,10,b,2,20,2);
+   box(pavilion,red,0,7,0,16,12,19);box(pavilion,gold,0,13,10,13,2,.4);
+   eaves(pavilion,19,19);eaves(pavilion,14,28);
+  }
+  if(i%3===0)buildGate(tower);
+  for(const x of [-33,33]){
+   box(tower,red,x,14,12,1,28,1);box(tower,gold,x,27,12,9,.7,1);
+   const lantern=new THREE.Mesh(new THREE.SphereGeometry(3.2,10,8),glow);lantern.scale.y=1.35;lantern.position.set(x+(x<0?3:-3),23,12);tower.add(lantern);
+   box(tower,gold,lantern.position.x,17,12,.3,5,.3);
+   if(i%3===0){const light=new THREE.PointLight(0xffa348,75,55,2);light.position.copy(lantern.position);tower.add(light);}
+  }
+ }
+ const mountainMat=new THREE.MeshStandardMaterial({color:0x4f697f,roughness:1,flatShading:false});
+ const mountainGeo=new THREE.IcosahedronGeometry(1,2);
+ for(let i=0;i<32;i++){const a=i/32*Math.PI*2,m=new THREE.Mesh(mountainGeo,mountainMat);m.position.set(Math.cos(a)*2300,-150,Math.sin(a)*2300);m.rotation.y=i*1.7;m.scale.set(350+i%4*110,280+i%5*95,320);group.add(m);}
+ const land=new THREE.Mesh(new THREE.PlaneGeometry(10000,10000),new THREE.MeshStandardMaterial({color:0x626c59,roughness:1}));land.rotation.x=-Math.PI/2;land.position.y=-170;group.add(land);
+ return group;
+}

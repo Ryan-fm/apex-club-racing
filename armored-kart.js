@@ -1,28 +1,27 @@
 import * as THREE from 'three';
+import {vehicleMaterials,bevelGeometry,tireGeometry} from './vehicle-finish.js';
 
 // Original, fully modelled off-road kart inspired by the supplied heavy-buggy reference.
 // +Z is forward. Ground contact is y=-3.4, matching the race chassis convention.
 export function createArmoredKart(teamColor=0x44baff,{driver=true}={}){
   const model=new THREE.Group();model.name='TITAN Armored Buggy';
-  const paint=new THREE.MeshPhysicalMaterial({color:0x29bfc5,metalness:.42,roughness:.27,clearcoat:1,clearcoatRoughness:.2});
-  const edge=new THREE.MeshStandardMaterial({color:0x173c46,metalness:.65,roughness:.32});
-  const dark=new THREE.MeshStandardMaterial({color:0x172027,metalness:.45,roughness:.42});
-  const rubber=new THREE.MeshStandardMaterial({color:0x202326,roughness:.94});
-  const treadMat=new THREE.MeshStandardMaterial({color:0x303437,roughness:.89});
-  const alloy=new THREE.MeshStandardMaterial({color:0xc3d0d3,metalness:.8,roughness:.24});
-  const seatMat=new THREE.MeshStandardMaterial({color:0x423b36,roughness:.82});
+  const surfaces=vehicleMaterials(0x1497a0),paint=surfaces.paint;
+  // TITAN retains its turquoise armor; team identity is carried by the trim and driver.
+  delete paint.userData.craftColor;
+  const edge=new THREE.MeshStandardMaterial({color:0x13303c,metalness:.72,roughness:.3});
+  const dark=surfaces.dark,rubber=surfaces.rubber,alloy=surfaces.metal,seatMat=surfaces.seat;
+  const treadMat=new THREE.MeshStandardMaterial({color:0x1b2024,roughness:.92});
   const red=new THREE.MeshStandardMaterial({color:0xca3c32,metalness:.3,roughness:.35});
   const trim=new THREE.MeshStandardMaterial({color:teamColor,metalness:.35,roughness:.35});trim.userData.craftColor=true;
-  const glass=new THREE.MeshPhysicalMaterial({color:0x163748,metalness:.75,roughness:.1,clearcoat:1});
-  const lamp=new THREE.MeshStandardMaterial({color:0x80b2d4,emissive:0x3387bb,emissiveIntensity:.25,metalness:.3,roughness:.17});
+  const glass=surfaces.glass;
+  const lamp=surfaces.lens;
   const amber=new THREE.MeshStandardMaterial({color:0xffb041,emissive:0xff861b,emissiveIntensity:.45});
   const wheels=[],engines=[],parts={};
   function group(name){const g=new THREE.Group();g.name=name;model.add(g);parts[name]=g;return g;}
   const chassis=group('Chassis & skid plate'),body=group('Bevelled armor'),suspension=group('Independent suspension'),cockpit=group('Cockpit'),engine=group('Rear engine & exhaust'),details=group('Lights & hardware');
   function mesh(parent,geo,mat,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
   function box(parent,mat,x,y,z,w,h,d,bevel=.12){
-    const shape=new THREE.Shape();shape.moveTo(-w/2,-h/2);shape.lineTo(w/2,-h/2);shape.lineTo(w/2,h/2);shape.lineTo(-w/2,h/2);shape.closePath();
-    const g=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:bevel>0,bevelSegments:2,steps:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:1});g.translate(0,0,-d/2);return mesh(parent,g,mat,x,y,z);
+    return mesh(parent,bevelGeometry(w,h,d,bevel),mat,x,y,z);
   }
   function ball(parent,mat,x,y,z,a,b,c){const m=mesh(parent,new THREE.SphereGeometry(1,20,12),mat,x,y,z);m.scale.set(a,b,c);return m;}
   function tube(parent,mat,pts,r=.16){const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p)));return mesh(parent,new THREE.TubeGeometry(curve,Math.min(144,Math.max(12,pts.length*7)),r,8,false),mat);}
@@ -47,13 +46,22 @@ export function createArmoredKart(teamColor=0x44baff,{driver=true}={}){
     for(let j=0;j<5;j++){const vent=box(body,dark,s*4.69,2.7,2.5+j*.52,.12,.46,.25,.025);vent.rotation.x=.22;}
     box(chassis,edge,s*4.7,-.1,-1.7,1,.6,5.8,.12);
   }
+  // Separate satin inserts, panel shut lines and dark lower armor add depth under broad highlights.
+  for(const side of [-1,1]){
+   box(body,dark,side*4.85,3.91,-5.25,2.55,.14,4.2,.05);
+   box(body,paint,side*4.85,4.03,-5.2,2.15,.15,3.7,.05);
+   for(let i=0;i<3;i++)box(details,dark,side*4.85,4.145,-4.3-i*.66,1.7,.055,.19,.015);
+   box(body,edge,side*4.12,3.6,4.8,.11,.06,4.6,.015);
+   box(details,alloy,side*3.5,3.65,6.6,.15,.055,.72,.02);
+  }
   // Front grille, bumper bars, lamps with separate bezel / lens / housing.
   box(body,edge,0,.7,7.4,4,3.1,1.1,.25);
   for(const x of [-1.1,0,1.1])box(details,alloy,x,.75,8.35,.18,2.25,.13,.025);
   tube(chassis,alloy,[[-5.1,-1.3,7.4],[-4.8,-1.5,9],[0,-1.5,9.6],[4.8,-1.5,9],[5.1,-1.3,7.4]],.24);
   for(const s of [-1,1]){
     disc(details,dark,s*3.35,1.1,7.9,1.2,.7);ring(details,alloy,s*3.35,1.1,8.3,1.02,.17);disc(details,lamp,s*3.35,1.1,8.4,.84,.18);
-    ball(details,new THREE.MeshBasicMaterial({color:0xf4ffff}),s*3.55,1.36,8.53,.22,.3,.08);
+    ring(details,dark,s*3.35,1.1,8.54,.57,.09);ball(details,lamp,s*3.35,1.1,8.59,.46,.46,.19);
+    ball(details,new THREE.MeshBasicMaterial({color:0xf4ffff}),s*3.5,1.3,8.76,.09,.12,.025);
     disc(details,dark,s*3.8,-1.1,9.15,.7,.5);ring(details,alloy,s*3.8,-1.1,9.45,.59,.12);disc(details,amber,s*3.8,-1.1,9.51,.43,.12);
     disc(details,amber,s*2.6,3.48,8.13,.22,.12);
   }
@@ -93,17 +101,23 @@ export function createArmoredKart(teamColor=0x44baff,{driver=true}={}){
     const flameMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,uniforms:{tint:{value:new THREE.Color(0x43cfff)},time:{value:0},power:{value:0}},vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec2 vUv;uniform vec3 tint;void main(){float a=pow(1.-vUv.y,1.7);gl_FragColor=vec4(mix(tint,vec3(1.),pow(1.-vUv.y,4.)),a*.8);}`});
     const flame=mesh(model,new THREE.ConeGeometry(.43,1,12,3,true),flameMat,s*2.8,.1,-9);flame.rotation.x=-Math.PI/2;flame.userData.nozzleZ=-8.8;engines.push(flame);
   }
+  box(engine,edge,0,-1.2,-7.35,5.4,.45,2.6,.1);
+  for(const x of [-2,-1,0,1,2])box(engine,dark,x,-.83,-8.15,.12,.72,1.7,.03);
+  for(const side of [-1,1]){disc(engine,dark,side*2.8,.1,-8.72,.3,.06);ring(engine,alloy,side*2.8,.1,-8.78,.39,.06);}
+  for(let i=0;i<5;i++)box(cockpit,edge,0,4+i*.32,-2.82,2.2,.045,.035,.008);
   // Four independent, steerable wheel assemblies. Tread blocks share one draw call per wheel.
   for(const s of [-1,1])for(const z of [-5.55,5.3]){
     const x=s*7.2,hub=new THREE.Group(),spin=new THREE.Group();hub.name=`${z>0?'Front':'Rear'} ${s>0?'left':'right'} wheel`;hub.position.set(x,0,z);hub.add(spin);model.add(hub);
-    const tire=mesh(spin,new THREE.CylinderGeometry(3.05,3.05,2.8,40,1),rubber);tire.rotation.z=Math.PI/2;
+    mesh(spin,tireGeometry(3.02,3),rubber);
     for(const face of [-1,1]){
-      ring(spin,rubber,face*1.38,0,0,2.42,.55,'x');
-      disc(spin,dark,face*1.57,0,0,1.94,.12,'x');ring(spin,alloy,face*1.65,0,0,1.94,.14,'x');ring(spin,paint,face*1.68,0,0,1.69,.14,'x');
+      ring(spin,rubber,face*1.44,0,0,2.56,.04,'x');
+      disc(spin,alloy,face*1.13,0,0,1.74,.11,'x');
+      box(hub,red,face*1.3,.2,1.33,.26,1.1,.44,.07);
+      ring(spin,dark,face*1.52,0,0,1.82,.16,'x');ring(spin,alloy,face*1.65,0,0,1.94,.14,'x');ring(spin,paint,face*1.68,0,0,1.69,.14,'x');
       disc(spin,dark,face*1.73,0,0,.62,.19,'x');disc(spin,alloy,face*1.85,0,0,.32,.12,'x');
       for(let i=0;i<6;i++){const a=i*Math.PI/3;rod(spin,alloy,[face*1.73,Math.cos(a)*.53,Math.sin(a)*.53],[face*1.73,Math.cos(a+.19)*1.62,Math.sin(a+.19)*1.62],.15);}
     }
-    const tread=new THREE.InstancedMesh(new THREE.BoxGeometry(.82,.19,.77),treadMat,72),pose=new THREE.Object3D();
+    const tread=new THREE.InstancedMesh(bevelGeometry(.82,.19,.77,.035),treadMat,72),pose=new THREE.Object3D();
     for(let i=0;i<24;i++)for(let j=0;j<3;j++){
       const a=(i+(j%2)*.5)/24*Math.PI*2;pose.position.set((j-1)*.91,Math.cos(a)*3.09,Math.sin(a)*3.09);pose.rotation.set(a,0,(j-1)*.16);pose.updateMatrix();tread.setMatrixAt(i*3+j,pose.matrix);
     }tread.castShadow=true;spin.add(tread);
@@ -118,8 +132,9 @@ export function createArmoredKart(teamColor=0x44baff,{driver=true}={}){
   const bolts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.10,.10,.12,6),alloy,24),pose=new THREE.Object3D();
   for(let i=0;i<24;i++){const s=i%2?1:-1;pose.position.set(s*(i<12?4.2:5.3),i<12?3.65:3.87,i<12?2.3+Math.floor(i/2)*.9:-3.2-Math.floor((i-12)/2)*.72);pose.updateMatrix();bolts.setMatrixAt(i,pose.matrix);}details.add(bolts);
   if(driver){
-    const occupant=group('Race driver');ball(occupant,trim,0,4.35,-1.65,1,1.25,.8);ball(occupant,alloy,0,6.25,-1.4,1.22,1.25,1.2);ball(occupant,glass,0,6.32,-.44,1.03,.48,.4);
-    for(const s of [-1,1])rod(occupant,dark,[s*.85,4.65,-1.1],[s*.74,4.35,-.1],.27);
+    const occupant=group('Race driver');ball(occupant,trim,0,4.35,-1.65,1,1.25,.8);ball(occupant,new THREE.MeshPhysicalMaterial({color:0xeee8d8,metalness:.08,roughness:.28,clearcoat:.8}),0,6.25,-1.4,1.22,1.25,1.2);ball(occupant,glass,0,6.32,-.44,1.03,.48,.4);
+    for(const s of [-1,1]){rod(occupant,trim,[s*.85,4.65,-1.1],[s*.74,4.35,-.1],.3);ball(occupant,dark,s*.74,4.35,-.1,.34,.3,.35);box(occupant,alloy,s*.37,4.45,-.86,.16,1.5,.12,.03);disc(occupant,alloy,s*1.18,6.25,-1.3,.2,.09,'x');}
+    const stripe=[];for(let i=0;i<=12;i++){const a=-1.1+i/12*2.2;stripe.push([0,6.25+Math.cos(a)*1.26,-1.4+Math.sin(a)*1.21]);}tube(occupant,trim,stripe,.09);
   }
   model.userData={wheels,engines,parts,fx:{wheelX:7.2,wheelZ:-5.55,nozzleX:2.8,nozzleY:.1,nozzleZ:-9}};
   return model;

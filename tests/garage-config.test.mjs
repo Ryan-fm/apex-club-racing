@@ -1,0 +1,7 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readGarage,saveCar,sanitizeCustomization,DEFAULT_CUSTOMIZATION,GARAGE_KEY} from '../garage-config.js';
+function storage(){const values=new Map();return {getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};}
+test('modifications persist separately for each car and restore independently',()=>{const s=storage();assert(saveCar(s,0,{paint:'#123456',exhaust:'pulse',livery:'stripes'}));assert(saveCar(s,4,{paint:'#abcdef',finish:'chrome'}));let state=readGarage(s);assert.equal(state.cars[0].paint,'#123456');assert.equal(state.cars[4].finish,'chrome');assert(saveCar(s,0,DEFAULT_CUSTOMIZATION));state=readGarage(s);assert.equal(state.cars[0].paint,null);assert.equal(state.cars[4].paint,'#abcdef');});
+test('invalid storage and unsupported customization values fall back safely',()=>{const s=storage();s.setItem(GARAGE_KEY,'broken');assert.deepEqual(readGarage(s),{cars:{}});assert.deepEqual(sanitizeCustomization({paint:'url(bad)',finish:'fast',livery:'bad',accent:42,flame:'#fff',exhaust:'hack'}),DEFAULT_CUSTOMIZATION);assert(!saveCar(s,7,{}));assert(!saveCar(s,-1,{}));});
+test('storage failures are reported instead of claiming a saved modification',()=>{const s={getItem(){throw Error('blocked');},setItem(){throw Error('full');}};assert.deepEqual(readGarage(s),{cars:{}});assert.equal(saveCar(s,2,{paint:'#abcdef'}),false);});
