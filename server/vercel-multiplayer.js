@@ -83,7 +83,7 @@ export function createDistributedServer({redisUrl=process.env.REDIS_URL||process
  });
  return {server,wss,store,get failed(){return failed;},async close(){clearInterval(timer);clearInterval(heartbeat);for(const entry of clients.values())entry.ws.terminate();for(const task of pending.values()){clearTimeout(task.timer);task.reject(Error('Server closed'));}pending.clear();await new Promise(resolve=>wss.close(resolve));await new Promise(resolve=>server.close(resolve));redis?.disconnect();subscriber?.disconnect();}};
 }
-export function originAllowed(origin){
+export function originAllowed(origin,additionalOrigins=process.env.ROOM_ALLOWED_ORIGINS||''){
  if(!origin)return true;
- try{const url=new URL(origin);if(url.protocol!=='https:')return false;return url.hostname==='apex-club-racing.vercel.app'||/^apex-club-racing-[a-z0-9-]+-ryan-1d85\.vercel\.app$/.test(url.hostname);}catch{return false;}
+ try{const url=new URL(origin);if(url.protocol!=='https:'||url.origin!==origin)return false;const extra=additionalOrigins.split(',').map(value=>value.trim()).filter(Boolean);return extra.includes(url.origin)||url.hostname==='apex-club-racing.vercel.app'||/^apex-club-racing-[a-z0-9-]+-ryan-1d85\.vercel\.app$/.test(url.hostname);}catch{return false;}
 }

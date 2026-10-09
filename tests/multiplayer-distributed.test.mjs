@@ -11,6 +11,11 @@ test('production multiplayer selects allowed project origins only',()=>{
  assert(originAllowed('https://apex-club-racing.vercel.app'));assert(originAllowed('https://apex-club-racing-git-main-ryan-1d85.vercel.app'));
  assert(!originAllowed('https://evil.example'));assert(!originAllowed('http://apex-club-racing.vercel.app'));assert(!originAllowed('https://apex-club-racing.vercel.app.evil.example'));
 });
+test('additional embedding origins require exact configured HTTPS origins',()=>{
+ const configured='https://embed.example, https://preview.example';
+ assert(originAllowed('https://embed.example',configured));assert(originAllowed('https://preview.example',configured));
+ for(const origin of ['https://embed.example.evil.example','http://embed.example','https://embed.example/path','https://other.example'])assert(!originAllowed(origin,configured));
+});
 test('four players share one race across two independent Vercel gateways and survive gateway replacement',{skip:!process.env.REDIS_TEST_URL},async()=>{
  const prefix=`apex:test:${randomUUID()}`,url=process.env.REDIS_TEST_URL,apps=[],clients=[];
  async function gateway(){const app=createDistributedServer({redisUrl:url,prefix,allowOrigin:()=>true});apps.push(app);await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));return `ws://127.0.0.1:${app.server.address().port}/api/rooms`;}
