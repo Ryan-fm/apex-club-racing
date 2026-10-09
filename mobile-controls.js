@@ -12,6 +12,15 @@ export function screenTilt(beta,gamma,angle=0){
 export function tiltSteering(value,center=0){
   const d=value-center;return Math.sign(d)*Math.min(1,Math.max(0,Math.abs(d)-3)/24);
 }
+// Embedded Android pages can retain a portrait viewport after the device rotates.
+export function isLandscapeDisplay(win=globalThis.window,display=globalThis.screen,media=false){
+  const type=display?.orientation?.type;
+  if(type?.startsWith('landscape'))return true;
+  if(Number.isFinite(win?.innerWidth)&&Number.isFinite(win?.innerHeight)&&win.innerWidth>win.innerHeight)return true;
+  if(media)return true;
+  // Older Android WebViews expose only the legacy rotation angle.
+  return !type&&Math.abs(win?.orientation??display?.orientation?.angle)===90;
+}
 export function createMobileControls({action,active,pause,handheld=isHandheldDevice()}){
   document.documentElement?.classList.toggle('handheld-input',handheld);
   if(!handheld)return {clear(){},update(){},down:()=>false,steer:()=>0,prepareLaunch:go=>go()};
@@ -25,13 +34,22 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
   const requestLandscape=async()=>{
     try{await document.documentElement.requestFullscreen?.();}catch{}
     try{await screen.orientation?.lock?.('landscape');}catch{}
+    resumeLaunch();
   };
   gate.querySelector('.primary').addEventListener('click',requestLandscape);
   gate.querySelector('.secondary').addEventListener('click',closeGate);
   gate.addEventListener('keydown',e=>{if(e.key==='Escape')closeGate();if(e.key==='Tab'){const buttons=[...gate.querySelectorAll('button')];e.preventDefault();(document.activeElement===buttons[0]?buttons[1]:buttons[0]).focus();}});
-  landscape.addEventListener('change',()=>{if(landscape.matches&&pendingLaunch){const go=pendingLaunch;pendingLaunch=null;gate.hidden=true;go();}});
+  const resumeLaunch=()=>{
+    if(!pendingLaunch||!isLandscapeDisplay(window,screen,landscape.matches))return;
+    const go=pendingLaunch;pendingLaunch=null;gate.hidden=true;go();
+  };
+  landscape.addEventListener('change',resumeLaunch);
+  for(const event of ['resize','orientationchange'])addEventListener(event,resumeLaunch);
+  screen.orientation?.addEventListener('change',resumeLaunch);
+  window.visualViewport?.addEventListener('resize',resumeLaunch);
+  document.addEventListener('fullscreenchange',resumeLaunch);
   const prepareLaunch=go=>{
-    if(landscape.matches){void requestLandscape();go();return;}
+    if(isLandscapeDisplay(window,screen,landscape.matches)){void requestLandscape();go();return;}
     pendingLaunch=go;returnFocus=document.activeElement;
     const zh=document.documentElement.lang.startsWith('zh');
     gate.querySelector('h2').textContent=zh?'横过来，准备出发':'Turn sideways to race';
@@ -102,6 +120,7 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
     document.querySelector('#screenHint').textContent='Rotate your phone sideways. If needed, turn off rotation lock.';
   });
   return {clear,prepareLaunch,update({boost,nitro,weapon,drift,empCooldown=0}){
+    resumeLaunch();
     const count=Math.floor(boost*3+.01),ready=boost>=.333&&nitro<=0;
     nitroButton.classList.toggle('unavailable',!ready&&nitro<=0);nitroButton.classList.toggle('firing',nitro>0);
     nitroButton.setAttribute('aria-disabled',String(!ready));nitroButton.setAttribute('aria-label',`Nitro, ${count} charges${nitro>0?', boosting':''}`);
