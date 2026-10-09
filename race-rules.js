@@ -15,10 +15,10 @@ export function createRace(mode = 'team', team = 'blue') {
 
 export function standings(race) {
   return [...race.racers].sort((a, b) => {
-    if (a.finishTime !== null && b.finishTime !== null) return a.finishTime - b.finishTime || a.id - b.id;
+    if (a.finishTime !== null && b.finishTime !== null) return a.finishTime - b.finishTime || (a.sortOrder ?? a.id) - (b.sortOrder ?? b.id);
     if (a.finishTime !== null) return -1;
     if (b.finishTime !== null) return 1;
-    return b.progress - a.progress || a.id - b.id;
+    return b.progress - a.progress || (a.sortOrder ?? a.id) - (b.sortOrder ?? b.id);
   });
 }
 

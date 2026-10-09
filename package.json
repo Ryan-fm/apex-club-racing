@@ -7,9 +7,13 @@
     "test": "node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs",
     "start": "python3 -m http.server 8080",
-    "export:model": "node scripts/export-model.mjs"
+    "export:model": "node scripts/export-model.mjs",
+    "start:multiplayer": "node server/multiplayer.js"
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   }
 }

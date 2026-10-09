@@ -1,0 +1,9 @@
+#openRoom{display:block;width:100%;margin:12px 0 0;padding:12px 10px;border:1px solid #9cd9cb66;background:#102b31;color:#bdede0;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer}
+#roomDialog{width:min(540px,calc(100vw - 32px));max-height:85dvh;overflow:auto;padding:24px;border:1px solid #627c86;background:#111f2c;color:#dce9ed;border-radius:16px;box-sizing:border-box}
+#roomDialog::backdrop{background:#071019bb;backdrop-filter:blur(6px)}
+#roomDialog [hidden]{display:none!important}#roomDialog .room-top{display:flex;align-items:center;justify-content:space-between;gap:12px}#roomDialog h2{margin:0;font-size:23px}
+#roomDialog button{padding:11px 16px;background:#203d46;color:#dcf4eb;border:1px solid #9cd9cb55;border-radius:6px;cursor:pointer;min-height:42px}#roomDialog button:disabled{opacity:.4;cursor:not-allowed}
+#roomDialog input,#roomDialog select{padding:10px;border:1px solid #637585;background:#0c1924;color:#fff;border-radius:5px;max-width:100%;box-sizing:border-box;font-size:16px}
+#roomDialog label{display:grid;gap:8px;font-size:13px}#roomEntry{display:grid;gap:14px}.room-join{display:flex;gap:8px}.room-join input{flex:1;min-width:0}.room-settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#roomStatus{min-height:20px;color:#ffd18d;font-size:13px;overflow-wrap:anywhere}#roomCode{display:block;font-size:24px;color:#a8ebd9;letter-spacing:.08em}#roomRules{font-size:12px;line-height:1.65;color:#afc2ce}#roomPlayers{padding-left:22px;line-height:2;overflow-wrap:anywhere}.room-actions{display:flex;flex-wrap:wrap;gap:10px}#roomStart{background:#ffba75!important;color:#13212a!important}
+#roomConnection{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:60;background:#24313e;padding:10px 20px;border-radius:5px;color:#ffd18d;font-size:13px;max-width:90vw}#roomConnection[hidden]{display:none}
