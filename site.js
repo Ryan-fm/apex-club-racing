@@ -1,6 +1,5 @@
 import {getLanguage,setLanguage} from './localization.js';
 import {onlineClub} from './online-club.js';
-import {craftDefs} from './kart-catalog.js';
 
 const page=document.body.dataset.page;
 const local=(zh,en)=>getLanguage()==='zh'?zh:en;
@@ -51,60 +50,40 @@ if(page==='home'){
 if(page==='leaderboard'){
   const query=new URLSearchParams(location.search);
   let scene=sceneNames[query.get('scene')]?query.get('scene'):'harbor';
-  let assisted=query.get('assisted')==='true';
+  let assisted=false;
   let records=[],requestId=0;
+  let period='all';
   const rows=document.querySelector('#globalRows'),empty=document.querySelector('#boardEmpty'),status=document.querySelector('#boardStatus');
   function renderBoard(){
     document.querySelectorAll('[data-scene]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===scene)));
     document.querySelectorAll('[data-assisted]').forEach(button=>button.setAttribute('aria-pressed',String((button.dataset.assisted==='true')===assisted)));
-    document.querySelector('#boardContext').textContent=`${sceneNames[scene][getLanguage()==='zh'?0:1]} / ${assisted?local('新手辅助','Assisted'):local('标准','Standard')}`;
+    document.querySelector('#boardContext').textContent=`${sceneNames[scene][getLanguage()==='zh'?0:1]} / ${assisted?local('新手辅助','Assisted'):local('标准','Standard')} / ${period}`;
     rows.replaceChildren();
     for(const [index,record] of records.entries()){
       const tr=document.createElement('tr');
       const minutes=Math.floor(record.time_ms/60000),seconds=((record.time_ms%60000)/1000).toFixed(2).padStart(5,'0');
-      for(const value of [String(index+1).padStart(2,'0'),record.player_name,`${String(minutes).padStart(2,'0')}:${seconds}`,craftDefs[record.craft]?.name||`#${record.craft+1}`]){
+      for(const value of [String(record.rank??index+1).padStart(2,'0'),record.player_name,`${String(minutes).padStart(2,'0')}:${seconds}`,local('标准三圈','Standard / 3 laps')]){
         const cell=document.createElement('td');cell.textContent=value;tr.append(cell);
       }
       rows.append(tr);
     }
     empty.hidden=records.length>0;
   }
-  async function load(){
+  async function load(refresh=false){
     const id=++requestId;records=[];empty.hidden=true;rows.replaceChildren();status.textContent=local('正在读取全球成绩…','Loading global records…');
-    try{const data=await onlineClub.leaderboard(scene,assisted);if(id!==requestId)return;records=data;status.textContent=data.length?local(`共 ${data.length} 条完赛成绩`,`Showing ${data.length} completed races`):'';renderBoard();}
-    catch(error){if(id!==requestId)return;status.textContent=error.message;empty.hidden=false;}
+    try{const data=await onlineClub.leaderboard(scene,assisted,{refresh,period});if(id!==requestId)return;records=data;status.textContent=data.length?local(`共 ${data.length} 条完赛成绩`,`Showing ${data.length} completed races`):'';renderBoard();}
+    catch(error){if(id!==requestId)return;status.textContent=error.message;empty.hidden=true;}
   }
   function select(nextScene,nextAssisted){scene=nextScene;assisted=nextAssisted;history.replaceState(null,'',`?scene=${scene}&assisted=${assisted}`);renderBoard();load();}
   document.querySelectorAll('[data-scene]').forEach(button=>button.addEventListener('click',()=>select(button.dataset.scene,assisted)));
   document.querySelectorAll('[data-assisted]').forEach(button=>button.addEventListener('click',()=>select(scene,button.dataset.assisted==='true')));
-  document.querySelector('#boardRefresh').addEventListener('click',load);
+  document.querySelector('#boardRefresh').addEventListener('click',()=>load(true));
+  document.querySelector('#boardMine').addEventListener('click',async event=>{const id=requestId;event.currentTarget.disabled=true;try{const mine=await onlineClub.myRank(scene,period);if(id===requestId)status.textContent=mine?local(`我的排名：第 ${mine.rank} 名 · ${(mine.time_ms/1000).toFixed(3)} 秒`,`My rank: ${mine.rank} · ${(mine.time_ms/1000).toFixed(3)} s`):local('当前榜单暂无你的成绩。','You have no result on this board.');}catch(error){if(id===requestId)status.textContent=error.message;}finally{document.querySelector('#boardMine').disabled=false;}});
+  document.querySelector('#boardPeriod').addEventListener('change',event=>{period=event.target.value;renderBoard();load();});
   renderPage=renderBoard;load();
 }
 if(page==='account'){
-  const signedOut=document.querySelector('#accountSignedOut'),signedIn=document.querySelector('#accountSignedIn');
-  const form=document.querySelector('#accountForm'),name=document.querySelector('#clubPlayerName'),password=document.querySelector('#clubPassword');
-  const status=document.querySelector('#accountStatus'),submit=document.querySelector('#accountSubmit');
-  let mode='login';
-  const target=new URLSearchParams(location.search).get('return');
-  const returnTo=['index.html','leaderboard.html','race.html','garage.html'].includes(target)?`./${target}`:'./leaderboard.html';
-  function renderMode(){
-    document.querySelectorAll('[data-mode]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.mode===mode)));
-    const heading=document.querySelector('#authHeading'),description=document.querySelector('#authDescription'),label=submit.querySelector('[data-zh]');
-    heading.dataset.zh=mode==='login'?'欢迎回来':'加入 APEX CLUB';heading.dataset.en=mode==='login'?'Welcome back':'Join APEX CLUB';
-    description.dataset.zh=mode==='login'?'登录后继续你的竞速纪录。':'注册一个独一无二的车手名。';description.dataset.en=mode==='login'?'Sign in to continue your racing record.':'Claim a unique name for your records.';
-    label.dataset.zh=mode==='login'?'登录':'创建车手账户';label.dataset.en=mode==='login'?'Sign in':'Create driver account';
-    for(const node of [heading,description,label])node.textContent=node.dataset[getLanguage()];
-    password.autocomplete=mode==='login'?'current-password':'new-password';
-  }
-  function showProfile(profile){signedOut.hidden=!!profile;signedIn.hidden=!profile;if(profile)document.querySelector('#signedInName').textContent=profile.player_name;}
-  document.querySelectorAll('[data-mode]').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.mode;status.textContent='';renderMode();}));
-  form.addEventListener('submit',async event=>{
-    event.preventDefault();if(!form.reportValidity())return;submit.disabled=true;status.textContent=local('正在连接车手账户…','Connecting your account…');
-    try{await onlineClub[mode](name.value.trim(),password.value);password.value='';location.assign(returnTo);}
-    catch(error){const messages={'Player name is already taken':['这个车手名已被使用。','This driver name is taken.'],'Invalid player name or password':['车手名或密码不正确。','Invalid name or password.'],'Too many attempts. Try again in 15 minutes.':['尝试次数过多，请 15 分钟后再试。','Too many attempts. Try again in 15 minutes.']};status.textContent=messages[error.message]?.[getLanguage()==='zh'?0:1]||error.message;submit.disabled=false;}
-  });
-  document.querySelector('#clubLogout').addEventListener('click',async()=>{try{await onlineClub.logout();showProfile(null);status.textContent=local('已退出登录。','Signed out.');}catch(error){status.textContent=error.message;}});
-  renderPage=renderMode;
-  if(onlineClub.signedIn())onlineClub.current().then(showProfile).catch(error=>{status.textContent=error.message;showProfile(null);});
+ const button=document.querySelector('#toyConnect'),status=document.querySelector('#accountStatus');
+ button.addEventListener('click',async()=>{button.disabled=true;try{const profile=await onlineClub.connect();status.textContent=local(`已连接：${profile.player_name}。完赛后点击提交成绩参与排名。`,`Connected: ${profile.player_name}. Submit your score after finishing.`);}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
 }
 renderLanguage();loadNavAccount();

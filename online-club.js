@@ -1,50 +1,10 @@
-import {ONLINE_CONFIG} from './online-config.js';
+import {createToyClub,loadToySDK} from './toy-platform.js';
 import {tr} from './localization.js';
-
-const configured=!!(ONLINE_CONFIG.url&&ONLINE_CONFIG.publishableKey);
-const root=ONLINE_CONFIG.url.replace(/\/$/,'');
-const sessionKey='apex-club-token-v2';
-const namePattern=/^[A-Za-z0-9_-]{3,16}$/;
-let token=null;
-try{token=localStorage.getItem(sessionKey);}catch{}
-
-function save(value){token=value;try{if(value)localStorage.setItem(sessionKey,value);else localStorage.removeItem(sessionKey);}catch{}}
-async function request(path,{method='GET',body}={}){
-  if(!configured)throw Error('Online club is not configured yet.');
-  const response=await fetch(root+path,{method,headers:{apikey:ONLINE_CONFIG.publishableKey,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
-  const data=await response.json().catch(()=>null);
-  if(!response.ok)throw Error(data?.message||data?.error||`Request failed (${response.status})`);
-  if(data?.error)throw Error(data.error);
-  return data;
-}
-const rpc=(name,body)=>request(`/rest/v1/rpc/${name}`,{method:'POST',body});
-export const onlineClub={
-  configured,
-  signedIn(){return !!token;},
-  async current(){if(!token)return null;const profile=await rpc('club_me',{p_token:token});if(!profile)save(null);return profile;},
-  async register(name,password){
-    if(!namePattern.test(name))throw Error('Player name: 3–16 English letters, numbers, _ or -.');
-    if(password.length<8||new TextEncoder().encode(password).length>72)throw Error('Password must be at least 8 characters and at most 72 bytes.');
-    const data=await rpc('club_register',{p_name:name,p_password:password});save(data.token);return {player_name:data.player_name};
-  },
-  async login(name,password){
-    const data=await rpc('club_login',{p_name:name,p_password:password});save(data.token);return {player_name:data.player_name};
-  },
-  async logout(){try{if(token)await rpc('club_logout',{p_token:token});}finally{save(null);}},
-  async leaderboard(scene,assisted){
-    return request(`/rest/v1/club_race_leaderboard?select=player_name,time_ms,craft,achieved_at&scene=eq.${scene}&assisted=eq.${assisted}&rules_version=eq.${ONLINE_CONFIG.rulesVersion}&order=time_ms.asc,achieved_at.asc&limit=50`);
-  },
-  async submit({scene,assisted,craft,time,laps}){
-    if(!token)throw Error('Sign in to submit a race.');
-    return rpc('submit_best_race',{p_token:token,p_scene:scene,p_assisted:assisted,p_craft:craft,p_rules_version:ONLINE_CONFIG.rulesVersion,p_time_ms:Math.round(time*1000),p_laps:laps.map(lap=>({time_ms:Math.round(lap.time*1000),splits_ms:lap.splits.map(v=>Math.round(v*1000)),samples:lap.samples}))});
-  },
-};
-
+// Load the bridge before gestures without requesting identity or making ranking calls.
+loadToySDK().catch(()=>{});
+export const onlineClub=createToyClub();
 export function mountOnlineClub({onProfile}){
-  let current=null;
-  const notice=document.querySelector('#onlineNotice');
-  const message=value=>{if(notice)notice.textContent=tr(value||'');};
-  const renderProfile=value=>{current=value;onProfile(value);};
-  if(configured)onlineClub.current().then(renderProfile).catch(error=>message(error.message));
-  return {profile:()=>current,message};
+ let current=null;const notice=document.querySelector('#onlineNotice');
+ const message=value=>{if(notice)notice.textContent=tr(value||'');};
+ return {profile:()=>current,message,async connect(){current=await onlineClub.connect();onProfile(current);return current;}};
 }

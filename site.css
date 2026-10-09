@@ -40,3 +40,8 @@
  .hero-shade{background:linear-gradient(90deg,#080e17ee,#080e1799 47%,transparent 80%)}
  .home-facts{min-height:110px}
 }
+
+[hidden]{display:none!important}
+.board-tabs button:disabled{opacity:.45;cursor:not-allowed}
+.board-period{display:flex;align-items:center;gap:12px;padding:18px 32px;color:#b5c6cf;font-size:12px}
+.board-period select{background:#152536;color:#d9e8e2;border:1px solid #63758555;padding:8px 12px;border-radius:4px}

@@ -638,10 +638,10 @@ function updateRaceHUD(){
 function finishRace(){
  finishExperience();
   const finishTime=race.racers[0].finishTime;
-  if(!replayData&&canSubmitRace(finishTime,raceLaps,raceValid)&&onlineClub.configured&&club.profile())
-    onlineClub.submit({scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps})
-      .then(saved=>{if(saved)club.message('New global race record submitted.');})
-      .catch(error=>club.message(`Race upload failed: ${error.message}`));
+  const upload=document.querySelector('#submitToyScore');
+  upload.hidden=!!replayData||raceAssisted||!canSubmitRace(finishTime,raceLaps,raceValid);upload.disabled=false;
+  const completed={scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps};
+  upload.onclick=async()=>{upload.disabled=true;try{await onlineClub.submit(completed);club.message('Toy 成绩已提交，排行榜保留你的最快用时。');}catch(error){club.message(error.message);upload.disabled=false;}};
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();document.querySelector('#results').hidden=false;document.querySelector('#raceAgain').focus();
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
@@ -658,6 +658,7 @@ function updateSprintHUD(){
   ui.text(raceNodes.lap,'SPRINT');
 }
 function finishSprint(){
+  document.querySelector('#submitToyScore').hidden=true;
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();state.speed=0;state.vx=0;state.vz=0;
   let saved=false;try{if(!replayData)saved=saveSprint(localStorage,sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked),sprint);}catch{}
   document.querySelector('#results').hidden=false;document.querySelector('#results table').hidden=true;
