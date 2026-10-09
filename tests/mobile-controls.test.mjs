@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {screenTilt,tiltSteering,isHandheldDevice} from '../mobile-controls.js';
+import {screenTilt,tiltSteering,isHandheldDevice,isLandscapeDisplay} from '../mobile-controls.js';
 test('landscape directions follow screen rotation in either grip',()=>{
  assert(screenTilt(20,0,90)>0);assert(screenTilt(20,0,270)<0);
  assert(screenTilt(0,20,0)>0);assert(screenTilt(0,20,180)<0);
@@ -22,8 +22,10 @@ test('multi-touch steering slides independently of drift and clears on cancellat
  Object.defineProperty(globalThis,'matchMedia',{configurable:true,value:()=>orientation});
  try{
   Object.defineProperty(globalThis,'document',{configurable:true,value:{documentElement:{lang:'zh-CN',classList:{toggle(){}}},body:{append(){}},createElement:()=>gate,querySelector:query,querySelectorAll:s=>s==='[data-drive]'?drive:[],addEventListener(t,f){documentEvents[t]=f;}}});
-  Object.defineProperty(globalThis,'screen',{configurable:true,value:{orientation:{angle:90,addEventListener(){}}}});
+  Object.defineProperty(globalThis,'screen',{configurable:true,value:{orientation:{angle:0,addEventListener(){}}}});
   Object.defineProperty(globalThis,'window',{configurable:true,value:{}});Object.defineProperty(globalThis,'addEventListener',{configurable:true,value:()=>{}});
+  const windowEvents={};window.visualViewport={addEventListener(t,f){windowEvents['visual-'+t]=f;}};
+  Object.defineProperty(globalThis,'addEventListener',{configurable:true,value:(t,f)=>{windowEvents[t]=f;}});
   const controls=createMobileControls({handheld:true,active:()=>true,action:x=>actions.push(x),pause(){}});
   for(const type of ['contextmenu','selectstart','dragstart']){let prevented=false;documentEvents[type]({target:{closest:()=>null},preventDefault(){prevented=true;}});assert(prevented);prevented=false;documentEvents[type]({target:{closest:()=>({})},preventDefault(){prevented=true;}});assert(!prevented);}
   const fire=(name,type,id,x=30,y=150)=>drive.find(b=>b.dataset.drive===name).listeners[type]({pointerId:id,clientX:x,clientY:y,preventDefault(){}});
@@ -37,6 +39,20 @@ test('multi-touch steering slides independently of drift and clears on cancellat
   fire('nitro','pointerdown',4);assert.deepEqual(actions,['nitro']);
   controls.clear();assert(!controls.down('drift'));assert.equal(controls.steer(.016),0);
   let launches=0;controls.prepareLaunch(()=>launches++);assert.equal(launches,0);assert.equal(gate.hidden,false);orientation.matches=true;orientation.change();assert.equal(launches,1);assert.equal(gate.hidden,true);orientation.change();assert.equal(launches,1);
+  orientation.matches=false;
+  controls.prepareLaunch(()=>launches++);assert.equal(gate.hidden,false);
+  screen.orientation.type='landscape-primary';windowEvents.orientationchange();
+  assert.equal(launches,2);assert.equal(gate.hidden,true);
+  windowEvents.resize();documentEvents.fullscreenchange();assert.equal(launches,2);
+  screen.orientation.type='portrait-primary';
+  controls.prepareLaunch(()=>launches++);gate.querySelector('.secondary').listeners.click();
+  screen.orientation.type='landscape-secondary';windowEvents.resize();assert.equal(launches,2);
+  controls.prepareLaunch(()=>launches++);assert.equal(launches,3);assert.equal(gate.hidden,true);
+  screen.orientation.type='portrait-primary';
+  controls.prepareLaunch(()=>launches++);assert.equal(gate.hidden,false);
+  window.innerWidth=851;window.innerHeight=393;windowEvents.resize();
+  assert.equal(launches,4);assert.equal(gate.hidden,true);
+  windowEvents['visual-resize']();assert.equal(launches,4);
  }finally{for(const [k,d] of saved){if(d)Object.defineProperty(globalThis,k,d);else delete globalThis[k];}}
 });
 
@@ -51,4 +67,14 @@ test('desktop adapter registers no sensor, orientation or touch listeners',()=>{
   const controls=createMobileControls({handheld:false,action(){throw Error('desktop mobile action');},active:()=>true,pause(){throw Error('desktop orientation pause');}});
   assert.equal(controls.down('throttle'),false);assert.equal(controls.down('brake'),false);assert.equal(controls.steer(.1),0);controls.clear();controls.update({});
  }finally{if(descriptor)Object.defineProperty(globalThis,'document',descriptor);else delete globalThis.document;}
+});
+
+test('Android embedded orientation detection handles stale viewport and legacy WebViews',()=>{
+ assert.equal(isLandscapeDisplay({innerWidth:393,innerHeight:851},{orientation:{type:'landscape-primary'}},false),true);
+ assert.equal(isLandscapeDisplay({innerWidth:393,innerHeight:851},{orientation:{type:'landscape-secondary'}},false),true);
+ assert.equal(isLandscapeDisplay({innerWidth:851,innerHeight:393},{},false),true);
+ for(const orientation of [-90,90])assert.equal(isLandscapeDisplay({orientation},{},false),true);
+ assert.equal(isLandscapeDisplay({innerWidth:393,innerHeight:851,orientation:0},{orientation:{type:'portrait-primary',angle:90}},false),false);
+ assert.equal(isLandscapeDisplay({},{orientation:{angle:90}},false),true);
+ assert.equal(isLandscapeDisplay({},{},true),true);
 });
