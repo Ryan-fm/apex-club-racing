@@ -9,9 +9,10 @@ export function mountRoomUI({endpoint,getSetup,onRoom,onExit,onStatus}){
  const status=text=>{$('roomStatus').textContent=text;};
  const client=new RoomClient(endpoint,{onRoom:room=>{render(room);onRoom(room,client);},onStatus:value=>{const map={connected:local('已连接多人服务。','Connected.'),disconnected:local('连接中断，正在重连；比赛继续。','Reconnecting. The race continues.'),reconnected:local('已重新连接。','Reconnected.'),closed:''};status(map[value]??value);onStatus(value);}});
  $('roomCraft').innerHTML=craftDefs.map((d,i)=>`<option value="${i}">${d.name}</option>`).join('');
- try{$('roomName').value=localStorage.getItem('apex-room-name')||'';}catch{}
+ let savedSession;try{$('roomName').value=localStorage.getItem('apex-room-name')||'';savedSession=JSON.parse(sessionStorage.getItem('apex-room-session')||'null');}catch{}
  const query=new URLSearchParams(location.search);$('roomCodeInput').value=(query.get('room')||'').slice(0,6);
  function render(room=client.room){
+  try{if(room?.code&&client.joined&&client.resumeToken)sessionStorage.setItem('apex-room-session',JSON.stringify({endpoint,code:room.code,resumeToken:client.resumeToken}));else if(!room&&client.closed)sessionStorage.removeItem('apex-room-session');}catch{}
   $('roomTitle').textContent=local('好友同玩 · 最多 4 人','Race with friends · Up to 4');
   $('roomCreate').textContent=local('创建房间','Create room');$('roomJoin').textContent=local('加入房间','Join');$('roomInvite').textContent=local('复制邀请链接','Copy invite');$('roomLeave').textContent=local('退出房间','Leave room');
   $('roomRules').textContent=local('标准三圈 · 漂移、小喷、氮气 · 无碰撞和 EMP。打开帮助不会暂停其他玩家。','Three standard laps · Drift, mini, nitro · No collisions or EMP. Help does not pause the race.');
@@ -36,5 +37,6 @@ export function mountRoomUI({endpoint,getSetup,onRoom,onExit,onStatus}){
  $('roomInvite').addEventListener('click',()=>run(async()=>{const url=new URL('./race.html',location.href);url.searchParams.set('room',client.room.code);url.searchParams.set('scene',client.room.scene);try{await navigator.clipboard.writeText(url.href);status(local('邀请链接已复制。','Invitation copied.'));}catch{status(url.href);}}));
  $('roomLeave').addEventListener('click',()=>run(async()=>{await client.leave();dialog.close();onExit();}));
  onLanguageChange(()=>render());render();if(query.has('room')){dialog.showModal();if(!endpoint)status(local('多人服务尚未配置。','Multiplayer service is not configured.'));}
+ if(savedSession?.endpoint===endpoint&&(!query.get('room')||query.get('room').toUpperCase()===savedSession.code))client.restoreSession(savedSession).catch(error=>{try{sessionStorage.removeItem('apex-room-session');}catch{}status(error.message);render();});
  return {client,dialog,status,render,open:()=>{render();if(!dialog.open)dialog.showModal();}};
 }

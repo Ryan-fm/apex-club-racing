@@ -14,7 +14,7 @@ test('four real sockets create, join, synchronize countdown/positions, recover a
   await waitFor(()=>clients.slice(0,4).every(client=>client.room.phase==='racing'));
   for(let seq=1;seq<=20;seq++){clients[0].input(seq,{rawSteer:0,throttle:true,brake:false,driftHeld:false,commands:{}});await new Promise(resolve=>setTimeout(resolve,17));}
   await waitFor(()=>clients[1].room.players.find(p=>p.id===clients[0].playerId)?.state.speed>30);
-  const savedId=clients[0].playerId;clients[0].socket.terminate();await waitFor(()=>clients[0].socket?.readyState===1&&clients[1].room.players.find(p=>p.id===savedId)?.connected);assert.equal(clients[0].playerId,savedId);
+  const savedId=clients[0].playerId;clients[0].socket.terminate();await waitFor(()=>clients[0].joined&&clients[0].socket?.readyState===1&&clients[1].room.players.find(p=>p.id===savedId)?.connected);assert.equal(clients[0].playerId,savedId);
   const mine=clients[0].room.players.find(p=>p.id===clients[0].playerId),progress=mine.racer.progress;await clients[0].request('recover');await waitFor(()=>clients[0].room.players.find(p=>p.id===clients[0].playerId)?.state.speed===0);assert(clients[0].room.players.find(p=>p.id===clients[0].playerId).racer.progress>=progress);
   await clients[0].leave();await waitFor(()=>clients[1].room.host===clients[1].playerId);assert(clients[1].room.players.find(p=>p.id===mine.id).dnf);
  }finally{for(const client of clients)await client.leave().catch(()=>{});await app.close();}

@@ -1,5 +1,9 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": null
+  "framework": null,
+  "functions": {
+    "api/rooms.js": {"maxDuration": 300, "memory": 2048}
+  },
+  "rewrites": [{"source": "/api/rooms/health", "destination": "/api/rooms"}]
 }

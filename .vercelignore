@@ -1,2 +1,7 @@
 creator-accounts/
 output/
+
+.agents/
+skills-lock.json
+.playwright-cli/
+xhs-mini/

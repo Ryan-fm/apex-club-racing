@@ -3,7 +3,7 @@ import {ROOM_LIMIT,SCENES,PHYSICS_DT,spawnPlayer,multiplayerTrack,stepRoomPlayer
 const cleanName=name=>{if(typeof name!=='string')throw Error('请输入车手昵称。');name=name.trim();if(!name||name.length>16||/[<>\u0000-\u001f\u007f]/.test(name))throw Error('昵称需为 1–16 个字符，不含特殊标记。');return name;};
 const cleanCraft=craft=>{if(!Number.isInteger(craft)||craft<0||craft>5)throw Error('Invalid kart.');return craft;};
 export class RoomService{
- constructor({now=()=>performance.now()/1000,maxRooms=100}={}){this.now=now;this.maxRooms=maxRooms;this.rooms=new Map();this.connections=new Map();}
+ constructor({now=()=>performance.now()/1000,maxRooms=100,makeRoomCode=()=>randomBytes(4).toString('hex').slice(0,6).toUpperCase()}={}){this.now=now;this.maxRooms=maxRooms;this.makeRoomCode=makeRoomCode;this.rooms=new Map();this.connections=new Map();}
  attach(connection){this.connections.set(connection,{room:null,player:null});}
  view(room){return {code:room.code,scene:room.scene,host:room.host,phase:room.phase,round:room.round,countdown:Math.max(0,room.startsAt-this.now()),elapsed:room.elapsed,firstFinish:room.firstFinish,players:[...room.players.values()].map(p=>({id:p.id,name:p.name,craft:p.craft,ready:p.ready,connected:!!p.connection,dnf:p.dnf,ack:p.ack,...(p.state?{state:p.state,stunts:p.stunts,racer:p.racer}:{})}))};}
  broadcast(room){const message={type:'snapshot',room:this.view(room)};for(const p of room.players.values())p.connection?.send(message);}
@@ -26,7 +26,7 @@ export class RoomService{
  const {type}=message;
  if(type==='create'){
   if(this.connections.get(connection)?.room)throw Error('请先退出当前房间。');if(this.rooms.size>=this.maxRooms)throw Error('服务繁忙，请稍后再试。');if(!SCENES.includes(message.scene))throw Error('Unknown circuit.');cleanName(message.name);cleanCraft(message.craft);
-  let code;do{code=randomBytes(4).toString('hex').slice(0,6).toUpperCase();}while(this.rooms.has(code));
+  let code;do{code=this.makeRoomCode();}while(this.rooms.has(code));
   const room={code,scene:message.scene,host:null,phase:'lobby',round:0,startsAt:0,elapsed:0,firstFinish:null,players:new Map(),createdAt:this.now()};this.rooms.set(code,room);const result=this.join(connection,room,message.name,message.craft);this.broadcast(room);return result;
  }
  if(type==='join'){const room=this.rooms.get(String(message.code).toUpperCase());if(!room)throw Error('房间不存在或已结束。');const result=this.join(connection,room,message.name,message.craft);this.broadcast(room);return result;}
