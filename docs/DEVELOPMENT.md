@@ -28,7 +28,7 @@ Open http://localhost:8080 from the repository root. Three.js 0.179.1 is include
 - **Up:** accelerate; **Down:** brake or hold at rest to reverse. Brake overrides auto throttle.
 - **Left / Right:** steer. Auto throttle never steers the vehicle.
 - **Shift + direction at speed:** start a drift. Keep Shift held while countersteering. Release at 32% charge for an exit-boost opportunity, or 78% for a stronger one. Wall contact cancels charge.
-- **W:** trigger the ready mini boost after releasing drift, leaving a gold ramp, or landing. Release alone does not fire it. Countersteering on release offers a cut boost. A press up to 100ms before a genuine take-off/landing window is buffered once.
+- **W:** trigger the ready mini boost after releasing a charged drift. Release alone does not fire it. Countersteering on release offers a cut boost.
 - **Ctrl:** consume one nitro unit for a 2.1-second boost. Up to three units can be stored. Release Ctrl before pressing W for a combo.
 - Rebind keys in **Settings → Custom hotkeys**. UI hints follow the saved bindings. These are desktop defaults; phone buttons retain their actions.
 - Q: EMP affects nearby opponents, excluding teammates in team mode.
@@ -97,7 +97,7 @@ Player movement uses independent world position, heading and velocity. Auto thro
 
 ## Three-turn gate practice and diagnostics
 
-Open `/?slice=gate` or select **Gate run · Three-turn practice** in the lobby. This solo segment starts at the citadel gates and ends after three bends and a gold ramp. Challenge results use `apex-challenge-citadel-gates-v1-*`; official lap records, ghosts and medals are untouched.
+Open `/?slice=gate` or select **Gate run · Three-turn practice** in the lobby. This solo segment starts at the citadel gates and ends after three bends and the final straight. Challenge results use `apex-challenge-citadel-gates-v1-*`; official lap records, ghosts and medals are untouched.
 
 For a reproducible developer check, open `/?slice=gate&perf=1&replay=gate`. This explicit diagnostic mode drives from a recorded input tape and saves no challenge records. Ordinary practice and races remain manually steered. `node scripts/generate-driving-replay.mjs` regenerates the tape using the production simulation; `npm test` replays it at 30/60/120 display Hz.
 

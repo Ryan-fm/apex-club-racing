@@ -1,6 +1,6 @@
 import {stepHandling,projectTrack,resolveTrackContact,progressDelta} from '../driving-model.js';
 import {updateDrift} from '../race-rules.js';
-import {offerDrift,stepStunts,fireStunt,rampHeight} from '../stunt-model.js';
+import {offerDrift,stepStunts,fireStunt} from '../stunt-model.js';
 
 // The same driving step is used by races and deterministic regression replays.
 // No DOM, camera, model animation, audio or automatic steering belongs here.
@@ -25,7 +25,7 @@ export function stepPlayerSimulation(state, stunts, input, kart, track, dt) {
   const hadContact=state.wallContact>0,wallHit=resolveTrackContact(state,road,track.halfWidth(road.t)-6);
   if(wallHit){state.nitro=0;state.miniTurbo=0;if(!hadContact)events.push({kind:'collision'});}
   const wasAirborne=stunts.airborne;
-  stepStunts(stunts,{ground:track.ground(road.t),ramp:rampHeight(road.t),speed:state.speed,dt,blocked:wallHit});
+  stepStunts(stunts,{ground:track.ground(road.t),ramp:0,speed:state.speed,dt,blocked:wallHit});
   if(!wasAirborne&&stunts.airborne)events.push({kind:'takeoff'});
   if(wasAirborne&&!stunts.airborne&&!wallHit)events.push({kind:'land'});
   if(!wallHit)fire();

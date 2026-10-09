@@ -14,7 +14,7 @@ test('Chinese cold-start keyboard copy restores English without reverse word sub
  const context=vm.createContext({localStorage:{getItem:()=> 'zh',setItem(){} }});
  vm.runInContext(source+'\nglobalThis.api={getLanguage,setLanguage,tr,englishSource,bindLocalizedText,rememberTranslation};',context);
  const api=context.api;
- const originals=['W / ↑ to accelerate, S / ↓ to brake / reverse, A / D or ← / → to steer.','SHIFT · NITRO STOCK','Release charged drift, then press E','Trigger a ready boost: release a charged drift, jump a gold ramp, or land. Each window is brief.'];
+ const originals=['W / ↑ to accelerate, S / ↓ to brake / reverse, A / D or ← / → to steer.','SHIFT · NITRO STOCK','Release charged drift, then press E','Trigger a ready boost after releasing a charged drift. The window is brief.'];
  const nodes=originals.map(s=>({nodeValue:s}));
  let bindings={...DEFAULT_BINDINGS};
  nodes.forEach((node,i)=>api.bindLocalizedText(node,originals[i],s=>formatKeys(s,bindings,api.tr)));

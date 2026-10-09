@@ -14,7 +14,7 @@ Drift racing · Garage customization · Solo & AI team races
 
 [![APEX CLUB lobby with TITAN, six karts and track selection](docs/images/lobby.jpg)](https://apex-club-racing.vercel.app/)
 
-APEX CLUB is a 3D arcade racer you can play in your browser. Take your kart through sweeping coastal bends, ancient city gates and a neon-lit harbor. Charge a drift, catch the exit, take-off and landing boost windows, and turn a small burst of speed into your next overtake.
+APEX CLUB is a 3D arcade racer you can play in your browser. Take your kart through sweeping coastal bends, ancient city gates and a neon-lit harbor. Charge a drift, catch the drift exit boost window, and turn a small burst of speed into your next overtake.
 
 No game client to download. The game interface supports English and Simplified Chinese; switch languages in the top-right corner.
 
@@ -26,7 +26,7 @@ Accelerate along the coast and across bridges, finding your line through wide, s
 
 **Jade Citadel**
 
-Pass through city gates and follow ancient walls toward distant mountains. Linked corners, elevation changes and golden ramps bring drifting and jumping together.
+Pass through city gates and follow ancient walls toward distant mountains. Linked corners and elevation changes reward drifting and exit boosts.
 
 ![TITAN at the start of the Jade Citadel three-turn practice segment](docs/images/citadel.jpg)
 
@@ -76,13 +76,13 @@ Auto throttle is on by default; you handle steering and braking. Start with this
 | **← / →** | Steer left / right |
 | **↑ / ↓** | Accelerate / brake; keep holding ↓ at rest to reverse |
 | **Shift + direction** | Drift; keep Shift held while countersteering |
-| **W** | Trigger an available mini, air or landing boost |
+| **W** | Trigger an available exit or cut boost |
 | **Ctrl** | Use nitro |
 | **Q** | Fire EMP |
 | **H / Esc** | Pause, view controls or recover your kart to the track |
 | **R** | Restart the race |
 
-Change bindings in **Settings → Custom hotkeys**. Once the basics feel natural, try chaining countersteer cut boosts, air boosts and landing boosts.
+Change bindings in **Settings → Custom hotkeys**. Once the basics feel natural, practice countersteer cut boosts and corner exit acceleration.
 
 **On your phone:** landscape is recommended. Use the on-screen steering, drift, mini boost, nitro, brake, throttle and EMP buttons. Supported devices can enable tilt steering in the phone controls settings; touch arrows always take priority. Sensor permissions and fullscreen support depend on your device and browser.
 

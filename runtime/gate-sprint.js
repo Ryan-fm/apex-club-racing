@@ -1,5 +1,5 @@
 export const GATE_SPRINT=Object.freeze({id:'citadel-gates-v1',start:.245,finish:.428,targetSeconds:30,
-  turns:[.282,.329,.375],ramp:.40});
+  turns:[.282,.329,.375]});
 export function createSprint(){return {finished:false,elapsed:0,turns:0,collisions:0,drifts:0,boosts:0,cut:0,air:0,land:0,maxCombo:0};}
 export function updateSprint(s,progress,time,events=[]){
  if(s.finished)return false;
@@ -17,6 +17,5 @@ export function sprintInstruction(progress){
  if(progress<.288)return 'TURN 1 · COUNTERSTEER, RELEASE, THEN E';
  if(progress<.332)return 'TURN 2 · CHARGE A DRIFT';
  if(progress<.378)return 'TURN 3 · RELEASE, THEN E';
- if(progress<.407)return 'GOLD RAMP · PRESS E AFTER TAKE-OFF';
- return 'LAND · PRESS E, THEN FINISH';
+ return 'FINAL STRAIGHT · BOOST, THEN FINISH';
 }

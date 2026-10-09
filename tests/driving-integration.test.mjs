@@ -22,13 +22,15 @@ function play(hz){
  }
  return {state,sprint,events};
 }
-test('fixed three-turn replay completes exit, cut, air and landing boosts at 30/60/120 display Hz',()=>{
+test('recorded three-turn inputs retain drift boosts without takeoff at 30/60/120 display Hz',()=>{
  const runs=[30,60,120].map(play);
- for(const {state,sprint,events} of runs){assert(state.t>=GATE_SPRINT.finish);assert(sprint.finished);assert.equal(sprint.collisions,0);assert.equal(sprint.drifts,3);assert.equal(sprint.boosts,5);assert.equal(sprint.air,1);assert.equal(sprint.land,1);assert(sprint.cut>=1);assert.equal(sprint.maxCombo,3);assert(events.some(e=>e.kind==='mini'&&e.type==='EXIT BOOST'));}
+ for(const {state,sprint,events} of runs){assert(state.t>.42);assert.equal(sprint.collisions,0);assert.equal(sprint.drifts,3);assert.equal(sprint.boosts,3);assert.equal(sprint.air,0);assert.equal(sprint.land,0);assert(sprint.cut>=1);assert.equal(sprint.maxCombo,1);assert(events.some(e=>e.kind==='mini'&&e.type==='EXIT BOOST'));assert(!events.some(e=>e.kind==='takeoff'||e.kind==='land'));
+  assert(sprint.finished);assert(state.t>=GATE_SPRINT.finish);}
+
  assert.equal(runs[0].state.x,runs[2].state.x);assert.equal(runs[0].state.z,runs[1].state.z);
 });
 test('four consecutive replays produce twelve successful drifts with no stale windows',()=>{
- let drifts=0;for(let i=0;i<4;i++){const r=play(60);drifts+=r.sprint.drifts;assert.equal(r.sprint.air,1);assert.equal(r.sprint.land,1);assert.equal(r.sprint.collisions,0);}assert.equal(drifts,12);
+ let drifts=0;for(let i=0;i<4;i++){const r=play(60);drifts+=r.sprint.drifts;assert.equal(r.sprint.air,0);assert.equal(r.sprint.land,0);assert.equal(r.sprint.collisions,0);}assert.equal(drifts,12);
 });
 test('incomplete first lap is invalid and challenge writes never touch race or medal keys',()=>{
  const lap=createLapRecord(),pose={x:0,y:0,z:0,heading:0};recordLap(lap,.245,0,pose);assert.equal(recordLap(lap,1,20,pose).valid,false);
@@ -61,4 +63,16 @@ test('camera smooths across angle wrap with bounded lag and reduced-motion suspe
  const h=chaseHeading(3.1,-3.1,1/60);assert(Math.abs(Math.atan2(Math.sin(h+3.1),Math.cos(h+3.1)))<=.1);
  assert.equal(chaseHeading(0,2,.01,true),2);
  const s=createSuspension();stepSuspension(s,true,.016);assert(stepSuspension(s,false,.016)<0);for(let i=0;i<240;i++)stepSuspension(s,false,1/120);assert(Math.abs(s.offset)<.001);assert.equal(stepSuspension(s,true,.1,true),0);
+});
+
+test('former ramp sections keep the player grounded without air or landing rewards',()=>{
+ for(const start of [.08,.40,.70]){
+  const state=initial(start),stunts=createStunts();state.speed=300;
+  for(let i=0;i<180;i++){
+   const ahead=curve.getPointAt(state.t+.008),angle=Math.atan2(ahead.x-state.x,ahead.z-state.z),error=Math.atan2(Math.sin(angle-state.heading),Math.cos(angle-state.heading));
+   const r=stepPlayerSimulation(state,stunts,{rawSteer:Math.max(-1,Math.min(1,-error*2.6)),throttle:true,brake:state.speed>300,driftHeld:false,commands:{mini:true}},craftDefs[4],track,1/120);
+   assert(!stunts.airborne);assert(Math.abs(stunts.y-track.ground(state.t))<1e-9);assert(!r.events.some(e=>['takeoff','land','mini'].includes(e.kind)));
+  }
+  assert(state.t>start+.007);
+ }
 });

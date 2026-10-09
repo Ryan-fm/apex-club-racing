@@ -1,6 +1,6 @@
 # Driving experience update
 
-The two selectable environments now have separate authored spline routes. Bay uses long coastal sweeps and a lighthouse landmark; Jade Citadel uses tighter courtyard turns, greater elevation variation and smoothly narrowed gate approaches. The road, ramps, collision boundaries, AI and map all use the selected route. Changing environment reloads the scene to release the previous GPU resources.
+The two selectable environments now have separate authored spline routes. Bay uses long coastal sweeps and a lighthouse landmark; Jade Citadel uses tighter courtyard turns, greater elevation variation and smoothly narrowed gate approaches. The road, collision boundaries, AI and map all use the selected route. Changing environment reloads the scene to release the previous GPU resources.
 
 Vehicles, helmet details, clustered rounded trees and softened rock geometry share a polished toy racing direction. Road surfaces now receive standard lighting and nearby directional shadows in Quality mode. Environment reflections support the vehicles' metal and paint. Performance mode disables dynamic shadows. Citadel combines cool distant mountains with warm lantern lights.
 

@@ -1,9 +1,3 @@
-export const JUMP_RAMPS=[.08,.40,.70];
-export const RAMP_LENGTH=.007;
-export function rampHeight(t){
- for(const start of JUMP_RAMPS){const u=(t-start)/RAMP_LENGTH;if(u>=0&&u<1)return u*7;}
- return 0;
-}
 export function createStunts(){return {airborne:false,y:null,vy:0,airWindow:0,landWindow:0,driftWindow:0,driftPower:0,kind:'',lastRamp:0,miniBuffer:0,combo:0,chainTime:0};}
 export function offerDrift(s,power,cut){if(power>0){s.driftWindow=.85;s.driftPower=power;s.kind=cut?'CUT BOOST':'EXIT BOOST';}}
 export function stepStunts(s,{ground,ramp,speed,dt,blocked=false}){

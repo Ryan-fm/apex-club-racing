@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createStunts,offerDrift,stepStunts,fireStunt,boostOpportunity,rampHeight,JUMP_RAMPS,RAMP_LENGTH} from '../stunt-model.js';
+import {createStunts,offerDrift,stepStunts,fireStunt,boostOpportunity} from '../stunt-model.js';
 test('drift boost requires a valid window and is consumed only once',()=>{
  const s=createStunts();assert.equal(fireStunt(s),null);offerDrift(s,.8,true);
  assert.equal(fireStunt(s).kind,'CUT BOOST');assert.equal(fireStunt(s),null);
@@ -21,7 +21,4 @@ test('cosmetic drift hops and slow ramp travel cannot generate air boosts',()=>{
 test('wall contact cancels airborne and pending boost rewards',()=>{
  const s=createStunts();offerDrift(s,.8,true);s.airborne=true;s.airWindow=.5;
  stepStunts(s,{ground:20,ramp:0,speed:300,dt:.1,blocked:true});assert(!s.airborne);assert.equal(fireStunt(s),null);assert.equal(s.y,20);
-});
-test('ramp height matches seven-unit geometry and returns to road after lip',()=>{
- for(const t of JUMP_RAMPS){assert.equal(rampHeight(t),0);assert(Math.abs(rampHeight(t+RAMP_LENGTH*.5)-3.5)<1e-9);assert.equal(rampHeight(t+RAMP_LENGTH+.00001),0);}
 });

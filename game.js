@@ -9,7 +9,7 @@ import {setupLanguage,tr,getLanguage,onLanguageChange,rememberTranslation} from 
 import {circuitPoints,roadHalfWidth} from './track-layout.js';
 import {createLesson,stepLesson,createLapRecord,recordLap,canSubmitRace,ghostPose,medals,empTargets,assistedInput} from './race-experience.js';
 import {createPickupFactory} from './pickup-design.js';
-import {JUMP_RAMPS,RAMP_LENGTH,rampHeight,createStunts,boostOpportunity} from './stunt-model.js';
+import {createStunts,boostOpportunity} from './stunt-model.js';
 import {createShowroom,createCitadel} from './scene-design.js';
 import {createMobileControls,isHandheldDevice} from './mobile-controls.js';
 import {DISTANCE_SCALE, DISPLAY_SPEED} from './driving-model.js';
@@ -189,15 +189,6 @@ function createTrack(){
 let trackMat,bayTrackObjects,structureMat;
 function buildRoad(){
 trackMat=createTrack();
-for(const start of JUMP_RAMPS){
- const positions=[],indices=[];
- for(let i=0;i<=20;i++){const t=start+RAMP_LENGTH*i/20,f=trackFrame(t);for(const side of [-1,1]){const p=f.p.clone().addScaledVector(f.side,side*(roadHalfWidth(requestedScene,t)-1));p.y+=7*i/20+.08;positions.push(p.x,p.y,p.z);}}
- for(let i=0;i<20;i++){const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
- const mesh=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xc39853,metalness:.2,roughness:.7,side:THREE.DoubleSide}));world.add(mesh);
- for(const u of [.15,.55,.90]){const f=trackFrame(start+RAMP_LENGTH*u),mark=new THREE.Mesh(new THREE.BoxGeometry(54,.12,1.5),new THREE.MeshBasicMaterial({color:0xffe3a2}));mark.position.copy(f.p);mark.position.y+=7*u+.25;mark.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),f.tan);world.add(mark);}
-}
-
 bayTrackObjects=[];
 const beforeBayTrack=new Set(world.children);
 // Edge rails + cathedral ribs.
@@ -403,7 +394,7 @@ function presentAI(time){
   for(const [i,a] of ai.entries()){
     a.mesh.visible=!lesson&&!gateSlice;if(!a.mesh.visible)continue;
     animateCraft(a.mesh,time,a.speed/560,a.stun<=0&&Math.sin(time+i)>.96);
-    const f=trackFrame(a.t);a.mesh.position.copy(f.p).addScaledVector(f.side,a.lane).addScaledVector(f.normal,3.7+rampHeight(a.t));
+    const f=trackFrame(a.t);a.mesh.position.copy(f.p).addScaledVector(f.side,a.lane).addScaledVector(f.normal,3.7);
     a.mesh.quaternion.setFromRotationMatrix(poseMatrix.makeBasis(f.side.clone().negate(),f.normal,f.tan));
   }
   if(race)state.rank=standings(race).findIndex(r=>r.id===0)+1;
@@ -671,9 +662,9 @@ function finishSprint(){
   let saved=false;try{if(!replayData)saved=saveSprint(localStorage,sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked),sprint);}catch{}
   document.querySelector('#results').hidden=false;document.querySelector('#results table').hidden=true;
   document.querySelector('#resultTitle').textContent='GATE RUN COMPLETE';
-  document.querySelector('#resultSubtitle').textContent=`${formatTime(sprint.elapsed)} · ${tr('Three turns, one jump.')}`;
+  document.querySelector('#resultSubtitle').textContent=`${formatTime(sprint.elapsed)} · ${tr('Three linked turns.')}`;
   document.querySelector('#challengeResult').textContent=tr(`Drifts ${sprint.drifts} · Mini boosts ${sprint.boosts} · Collisions ${sprint.collisions}`)+`
-${tr('CUT BOOST')} ${sprint.cut} · ${tr('AIR BOOST')} ${sprint.air} · ${tr('LAND BOOST')} ${sprint.land}
+${tr('CUT BOOST')} ${sprint.cut}
 `+tr(saved?'Challenge saved separately. Race records unchanged.':'Challenge complete. Race records unchanged.');
   document.querySelector('#raceAgain').focus();
   if(replayData){let output=document.querySelector('#replayReport');if(!output){output=document.createElement('output');output.id='replayReport';output.hidden=true;output.dataset.noTranslate='';document.body.append(output);}output.textContent=JSON.stringify({inputHash:replayData.inputHash,ticks:replayTick,sprint,performance:perf.exportReport()});}
@@ -861,7 +852,7 @@ if(gateSlice){
   document.querySelector('#teamChoice').hidden=true;
   document.querySelector('#raceStart').innerHTML='Launch gate sprint <span>↗</span>';
   document.querySelector('.scene-options').hidden=true;document.querySelector('.mode-options').hidden=true;
-  document.querySelector('.race-disclosure').textContent=replayData?'DIAGNOSTIC REPLAY · Recorded inputs · No records saved':'Three turns, one jump. Your controls. Separate challenge records.';
+  document.querySelector('.race-disclosure').textContent=replayData?'DIAGNOSTIC REPLAY · Recorded inputs · No records saved':'Three linked turns. Your controls. Separate challenge records.';
 }
 setCraft(craftIndex);
 selectScene(requestedScene);
