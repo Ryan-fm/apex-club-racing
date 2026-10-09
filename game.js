@@ -638,10 +638,16 @@ function updateRaceHUD(){
 function finishRace(){
  finishExperience();
   const finishTime=race.racers[0].finishTime;
-  const upload=document.querySelector('#submitToyScore');
-  upload.hidden=!!replayData||raceAssisted||!canSubmitRace(finishTime,raceLaps,raceValid);upload.disabled=false;
-  const completed={scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps};
-  upload.onclick=async()=>{upload.disabled=true;try{await onlineClub.submit(completed);club.message('Toy 成绩已提交，排行榜保留你的最快用时。');}catch(error){club.message(error.message);upload.disabled=false;}};
+  const finishedRace=race;
+  const notice=document.querySelector('#onlineNotice');
+  const eligible=!replayData&&!raceAssisted&&canSubmitRace(finishTime,raceLaps,raceValid);
+  notice.textContent=eligible?'成绩正在自动提交…':raceAssisted?'辅助模式成绩已保存在本地，不参与标准排行榜。':'';
+  if(eligible){
+    const completed={scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps};
+    onlineClub.submit(completed)
+      .then(()=>{if(race===finishedRace)notice.textContent='成绩已自动提交，排行榜保留你的最快用时。';})
+      .catch(error=>{if(race===finishedRace)notice.textContent=`本次成绩提交失败：${error.message}`;});
+  }
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();document.querySelector('#results').hidden=false;document.querySelector('#raceAgain').focus();
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
@@ -658,7 +664,7 @@ function updateSprintHUD(){
   ui.text(raceNodes.lap,'SPRINT');
 }
 function finishSprint(){
-  document.querySelector('#submitToyScore').hidden=true;
+  document.querySelector('#onlineNotice').textContent='';
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();state.speed=0;state.vx=0;state.vz=0;
   let saved=false;try{if(!replayData)saved=saveSprint(localStorage,sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked),sprint);}catch{}
   document.querySelector('#results').hidden=false;document.querySelector('#results table').hidden=true;
