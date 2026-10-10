@@ -133,10 +133,10 @@ let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor'].includes(new 
 let curve,trackLength,roadSamples,trackRoutes;
 function setRouteGeometry(name){
  requestedScene=name;
- curve=new THREE.CatmullRomCurve3(circuitPoints(name).map(p=>new THREE.Vector3(...p)),true,'catmullrom',name==='harbor'?.65:.35);
+ curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',name==='harbor'?.65:.35);
  if(name==='harbor')curve.arcLengthDivisions=2400;
  trackLength=curve.getLength();
- roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};});
+ roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:gateSlice?undefined:p.y,z:p.z};});
  trackRoutes=createTrackRoutes(name,curve);
 }
 setRouteGeometry(requestedScene);
@@ -746,7 +746,7 @@ function resetExperience(){
  document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');
  runStats={collisions:0,boosts:0,drifts:0,recoveries:[],recoveryStart:null};lapRecord=createLapRecord();lapNumber=0;raceLaps=[];raceValid=true;
  lapAssisted=document.querySelector('#beginnerSetting').checked;raceAssisted=lapAssisted;
- recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene+'-routes-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
+ recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene+'-hills-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
 function startLesson(){
@@ -818,7 +818,7 @@ function launchPrepared(action){
 }
 function updateLobbyRecord(){
  const names=['CLUB DRIVER','BRONZE DRIVER','SILVER DRIVER','GOLD DRIVER'];let medal=0,record=null;
- try{medal=Math.min(3,Number(localStorage.getItem('apex-medal')||0));record=JSON.parse(localStorage.getItem(`apex-best-v2-${requestedScene+'-routes-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`)||'null');}catch{}
+ try{medal=Math.min(3,Number(localStorage.getItem('apex-medal')||0));record=JSON.parse(localStorage.getItem(`apex-best-v2-${requestedScene+'-hills-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`)||'null');}catch{}
  document.querySelector('#profileMedal').textContent=names[medal]||names[0];document.querySelector('#sceneBest').textContent=record?.time?`PERSONAL BEST ${formatTime(record.time)}`:'PERSONAL BEST —';
 }
 function snapshot(s,c,width,height){

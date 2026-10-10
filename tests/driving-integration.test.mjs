@@ -9,7 +9,7 @@ import {GATE_SPRINT,createSprint,updateSprint,sprintRecordKey,saveSprint} from '
 import {createLapRecord,recordLap} from '../race-experience.js';
 import {chaseHeading,createSuspension,stepSuspension} from '../runtime/race-presenter.js';
 import {replay} from '../diagnostics/gate-replay.js';
-const curve=new THREE.CatmullRomCurve3(circuitPoints('citadel').map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35);
+const curve=new THREE.CatmullRomCurve3(circuitPoints('citadel',{classic:true}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',.35);
 const track={samples:Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};}),halfWidth:t=>roadHalfWidth('citadel',t),ground:t=>curve.getPointAt(t).y};
 function initial(t=.245){const p=curve.getPointAt(t),tan=curve.getTangentAt(t);return {x:p.x,z:p.z,heading:Math.atan2(tan.x,tan.z),t,speed:0,vx:0,vz:0,lane:0,laneVel:0,roadIndex:null,hit:0,hop:0,nitro:0,miniTurbo:0,boost:1/3,drift:{active:false,charge:0,direction:0}};}
 function play(hz){
