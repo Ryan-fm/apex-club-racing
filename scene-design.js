@@ -3,7 +3,7 @@ import {createGateBuilder} from './citadel-gate.js';
 
 export {createClubShowroom as createShowroom} from './showroom-design.js';
 
-export function createCitadel(trackFrame,trackLength,halfWidth=()=>38){
+export function createCitadel(trackFrame,trackLength,halfWidth=()=>38,opening=()=>false){
  const group=new THREE.Group();group.name='Jade Citadel';
  const buildGate=createGateBuilder();
  const stone=new THREE.MeshStandardMaterial({color:0x687474,roughness:.95});
@@ -19,11 +19,13 @@ export function createCitadel(trackFrame,trackLength,halfWidth=()=>38){
  for(let i=0;i<320;i++){
   const f=trackFrame(i/320);orient.makeBasis(f.side.clone().negate(),f.normal,f.tan);pose.quaternion.setFromRotationMatrix(orient);
   for(const side of [-1,1]){
+   if(opening(i/320,side,f))continue;
    pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.normal,-20);pose.scale.set(10,50,trackLength/320+2);pose.updateMatrix();walls.setMatrixAt(wi++,pose.matrix);
    for(const offset of [-.25,.25]){pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.tan,offset*trackLength/320).addScaledVector(f.normal,9);pose.scale.set(10,8,trackLength/320*.23);pose.updateMatrix();merlons.setMatrixAt(mi++,pose.matrix);}
    for(const y of [-34,-18,-2]){pose.position.copy(f.p).addScaledVector(f.side,side*(halfWidth(i/320)+5)).addScaledVector(f.normal,y);pose.scale.set(10.3,.6,trackLength/320+2);pose.updateMatrix();courses.setMatrixAt(ci++,pose.matrix);}
   }
  }
+ walls.count=wi;merlons.count=mi;courses.count=ci;
  const box=(parent,mat,x,y,z,sx,sy,sz)=>{const m=new THREE.Mesh(cube,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;};
  // Four gently upturned eaves, built as a real roof mesh rather than a flat decal.
  function eaves(parent,width,y){

@@ -78,3 +78,6 @@ html.handheld-input .in-race .telemetry{bottom:22px}
  #lobby .gate-practice,#lobby #practiceStart{display:none}
  .controls-card,.results-card{max-height:calc(100dvh - 24px);overflow-y:auto}
 }
+
+#lobby .route-guide{display:block;color:#98cfc8;font-size:10px;line-height:1.6;margin-top:5px}
+@media(orientation:landscape) and (max-height:550px){#lobby .route-guide{display:none}}
