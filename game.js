@@ -1,3 +1,5 @@
+import {applyRoadFinish,createTrackFinish} from './track-finish.js';
+import {createChaseCamera} from './runtime/chase-camera.js';
 import {createChallengeUI} from './challenge-ui.js';
 import {mountRoomUI} from './multiplayer/ui.js';
 import {multiplayerEndpoint} from './multiplayer/config.js';
@@ -157,23 +159,23 @@ function drivingFrame(t,id=state.routeId){return branchFrame(trackRoutes,id,t)||
 
 function createTrack(){
   const seg=900;
-  const pos=[], uv=[], idx=[];
+  const pos=[], uv=[], idx=[], shoulderOpen=[];
   for(let i=0;i<=seg;i++){
     const t=i/seg, f=trackFrame(t),half=roadHalfWidth(requestedScene,t);
     for(const s of [-1,1]){
       const v=f.p.clone().addScaledVector(f.side,half*s);
-      pos.push(v.x,v.y,v.z); uv.push(s<0?0:1,t*90);
+      pos.push(v.x,v.y,v.z); uv.push(s<0?0:1,t*90);shoulderOpen.push(routeOpening(trackRoutes,t,s,f)?1:0);
     }
   }
   for(let i=0;i<seg;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
-  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('shoulderOpen',new THREE.Float32BufferAttribute(shoulderOpen,1)); g.setIndex(idx); g.computeVertexNormals();
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,side:THREE.DoubleSide});
   m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0}};
   m.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,m.uniforms);
-    shader.vertexShader='varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
-    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;');
-    shader.fragmentShader='varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
+    shader.vertexShader='attribute float shoulderOpen;varying float vShoulderOpen;varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
+    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;vShoulderOpen=shoulderOpen;');
+    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
         float edge=1.-smoothstep(.009,.022,min(vRoadUv.x,1.-vRoadUv.x));
         float lane=(1.-smoothstep(.002,.006,abs(vRoadUv.x-.333)))+(1.-smoothstep(.002,.006,abs(vRoadUv.x-.667)));
@@ -182,9 +184,9 @@ function createTrack(){
         float shoulder=(1.-smoothstep(.035,.07,min(vRoadUv.x,1.-vRoadUv.x)))*(1.-edge);
         float grain=fract(sin(dot(floor(vPos.xz*9.),vec2(12.9898,78.233)))*43758.5453);
         vec3 base=vec3(.075,.105,.13)+seam*.024+grain*.015;
-        base+=lane*dash*vec3(.09,.16,.20);
-        base=mix(base,mix(vec3(.92,.92,.79),vec3(.95,.20,.16),step(.5,fract(vRoadUv.y*2.))),shoulder*.8);
-        base+=edge*vec3(.1,.32,.38)*.45;
+        base+=lane*dash*vec3(.09,.16,.20)*(1.-vShoulderOpen);
+        base=mix(base,mix(vec3(.92,.92,.79),vec3(.95,.20,.16),step(.5,fract(vRoadUv.y*2.))),shoulder*.8*(1.-vShoulderOpen));
+        base+=edge*vec3(.1,.32,.38)*.45*(1.-vShoulderOpen);
         float marker=line(vRoadUv.y*.33,.09)*step(.93,abs(vRoadUv.x-.5)*2.);
         base+=marker*vec3(.95,.28,.08);
         vec2 brick=vec2(vRoadUv.x*12.+mod(floor(vRoadUv.y*3.),2.)*.5,vRoadUv.y*3.);
@@ -199,11 +201,13 @@ function createTrack(){
         base=mix(base,wet,harbor);base=mix(base,base*vec3(1.35,1.05,.80)+vec3(.018,.009,0.),canyon);diffuseColor.rgb=base;
     `);
   };
+  applyRoadFinish(m);
   const mesh=new THREE.Mesh(g,m);mesh.receiveShadow=true; world.add(mesh); return m;
 }
 let trackMat,bayTrackObjects,structureMat;
 function buildRoad(){
 trackMat=createTrack();
+world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
 world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t)));
 bayTrackObjects=[];
 const beforeBayTrack=new Set(world.children);
@@ -456,20 +460,21 @@ function updatePickups(dt,time){
   }
 }
 
+const chaseCamera=createChaseCamera();
 let cameraReady=false;
 function updateCamera(dt,meta){
   const f={...meta.f,tan:meta.f.tan.clone()};
   cameraHeading=chaseHeading(cameraHeading,state.heading,dt,!cameraReady);
   f.tan.set(Math.sin(cameraHeading),0,Math.cos(cameraHeading)).addScaledVector(f.normal,-f.tan.dot(f.normal)).normalize();
   const speedN=clamp(state.speed/650,0,1);
-  const desired=player.position.clone().addScaledVector(f.tan,-61-speedN*7).addScaledVector(f.normal,27+speedN*2);
+  if(!cameraReady)chaseCamera.reset();
+  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,dt,roots:[world,...bayDecor,citadel,harbor,canyon]});
+  const desired=view.position;
   const shake=reducedMotion?0:state.hit?.45:0;
-  desired.x+=(Math.random()-.5)*shake*speedN; desired.y+=(Math.random()-.5)*shake*speedN; desired.z+=(Math.random()-.5)*shake*speedN;
-  if(!cameraReady){camera.position.copy(desired);cameraReady=true;}
-  // Chase the actual vehicle heading, not the circuit tangent.
-  camera.position.copy(desired);
-  const look=player.position.clone().addScaledVector(f.tan,23+speedN*14).addScaledVector(f.side,state.laneVel*.07);
-  camera.up.copy(f.normal).applyAxisAngle(f.tan,state.bank*.1).normalize();
+  desired.x+=(Math.random()-.5)*shake*speedN;desired.z+=(Math.random()-.5)*shake*speedN;
+  camera.position.copy(desired);cameraReady=true;
+  const look=player.position.clone().addScaledVector(view.forward,(23+speedN*14)*Math.max(.25,view.boom)).addScaledVector(view.up,4);
+  camera.up.copy(view.up);
   camera.lookAt(look);
   dir.position.copy(player.position).add(new THREE.Vector3(-110,220,90));dir.target.position.copy(player.position);
   chaseLight.position.copy(camera.position).addScaledVector(f.normal,20);chaseLight.target.position.copy(player.position);
@@ -840,7 +845,7 @@ function snapshot(s,c,width,height){
 function updateScenePreview(){
  if(scenePreviews.has(requestedScene))return;
  const f=trackFrame(.025),previewCamera=new THREE.PerspectiveCamera(55,432/200,.1,9000);previewCamera.position.copy(f.p).addScaledVector(f.tan,-145).addScaledVector(f.side,25).addScaledVector(f.normal,60);previewCamera.lookAt(f.p.clone().addScaledVector(f.tan,75).addScaledVector(f.normal,18));
- const url=snapshot(scene,previewCamera,432,200),image=document.querySelector(`button[data-scene="${requestedScene}"] img`);image.src=url;image.hidden=false;try{localStorage.setItem(`apex-lobby-preview-v2-${requestedScene}`,url);}catch{}
+ const url=snapshot(scene,previewCamera,432,200),image=document.querySelector(`button[data-scene="${requestedScene}"] img`);image.src=url;image.hidden=false;try{localStorage.setItem(`apex-lobby-preview-v3-${requestedScene}`,url);}catch{}
  scenePreviews.add(requestedScene);
 }
 function setupClubLobby(){
@@ -848,7 +853,7 @@ function setupClubLobby(){
  for(const type of ['bay','citadel','harbor','canyon']){
   const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(type));
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
-  try{const cached=localStorage.getItem(`apex-lobby-preview-v2-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
+  try{const cached=localStorage.getItem(`apex-lobby-preview-v3-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
  }
  const miniScene=new THREE.Scene();miniScene.background=new THREE.Color(0x102635);miniScene.environment=scene.environment;miniScene.add(new THREE.HemisphereLight(0xd8efff,0x293646,2));const light=new THREE.DirectionalLight(0xffe8c6,3);light.position.set(12,22,18);miniScene.add(light);
  const miniCamera=new THREE.PerspectiveCamera(38,216/124,.1,150);miniCamera.position.set(26,16,35);miniCamera.lookAt(0,0,0);const kart=makeCraft(0xffffff,1);miniScene.add(kart);

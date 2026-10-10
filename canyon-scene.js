@@ -21,7 +21,8 @@ export function createCanyon(trackFrame,trackLength,routes=[],opening=()=>false)
  const clear=(p,radius)=>roads.every(samples=>projectTrack(p.x,p.z,samples).d2>(radius+48)**2);
  for(let i=0;i<360;i++){
   const t=i/360,f=trackFrame(t),len=trackLength/360+2;
-  local(f,sandstone,0,-43,0,98,82,len);
+  local(f,sandstone,0,-7,0,98,12,len);
+  if(i%15===0&&f.p.y>20)for(const side of [-1,1])local(f,dark,side*30,-f.p.y*.5-4,0,9,f.p.y+8,12);
   for(const side of [-1,1]){
    if(opening(t,side,f))continue;
    local(f,steel,side*41,3,0,3,6,len);
@@ -35,7 +36,7 @@ export function createCanyon(trackFrame,trackLength,routes=[],opening=()=>false)
   if(!clear(p,radius))continue;
   const q=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),i*1.7);
   add(rock,i%3?sandstone:pale,p,[radius,height,radius*.8],q);
-  for(let layer=0;layer<3;layer++)add(cube,layer%2?pale:dark,new THREE.Vector3(p.x,30+layer*height*.4,p.z),[radius*1.65,4,radius*1.3],q);
+  for(let layer=0;layer<3;layer++)add(rock,layer%2?pale:dark,new THREE.Vector3(p.x,30+layer*height*.4,p.z),[radius*.95,4,radius*.73],q);
  }
  // Distant mesas form a warm horizon rather than a sea backdrop.
  for(let i=0;i<18;i++){
