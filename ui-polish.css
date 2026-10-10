@@ -1,0 +1,60 @@
+/* Shared, resolution-independent icon language. Decorative masks inherit button labels and focus behavior. */
+:root{
+ --icon-arrow:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2019%2019%205M6%205h13v13%22/%3E%3C/svg%3E");
+ --icon-flag:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2021V3m0%201h14v10H5%22/%3E%3Cpath%20d%3D%22M5%204h7v5H5m7%200h7v5h-7%22%20fill%3D%22currentColor%22%20stroke%3D%22none%22/%3E%3C/svg%3E");
+ --icon-users:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%228%22%20r%3D%223%22/%3E%3Cpath%20d%3D%22M3%2021v-3a6%206%200%200%201%2012%200v3M16%205a3%203%200%200%201%200%206m2%203a5%205%200%200%201%203%204v3%22/%3E%3C/svg%3E");
+ --icon-settings:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m9%203-1%203-3%201-2%204%202%202v4l4%202%203-1%203%201%204-2v-4l2-2-2-4-3-1-1-3Z%22/%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2211%22%20r%3D%223%22/%3E%3C/svg%3E");
+ --icon-garage:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m3%209%209-6%209%206v12H3Zm4%2012V11h10v10M7%2014h10M7%2017h10%22/%3E%3C/svg%3E");
+ --icon-cup:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%203h10v6a5%205%200%200%201-10%200ZM7%205H3v3a4%204%200%200%200%205%204m9-7h4v3a4%204%200%200%201-5%204m-4%202v5m-5%202h10%22/%3E%3C/svg%3E");
+ --icon-driver:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2015V9a7%207%200%200%201%2014%200v6l-3%205H8Zm0-7h14v5H5m7%200v7%22/%3E%3C/svg%3E");
+ --icon-check:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%2012%204%204%208-9%22/%3E%3Cpath%20d%3D%22m12%202%208%204v6c0%205-8%2010-8%2010S4%2017%204%2012V6Z%22/%3E%3C/svg%3E");
+ --icon-plus:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%205v14M5%2012h14%22/%3E%3Cpath%20d%3D%22M3%207V3h4m10%200h4v4m0%2010v4h-4M7%2021H3v-4%22/%3E%3C/svg%3E");
+ --icon-refresh:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M20%208a9%209%200%201%200%201%207M20%203v6h-6%22/%3E%3C/svg%3E");
+ --icon-rotate:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%228%22%20y%3D%225%22%20width%3D%228%22%20height%3D%2214%22%20rx%3D%222%22%20transform%3D%22rotate%2830%2012%2012%29%22/%3E%3Cpath%20d%3D%22M3%209a9%209%200%200%201%2015-6m0-1v4h-4m7%209a9%209%200%200%201-15%206m0%201v-4h4%22/%3E%3C/svg%3E");
+ --icon-music:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%2017V5l11-2v12M9%208l11-2%22/%3E%3Cellipse%20cx%3D%226%22%20cy%3D%2218%22%20rx%3D%223%22%20ry%3D%222%22/%3E%3Cellipse%20cx%3D%2217%22%20cy%3D%2216%22%20rx%3D%223%22%20ry%3D%222%22/%3E%3C/svg%3E");
+ --icon-drift:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m9%203%2010%204-2%209-10-4Zm-1%205%2010%204M4%2014c-6%204%201%204%201%207m5-5c-6%204%201%204%201%207%22/%3E%3C/svg%3E");
+ --icon-emblem:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m3%2020%208-16h3l7%2016h-5l-4-9-4%209Zm7-5h7%22/%3E%3C/svg%3E");
+}
+.action-arrow,.brand-mark::before,.apex-emblem::before,.signed-in-mark::before,.invite-plus::before{content:"";display:inline-block;width:22px;height:22px;background:currentColor;mask:var(--icon-arrow) center/contain no-repeat;vertical-align:middle;flex-shrink:0}
+.brand-mark{display:grid;place-items:center;background:linear-gradient(145deg,#ffe4a8,#bc8f49);color:#111a20;box-shadow:inset 0 1px #fff8,0 3px 18px #e6be6c18}
+.brand-mark::before,.apex-emblem::before{mask-image:var(--icon-emblem);width:26px;height:26px}
+.brand .apex-emblem{display:grid;place-items:center;background:linear-gradient(145deg,#ffe4a8,#bc8f49);color:#111a20;border-radius:9px}
+.signed-in-mark::before{mask-image:var(--icon-check);width:30px;height:30px}
+.invite-plus::before{mask-image:var(--icon-plus);width:36px;height:36px}
+:where(#openSettings,.lobby-tools>a,#raceStart,#openRoom,#practiceStart,.gate-practice,#raceAgain,#startDriving,#roomCreate,#roomJoin,#roomInvite,#roomReady,#roomStart,#boardRefresh,.site-nav>a,.driver-actions>button,#landscapeMode)::before{content:"";display:inline-block;width:18px;height:18px;margin-right:9px;vertical-align:-4px;background:currentColor;mask:var(--icon-flag) center/contain no-repeat;flex-shrink:0}
+#openSettings::before{mask-image:var(--icon-settings)}
+.lobby-tools>a::before{mask-image:var(--icon-garage)}
+#openRoom::before,#roomCreate::before,#roomJoin::before,#roomInvite::before{mask-image:var(--icon-users)}
+#roomReady::before{mask-image:var(--icon-check)}
+#boardRefresh::before{mask-image:var(--icon-refresh)}
+.site-nav>a[href*="leaderboard"]::before{mask-image:var(--icon-cup)}
+.site-nav>a[href*="account"]::before,.driver-actions>button::before{mask-image:var(--icon-driver)}
+.driver-actions>[data-action="dance"]::before{mask-image:var(--icon-music)}
+.driver-actions>[data-action="victory"]::before{mask-image:var(--icon-cup)}
+#practiceStart::before,.gate-practice::before{mask-image:var(--icon-drift)}
+#landscapeMode::before{mask-image:var(--icon-rotate)}
+.rotate-device{font-size:0!important;display:grid!important;place-items:center}
+.rotate-device::before{content:"";width:68px;height:68px;background:currentColor;mask:var(--icon-rotate) center/contain no-repeat}
+#roomClose{border-radius:12px}
+#roomDialog:not(.is-room) #roomClose{font-size:0}
+#roomDialog:not(.is-room) #roomClose::before{content:"";display:block;width:20px;height:20px;margin:auto;background:currentColor;clip-path:polygon(12% 0,50% 38%,88% 0,100% 12%,62% 50%,100% 88%,88% 100%,50% 62%,12% 100%,0 88%,38% 50%,0 12%)}
+:where(.button-primary,#raceStart,#roomStart,#roomReady){background-image:linear-gradient(130deg,#fff2d1aa,transparent 48%,#be873a22);box-shadow:inset 0 1px 0 #fff9,0 6px 24px #0003;border-radius:12px}
+:where(.mode-options>button,.team-options>button,.driver-actions>button){border-radius:12px;background-image:linear-gradient(155deg,#ffffff09,transparent 70%);box-shadow:inset 0 1px 0 #ffffff09}
+:where(.mode-options>button,.team-options>button,.driver-actions>button):is(.active,[aria-pressed="true"]){border-color:#efd09a88;box-shadow:inset 3px 0 0 #eed09c,inset 0 1px 0 #ffffff14,0 4px 18px #0002}
+#touchControls button{background-image:linear-gradient(145deg,#ffffff12,transparent 55%,#00000028);box-shadow:inset 0 1px 0 #ffffff30,inset 0 -2px 0 #0005,0 5px 16px #0003}
+#touchControls button>svg:not(.charge-ring){stroke-width:1.8;filter:drop-shadow(0 2px 2px #0006)}
+#touchControls button:active,#touchControls button.pressed{box-shadow:inset 0 2px 8px #0007,0 0 16px #efcf8d20}
+:where(.account-card,.board-panel,.controls-card,.results-card){border-color:#c8dfdf22;background-image:linear-gradient(135deg,#c7e9e908,transparent 55%);box-shadow:inset 0 1px 0 #ffffff09,0 22px 70px #0003}
+:where(.site-nav>a,.lobby-tools>a,#openSettings):hover{color:#ffe1a0}
+@media(max-width:600px){.site-nav>a::before{width:15px;height:15px;margin-right:5px;vertical-align:-3px}.action-arrow{width:19px;height:19px}}
+@media(orientation:landscape) and (max-height:550px){.lobby-tools>a::before,#openSettings::before{width:14px;height:14px;margin-right:4px}.gate-practice::before,#practiceStart::before{width:13px;height:13px;margin-right:4px}}
+
+.seat-state::before,#roomSignal::before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;vertical-align:2px;border:1px solid currentColor;border-radius:50%}
+.is-ready .seat-state::before{width:16px;height:16px;vertical-align:-3px;border:0;border-radius:0;background:currentColor;mask:var(--icon-check) center/contain no-repeat}
+#roomSignal::before{background:currentColor;box-shadow:0 0 9px currentColor}
+.motion-icon{display:inline-block;width:14px;height:14px;background:currentColor;vertical-align:-2px}
+.motion-icon.is-paused{clip-path:polygon(15% 0,38% 0,38% 100%,15% 100%,15% 0,62% 0,85% 0,85% 100%,62% 100%,62% 0)}
+.motion-icon.is-playing{clip-path:polygon(20% 0,100% 50%,20% 100%)}
+
+#hud .brand .apex-emblem{color:#17252d;font-style:normal}
+#lobby .scene-options button.active::before{content:"";background:#efbf7e;mask:var(--icon-check) center/contain no-repeat;border-radius:0;width:22px;height:22px}
