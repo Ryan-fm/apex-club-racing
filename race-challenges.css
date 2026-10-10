@@ -1,0 +1,24 @@
+#challengeSelect{width:100%;border:1px solid #eac78b55;border-radius:10px;background:linear-gradient(110deg,#edc98f12,#0f2530);color:#f4d8a7;padding:11px 12px;text-align:left;font-size:11px;cursor:pointer}
+#challengeSelect::before{content:"";display:inline-block;width:17px;height:17px;margin-right:8px;vertical-align:-4px;background:currentColor;mask:var(--icon-cup) center/contain no-repeat}
+#challengeDialog{width:min(620px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:26px;border:1px solid #b4d2d633;border-radius:20px;background:linear-gradient(140deg,#142a36,#071119);color:#edf5f5;box-shadow:0 30px 100px #0009}
+#challengeDialog::backdrop{background:#020b11bb;backdrop-filter:blur(8px)}
+#challengeDialog header{display:flex;align-items:center;justify-content:space-between;gap:20px}
+#challengeDialog header small{color:#dfb97c;font-size:9px;letter-spacing:.18em}
+#challengeDialog h2{font-size:25px;margin:8px 0 22px}
+#challengeDialog .challenge-close{border:1px solid #a9cfd333;border-radius:9px;background:#ffffff09;padding:10px 16px;color:#cfe3e4;cursor:pointer}
+.career-summary{padding:18px;background:linear-gradient(110deg,#e7bc7922,#183b4322);border-radius:12px;border:1px solid #eccf9422;display:grid;gap:9px;margin-bottom:18px}
+.career-summary b{font-size:18px;color:#ffe0a7}.career-summary span,.career-summary small{font-size:11px;color:#adcbcf}
+.career-summary progress{width:100%;height:5px;accent-color:#efc985}
+.challenge-options{display:grid;gap:10px}.challenge-options button{display:grid;grid-template-columns:1fr auto;gap:8px;text-align:left;padding:16px;border:1px solid #a9cfd328;border-radius:12px;background:#ffffff03;color:#d8e9e9;cursor:pointer}
+.challenge-options button[aria-pressed=true]{border-color:#efc985;box-shadow:inset 3px 0 #efc985;background:linear-gradient(100deg,#e8be7c18,#0000)}
+.challenge-options small{grid-column:1;color:#7fa6ad;font-size:9px;letter-spacing:.12em}.challenge-options strong{grid-column:1;font-size:16px}.challenge-options span{grid-column:1;font-size:11px;line-height:1.6;color:#acccd0}.challenge-options b{grid-column:2;grid-row:1/4;align-self:center;color:#efd09b;font-size:12px}
+.challenge-rules{color:#91b2b9;font-size:11px;line-height:1.8;margin:18px 0 0}
+#challengeHUD{position:absolute;top:184px;right:24px;width:250px;pointer-events:none;border:1px solid #b9d8dc22;border-radius:12px;background:linear-gradient(120deg,#0b1a28e8,#132d35bd);padding:11px 14px;box-shadow:0 8px 22px #0003}
+#challengeHUD[hidden]{display:none}.challenge-live{display:grid;gap:5px;border-bottom:1px solid #b9d8dc22;padding-bottom:9px}.challenge-live b{font-size:11px;color:#edcd96;letter-spacing:.08em}.challenge-live span{font-size:10px;color:#b8d5d8}
+.chain-live{display:grid;grid-template-columns:1fr auto;gap:5px;padding-top:9px}.chain-live strong{font-size:16px;font-style:italic;color:#8bebdb}.chain-live span{grid-column:1/3;font-size:9px;color:#b5cdd1}.chain-live progress{grid-column:1/3;width:100%;height:3px;accent-color:#8bebdb}
+#careerResult{margin:12px 0;padding:12px;border:1px solid #e7c58b44;border-radius:9px;background:#d7ac6210;color:#f0d39f;font-size:12px;line-height:1.7}
+@media(orientation:landscape) and (max-height:550px){#challengeHUD{top:147px;left:12px;right:auto;width:210px;padding:7px 10px}.challenge-live{gap:3px;padding-bottom:5px}.challenge-live b{font-size:10px}.challenge-live span{font-size:9px}.chain-live{padding-top:5px}.chain-live strong{font-size:13px}.chain-live span{font-size:8px}#challengeSelect{font-size:10px;padding:8px 10px}#challengeDialog{padding:18px}#challengeDialog h2{font-size:20px;margin:6px 0 12px}}
+@media(max-width:600px) and (orientation:portrait){#challengeHUD{top:292px;right:12px;width:220px}.challenge-options span{font-size:10px}}
+
+@media(orientation:landscape) and (max-height:360px){#challengeHUD{top:95px;width:190px}.chain-live span{display:none}.challenge-live{padding-bottom:4px}.chain-live{padding-top:4px}}
+@media(orientation:landscape) and (max-height:550px){.challenge-live b,.challenge-live span{line-height:1.3}.chain-live{gap:3px}.chain-live strong{line-height:1.2}.chain-live span{line-height:1.3}}

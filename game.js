@@ -1,3 +1,4 @@
+import {createChallengeUI} from './challenge-ui.js';
 import {mountRoomUI} from './multiplayer/ui.js';
 import {multiplayerEndpoint} from './multiplayer/config.js';
 import {PHYSICS_DT,idleInput,multiplayerTrack,stepRoomPlayer} from './multiplayer/simulation.js';
@@ -82,6 +83,7 @@ let reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let helpOpen=false,simulationTime=0,race=null,selectedMode='team',selectedTeam='blue';
 let roomUI=null,multiplayerActive=false,startingMultiplayer=false,roomConnected=true,roomPrediction=null,roomRound=null,roomAccumulator=0,roomSnapshot=null,roomDismissedRound=null;
 const safeName=name=>String(name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const drivingChallenges=createChallengeUI({enabled:!gateSlice});
 const mobile=createMobileControls({active:()=>race?.phase==='racing'&&!helpOpen,action:name=>actions.add(name==='nitro'?'ShiftLeft':name==='mini'?'KeyE':'KeyQ'),pause:()=>toggleControls(true)});
 function toggleControls(open=!helpOpen){
   if(!race || race.phase==='finished')return;
@@ -316,7 +318,7 @@ function setCraft(i){
 }
 function reset(){
  if(roomUI?.client.room&&!startingMultiplayer){roomUI.open();return;}
- resetExperience();replayTick=0;replayAccumulator=0;sprint=createSprint();Object.assign(suspension,createSuspension());cameraHeading=null;
+ drivingChallenges.reset();resetExperience();replayTick=0;replayAccumulator=0;sprint=createSprint();Object.assign(suspension,createSuspension());cameraHeading=null;
   Object.assign(stunts,createStunts());
   scene.add(player);
   audio.start();raceEffects.reset();driftLatched=false;lastSteer=0;keyboard.clear();actions.clear();mobile.clear();helpOpen=false;simulationTime=0;cameraReady=false;qWas=false;
@@ -364,6 +366,7 @@ function updatePlayer(dt,time){
       if(e.kind==='mini'){runStats.boosts++;lessonFired=true;audio.cue(e.type==='AIR BOOST'?'air':e.type==='LAND BOOST'?'land':e.type==='CUT BOOST'?'cut':'mini');ping(`${e.type}${e.combo>1?' / CHAIN '+e.combo:''}`,'#ffce73');}
       if(e.kind==='collision'){runStats.collisions++;runStats.recoveryStart=race.elapsed;}
     }
+    if(!gateSlice&&!lesson&&!multiplayerActive)drivingChallenges.step({events:result.events,routeId:state.routeId,collisions:runStats.collisions,rank:state.rank,dt});
     if(gateSlice&&!lesson)updateSprint(sprint,r.progress,race.elapsed,result.events);
     if(runStats.recoveryStart!==null&&!result.wallHit&&state.speed>120){runStats.recoveries.push(race.elapsed-runStats.recoveryStart);runStats.recoveryStart=null;}
     if(state.lap>oldLap)ping(state.lap===3?'FINAL LAP':'LAP 2','#fff0b3');
@@ -404,6 +407,7 @@ function updateAI(dt,time){
       const near=Math.abs(r.progress-race.racers[0].progress)<.0025;
       const opponent=trackFrame(a.t),opponentX=opponent.p.x+opponent.side.x*a.lane,opponentZ=opponent.p.z+opponent.side.z*a.lane;
       if(near&&Math.hypot(opponentX-state.x,opponentZ-state.z)<14&&state.hit===0&&race.racers[0].finishTime===null){
+        runStats.collisions++;
         const impulse=Math.sign(state.lane-a.lane||1)*12/density();const roadSide=drivingFrame(state.t).side;state.vx+=roadSide.x*impulse;state.vz+=roadSide.z*impulse;state.speed*=state.shield>0?.94:.86;state.shield=Math.max(0,state.shield-.10);state.hit=.3;
       }
     }
@@ -658,6 +662,7 @@ function updateRaceHUD(){
 }
 
 function finishRace(){
+ drivingChallenges.finish({finished:race.racers[0].finishTime!==null,valid:!replayData&&canSubmitRace(race.racers[0].finishTime,raceLaps,raceValid),collisions:runStats.collisions,rank:standings(race).findIndex(r=>r.id===0)+1});
  finishExperience();
   const finishTime=race.racers[0].finishTime;
   if(!replayData&&canSubmitRace(finishTime,raceLaps,raceValid)&&onlineClub.configured&&club.profile())
@@ -692,7 +697,7 @@ ${tr('CUT BOOST')} ${sprint.cut}
   if(replayData){let output=document.querySelector('#replayReport');if(!output){output=document.createElement('output');output.id='replayReport';output.hidden=true;output.dataset.noTranslate='';document.body.append(output);}output.textContent=JSON.stringify({inputHash:replayData.inputHash,ticks:replayTick,sprint,performance:perf.exportReport()});}
 }
 function formatTime(t){return `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toFixed(2).padStart(5,'0')}`;}
-function returnLobby({keepRoom=false}={}){if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureKart(a.mesh,craftDefs[i%craftDefs.length]);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
+function returnLobby({keepRoom=false}={}){drivingChallenges.hide();if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureKart(a.mesh,craftDefs[i%craftDefs.length]);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
 document.querySelector('#raceStart').addEventListener('click',()=>{if(roomUI?.client.room){roomUI.open();return;}let trained=gateSlice;try{trained=trained||localStorage.getItem('apex-trained')==='yes';}catch{}beginLaunch(trained?reset:startLesson);});
 document.querySelector('#raceAgain').addEventListener('click',()=>{if(multiplayerActive){roomDismissedRound=roomRound;returnLobby({keepRoom:true});roomUI.open();}else reset();});
 document.querySelectorAll('[data-lobby]').forEach(el=>el.addEventListener('click',returnLobby));
@@ -819,7 +824,7 @@ function launchPrepared(action){
 function updateLobbyRecord(){
  const names=['CLUB DRIVER','BRONZE DRIVER','SILVER DRIVER','GOLD DRIVER'];let medal=0,record=null;
  try{medal=Math.min(3,Number(localStorage.getItem('apex-medal')||0));record=JSON.parse(localStorage.getItem(`apex-best-v2-${requestedScene+'-hills-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`)||'null');}catch{}
- document.querySelector('#profileMedal').textContent=names[medal]||names[0];document.querySelector('#sceneBest').textContent=record?.time?`PERSONAL BEST ${formatTime(record.time)}`:'PERSONAL BEST —';
+ document.querySelector('#profileMedal').textContent=drivingChallenges.title()||names[medal]||names[0];document.querySelector('#sceneBest').textContent=record?.time?`PERSONAL BEST ${formatTime(record.time)}`:'PERSONAL BEST —';
 }
 function snapshot(s,c,width,height){
   const target=new THREE.WebGLRenderTarget(width,height);target.texture.colorSpace=THREE.SRGBColorSpace;const previous=renderer.getRenderTarget();
