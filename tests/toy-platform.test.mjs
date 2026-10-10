@@ -21,3 +21,13 @@ test('negative score is a valid personal rank and unsupported SDK never submits'
  const club=createToyClub(async()=>({isSupport:async()=>true,getMyRank:async()=>({ranked:true,rank:9,score:-50000})}));assert.deepEqual(await club.myRank('bay'),{rank:9,time_ms:50000});
  const unsupported=createToyClub(async()=>({isSupport:async()=>false}));await assert.rejects(unsupported.submit(race),/B站 Toy/);
 });
+
+test('canyon uses a separate fourth board and keeps existing harbor records isolated',async()=>{
+ const reads=[],scores=[];
+ const sdk={isSupport:async()=>true,getRankList:async request=>{reads.push(request.board);return [{rank:1,score:-123456,nickname:'Driver'}];},submitScore:async request=>scores.push(request)};
+ const club=createToyClub(async()=>sdk);
+ await club.leaderboard('canyon',false);await club.leaderboard('harbor',false);await club.leaderboard('canyon',false);
+ assert.deepEqual(reads,[4,3]);
+ await club.submit({...race,scene:'canyon'});assert.deepEqual(scores,[{board:4,score:-123456}]);
+ assert.deepEqual(raceScore(race),{board:3,score:-123456});
+});

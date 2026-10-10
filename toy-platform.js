@@ -1,5 +1,5 @@
 // Official contract: https://www.bilibili.com/toy/publish/sdk
-export const TOY_BOARDS=Object.freeze({bay:1,citadel:2,harbor:3});
+export const TOY_BOARDS=Object.freeze({bay:1,citadel:2,harbor:3,canyon:4});
 export function raceScore({scene,assisted,time,laps}){
  if(!TOY_BOARDS[scene])throw Error('Unknown circuit.');
  if(assisted)throw Error('新手辅助仅保存本地成绩，不参与 Toy 标准榜。');
