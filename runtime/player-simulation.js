@@ -23,7 +23,7 @@ export function stepPlayerSimulation(state, stunts, input, kart, track, dt) {
   fire();
   const surface=projectRoad(state,track);
   state.surfaceBoost=surface.surfaceBoost;
-  stepHandling(state,{steer:stunts.airborne?input.rawSteer*.35:input.rawSteer,throttle:input.throttle,brake:input.brake,boosting:state.nitro>0||state.miniTurbo>0,surfaceBoost:state.surfaceBoost},kart,dt);
+  stepHandling(state,{steer:stunts.airborne?input.rawSteer*.35:input.rawSteer,throttle:input.throttle,brake:input.brake,boosting:state.nitro>0||state.miniTurbo>0,surfaceBoost:state.surfaceBoost,grade:surface.grade*(Math.sin(state.heading)*surface.sideZ-Math.cos(state.heading)*surface.sideX)},kart,dt);
   const road=projectRoad(state,track);state.roadIndex=road.index;
   if(road.routeId!==state.routeId&&road.routeId)events.push({kind:"route-enter",route:road.routeKind});
   if(road.surfaceBoost&&!state.surfaceBoost)events.push({kind:"fast-road"});

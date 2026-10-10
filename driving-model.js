@@ -3,13 +3,15 @@ export const DISTANCE_SCALE=.52;
 export const DISPLAY_SPEED=.42;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export function stepHandling(state,input,kart,dt){
- const {steer=0,throttle,brake,boosting,surfaceBoost=false}=input;
+ const {steer=0,throttle,brake,boosting,surfaceBoost=false,grade=0}=input;
  // Hold brake at rest briefly to engage reverse, overriding auto throttle.
  state.reverseHold=brake&&state.speed<2?(state.reverseHold||0)+dt:0;
  const reversing=brake&&state.reverseHold>=.3;
- const target=brake?(reversing?-kart.max*.22:0):throttle?kart.max*Math.max(boosting?1.34:1,surfaceBoost?1.25:1):0;
+ const target=brake?(reversing?-kart.max*.22:0):throttle?kart.max*Math.max(boosting?1.34:1,surfaceBoost?1.25:1)*(1-clamp(grade,-.2,.2)*.4):0;
  const accel=brake?(reversing?kart.accel*.65:520):target>state.speed?kart.accel*(boosting?2.4:surfaceBoost?1.8:1):125;
  state.speed+=clamp(target-state.speed,-accel*dt,accel*dt);
+ // Gravity adds gentle hill feedback without changing player steering. Brakes stay authoritative.
+ if(!brake&&Math.abs(state.speed)>2)state.speed-=clamp(grade,-.25,.25)*90*dt;
  if(state.drift.active)state.speed=Math.max(0,state.speed-22*dt);
  state.wallContact=Math.max(0,(state.wallContact||0)-dt);
  const ratio=clamp(Math.abs(state.speed)/kart.max,0,1.3),slip=state.drift.active;
@@ -35,7 +37,7 @@ export function projectTrack(x,z,samples,previous=null){
   i=(i%n+n)%n;const a=samples[i],b=samples[i+1],dx=b.x-a.x,dz=b.z-a.z;
   const u=clamp(((x-a.x)*dx+(z-a.z)*dz)/(dx*dx+dz*dz),0,1);
   const px=a.x+dx*u,pz=a.z+dz*u,d2=(x-px)**2+(z-pz)**2;
-  if(!best||d2<best.d2){const l=Math.hypot(dx,dz);best={x:px,z:pz,t:(i+u)/n,index:i,d2,sideX:-dz/l,sideZ:dx/l};}
+  if(!best||d2<best.d2){const l=Math.hypot(dx,dz);best={x:px,z:pz,t:(i+u)/n,index:i,d2,grade:Number.isFinite(a.y)&&Number.isFinite(b.y)?(b.y-a.y)/l:0,sideX:-dz/l,sideZ:dx/l};}
  };
  if(previous===null)for(let i=0;i<n;i++)scan(i);
  else for(let i=previous-24;i<=previous+24;i++)scan(i);

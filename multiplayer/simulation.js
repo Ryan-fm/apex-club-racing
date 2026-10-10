@@ -18,7 +18,7 @@ export function multiplayerTrack(scene){
  if(tracks.has(scene))return tracks.get(scene);
  const curve=new THREE.CatmullRomCurve3(circuitPoints(scene).map(p=>new THREE.Vector3(...p)),true,'catmullrom',scene==='harbor'?.65:.35);
  if(scene==='harbor')curve.arcLengthDivisions=2400;
- const track={scene,routes:createTrackRoutes(scene,curve),curve,samples:Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};}),halfWidth:t=>roadHalfWidth(scene,t),ground:t=>curve.getPointAt(t).y};tracks.set(scene,track);return track;
+ const track={scene,routes:createTrackRoutes(scene,curve),curve,samples:Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:p.y,z:p.z};}),halfWidth:t=>roadHalfWidth(scene,t),ground:t=>curve.getPointAt(t).y};tracks.set(scene,track);return track;
 }
 export function spawnPlayer(scene,index){
  const track=multiplayerTrack(scene),progress=-.004-Math.floor(index/2)*.005,t=(progress+1)%1,p=track.curve.getPointAt(t),tan=track.curve.getTangentAt(t),side=new THREE.Vector3().crossVectors(tan,new THREE.Vector3(0,1,0)).normalize(),lane=index%2===0?-13:13;
