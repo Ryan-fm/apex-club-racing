@@ -4,6 +4,7 @@ import {roadHalfWidth} from './track-layout.js';
 
 // Shared authored roads: no branch crosses the finish line or supplies steering.
 const layout={
+ canyon:{cuts:[[.10,.22],[.43,.54]],express:[[.015,.07,-80],[.85,.92,-80]]},
  bay:{cuts:[[.075,.225],[.41,.56]],express:[[.01,.065,-75],[.76,.815,-80]]},
  citadel:{cuts:[[.08,.145],[.16,.225]],express:[[.01,.065,-72],[.85,.93,72]]},
  harbor:{cuts:[[.08,.145],[.24,.305]],express:[[.005,.06,-72],[.69,.745,-75]]}

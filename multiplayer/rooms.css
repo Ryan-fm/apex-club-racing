@@ -34,3 +34,5 @@
 @media(max-height:550px) and (min-width:701px){.room-heading{margin:10px 0 14px}.room-brand h3{font-size:26px;margin:5px 0}.room-brand p{font-size:10px}.room-seat{min-height:220px}.seat-stage{height:110px}.seat-kart{height:120px}.seat-info{padding:8px 12px}.seat-info strong{font-size:13px}.seat-state{padding-top:6px;margin:0}.seat-number{font-size:16px}.room-seat .seat-invite{min-height:200px}.room-track{padding:10px}.room-track-art{height:105px}.room-track-art svg{width:150px}.room-settings{margin-top:8px;gap:5px}#roomDialog .room-settings select{padding:6px}.room-actions{margin-top:12px;padding-top:10px}}
 @media(prefers-reduced-motion:reduce){#roomDialog .room-seat,#roomDialog #roomStart{animation:none}#roomDialog *{transition:none!important}}
 #roomDialog:not([open]){display:none!important}
+
+.room-track-art[data-scene="canyon"]{background:radial-gradient(ellipse at 80% 70%,#e1a34a44,transparent),linear-gradient(140deg,#7a4d36,#332725)}

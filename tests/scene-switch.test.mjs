@@ -4,22 +4,23 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import * as THREE from '../vendor/three/build/three.module.min.js';
 import {createTrackRoutes} from '../track-routes.js';
-import {circuitPoints,roadHalfWidth} from '../track-layout.js';
+import {circuitPoints,roadHalfWidth,trackTension} from '../track-layout.js';
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
 function harness(){
- const nodes=new Map(),history=[],buttons=['bay','citadel','harbor'].map(name=>({dataset:{scene:name},classList:{toggle(){}},setAttribute(k,v){this[k]=v;}}));
+ const nodes=new Map(),history=[],buttons=['bay','citadel','harbor','canyon'].map(name=>({dataset:{scene:name},classList:{toggle(){}},setAttribute(k,v){this[k]=v;}}));
  const scene=new THREE.Scene();scene.background=new THREE.Color();scene.fog=new THREE.FogExp2();
- const context=vm.createContext({THREE,circuitPoints,roadHalfWidth,createTrackRoutes,updateRouteMap(){},URL,URLSearchParams,gateSlice:false,up:new THREE.Vector3(0,1,0),scene,world:new THREE.Group(),location:{search:'',href:'https://game.test/?test=retained',assign(){throw Error('Map selection must not reload the document');}},history:{pushState(_s,_t,url){history.push(url.href);}},
+ const context=vm.createContext({THREE,circuitPoints,roadHalfWidth,trackTension,createTrackRoutes,updateRouteMap(){},URL,URLSearchParams,gateSlice:false,up:new THREE.Vector3(0,1,0),scene,world:new THREE.Group(),location:{search:'',href:'https://game.test/?test=retained',assign(){throw Error('Map selection must not reload the document');}},history:{pushState(_s,_t,url){history.push(url.href);}},
  document:{body:{dataset:{}},querySelectorAll(){return buttons;},querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{setAttribute(k,v){this[k]=v;}});return nodes.get(selector);}},
  keyboard:{clear(){}},actions:new Set(),mobile:{clear(){}},ghost:new THREE.Group(),sea:new THREE.Group(),dir:{color:new THREE.Color()},ambientLight:{color:new THREE.Color()},race:null,craftIndex:4,launchElapsed:null,cameraReady:true});
  const geometry=source.slice(source.indexOf('let requestedScene='),source.indexOf('function createTrack()'));
  // Use real spline/physics samples and the production cache/switch functions. Builders are counted stand-ins for GPU assets.
  vm.runInContext(geometry+`
  let roadBuilds=0,decorBuilds=0,citadelBuilds=0,previews=0,records=0;
- let trackMat,bayTrackObjects,structureMat,bayDecor,citadel=null,harbor=null,selectedScene='bay';
+ let trackMat,bayTrackObjects,structureMat,bayDecor,citadel=null,harbor=null,canyon=null,selectedScene='bay';
  const pickups=[{t:.1,lane:12,m:new THREE.Object3D()}];
- function buildRoad(){roadBuilds++;trackMat={uniforms:{citadel:{value:0},harbor:{value:0}}};structureMat={};const road=new THREE.Group(),rails=new THREE.Group();world.add(road,rails);bayTrackObjects=[rails];}
+ function buildRoad(){roadBuilds++;trackMat={uniforms:{citadel:{value:0},harbor:{value:0},canyon:{value:0}}};structureMat={};const road=new THREE.Group(),rails=new THREE.Group();world.add(road,rails);bayTrackObjects=[rails];}
  function buildDecor(){decorBuilds++;const island=new THREE.Group(),sign=new THREE.Group();sign.userData.sharedTrack=true;scene.add(island,sign);bayDecor=[island];}
+ function createCanyon(){return new THREE.Group();}
  function createHarbor(){return new THREE.Group();}
  function createCitadel(){citadelBuilds++;return new THREE.Group();}
  function updateScenePreview(){previews++;}function updateLobbyRecord(){records++;}
@@ -85,4 +86,23 @@ test('technical harbor has continuous drivable bends and separated road sections
  assert(maxGrade<.25,`unclimbable grade ${maxGrade}`);
  assert(Math.max(...points.map(p=>p.y))-Math.min(...points.map(p=>p.y))>160);
  assert(c.getPointAt(0).distanceTo(c.getPointAt(1))<.001);
+});
+
+test('canyon has its own cached scenery, materials and HUD across all four circuits',()=>{
+ const h=harness();h.run("selectScene('canyon')");
+ const canyon=h.run('canyon'),curve=h.run('curve');assert.equal(canyon.visible,true);
+ assert.equal(h.run('trackMat.uniforms.canyon.value'),1);assert.equal(h.run('sea.visible'),false);
+ assert.equal(h.nodes.get('.track-title').textContent,'Redrock Canyon');
+ h.run("selectScene('harbor');selectScene('citadel');selectScene('bay')");assert.equal(canyon.visible,false);assert.equal(h.run('trackMat.uniforms.canyon.value'),0);
+ h.run("selectScene('canyon')");assert.equal(h.run('curve'),curve);assert.equal(h.run('canyon'),canyon);assert.equal(canyon.visible,true);assert.equal(h.run('sceneCache.size'),4);
+});
+test('canyon S bends, grades and nonadjacent sections remain separated',()=>{
+ const h=harness();h.run("selectScene('canyon')");const c=h.run('curve'),n=1200,points=Array.from({length:n},(_,i)=>c.getPointAt(i/n));
+ let minRadius=Infinity,maxGrade=0,minGap=Infinity;
+ for(let i=0;i<n;i++){
+  const a=points[(i+n-1)%n],b=points[i],d=points[(i+1)%n],u=b.clone().sub(a),v=d.clone().sub(b);
+  minRadius=Math.min(minRadius,u.length()/Math.max(1e-8,u.angleTo(v)));maxGrade=Math.max(maxGrade,Math.abs(v.y)/Math.hypot(v.x,v.z));
+  for(let j=i+1;j<n;j++){if(Math.min(j-i,n-j+i)*c.getLength()/n<200)continue;minGap=Math.min(minGap,Math.hypot(b.x-points[j].x,b.z-points[j].z));}
+ }
+ assert(minRadius>70);assert(minGap>100);assert(maxGrade<.25);assert(c.getPointAt(0).distanceTo(c.getPointAt(1))<.001);
 });

@@ -4,7 +4,7 @@ import {multiplayerTrack,spawnPlayer,stepRoomPlayer,idleInput,recoverRoomPlayer}
 import {projectRoad} from '../track-routes.js';
 import {projectTrack} from '../driving-model.js';
 
-for(const scene of ['bay','citadel','harbor']){
+for(const scene of ['bay','citadel','harbor','canyon']){
  test(`${scene}: two shorter cuts and two express roads connect without crossing unrelated roads`,()=>{
   const track=multiplayerTrack(scene);
   assert.equal(track.routes.filter(r=>r.kind==='shortcut').length,2);

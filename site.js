@@ -4,7 +4,7 @@ import {craftDefs} from './kart-catalog.js';
 
 const page=document.body.dataset.page;
 const local=(zh,en)=>getLanguage()==='zh'?zh:en;
-const sceneNames={bay:['晴湾赛道','Bay Circuit'],citadel:['玉城古道','Jade Citadel'],harbor:['霓虹港湾','Neon Harbor']};
+const sceneNames={bay:['晴湾赛道','Bay Circuit'],citadel:['玉城古道','Jade Citadel'],harbor:['霓虹港湾','Neon Harbor'],canyon:['赤岩峡谷','Redrock Canyon']};
 let renderPage=()=>{};
 let renderHeroToggle=()=>{};
 function renderLanguage(){
