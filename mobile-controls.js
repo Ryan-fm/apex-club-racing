@@ -18,8 +18,30 @@ export function isLandscapeDisplay(win=globalThis.window,display=globalThis.scre
   if(type?.startsWith('landscape'))return true;
   if(Number.isFinite(win?.innerWidth)&&Number.isFinite(win?.innerHeight)&&win.innerWidth>win.innerHeight)return true;
   if(media)return true;
-  // Older Android WebViews expose only the legacy rotation angle.
-  return !type&&Math.abs(win?.orientation??display?.orientation?.angle)===90;
+  // Some Android WebViews keep a stale orientation.type but update window.orientation.
+  if(Number.isFinite(win?.orientation)&&Math.abs(win.orientation)%180===90)return true;
+  return !type&&Number.isFinite(display?.orientation?.angle)&&Math.abs(display.orientation.angle)%180===90;
+}
+// Native WebView calls may reject, expose legacy APIs, or never settle.
+// Bound each call so a blocked fullscreen request cannot also block orientation.
+export async function requestLandscapeDisplay(doc=globalThis.document,display=globalThis.screen,timeoutMs=1800){
+  const attempt=async operation=>{
+    if(!operation)return {ok:false,reason:'unsupported'};
+    let timer;
+    try{
+      const result=operation();
+      const value=await Promise.race([Promise.resolve(result),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error('timeout'),{name:'TimeoutError'})),timeoutMs);})]);
+      return value===false?{ok:false,reason:'denied'}:{ok:true};
+    }catch(error){return {ok:false,reason:error?.name||'denied'};}
+    finally{clearTimeout(timer);}
+  };
+  const element=doc?.documentElement;
+  const fullscreenMethod=element?.requestFullscreen||element?.webkitRequestFullscreen;
+  const fullscreen=doc?.fullscreenElement||doc?.webkitFullscreenElement?{ok:true}:await attempt(fullscreenMethod&&(()=>fullscreenMethod.call(element)));
+  const orientationMethod=display?.orientation?.lock;
+  const legacyMethod=display?.lockOrientation||display?.mozLockOrientation||display?.msLockOrientation;
+  const orientation=await attempt(orientationMethod?()=>orientationMethod.call(display.orientation,'landscape'):legacyMethod?()=>legacyMethod.call(display,'landscape'):null);
+  return {fullscreen,orientation};
 }
 export function createMobileControls({action,active,pause,handheld=isHandheldDevice()}){
   document.documentElement?.classList.toggle('handheld-input',handheld);
@@ -31,10 +53,22 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
   document.body.append(gate);
   let pendingLaunch=null,returnFocus=null;
   const closeGate=()=>{gate.hidden=true;pendingLaunch=null;returnFocus?.focus();};
+  let requestingLandscape=false;
   const requestLandscape=async()=>{
-    try{await document.documentElement.requestFullscreen?.();}catch{}
-    try{await screen.orientation?.lock?.('landscape');}catch{}
-    resumeLaunch();
+    if(requestingLandscape)return;
+    requestingLandscape=true;
+    const primary=gate.querySelector('.primary');primary.disabled=true;
+    try{
+      const result=await requestLandscapeDisplay();
+      resumeLaunch();
+      if(pendingLaunch&&!gate.hidden){
+        const zh=document.documentElement.lang.startsWith('zh');
+        gate.querySelector('p').textContent=result.orientation.ok
+          ?(zh?'横屏请求已发送。请横放手机，等待画面旋转。':'Landscape requested. Turn your phone sideways and wait for the display.')
+          :(zh?'当前浏览器或 App 没有允许自动横屏。请打开手机自动旋转后横放；如果整个页面仍不旋转，请从浏览器打开游戏。':'This browser or app did not allow automatic landscape. Enable auto-rotate and turn sideways; if the entire page stays portrait, open the game in a browser.');
+      }
+      return result;
+    }finally{requestingLandscape=false;primary.disabled=false;}
   };
   gate.querySelector('.primary').addEventListener('click',requestLandscape);
   gate.querySelector('.secondary').addEventListener('click',closeGate);
@@ -43,11 +77,11 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
     if(!pendingLaunch||!isLandscapeDisplay(window,screen,landscape.matches))return;
     const go=pendingLaunch;pendingLaunch=null;gate.hidden=true;go();
   };
-  landscape.addEventListener('change',resumeLaunch);
-  for(const event of ['resize','orientationchange'])addEventListener(event,resumeLaunch);
-  screen.orientation?.addEventListener('change',resumeLaunch);
+  if(landscape.addEventListener)landscape.addEventListener('change',resumeLaunch);
+  else landscape.addListener?.(resumeLaunch);
+  addEventListener('resize',resumeLaunch);
   window.visualViewport?.addEventListener('resize',resumeLaunch);
-  document.addEventListener('fullscreenchange',resumeLaunch);
+  for(const event of ['fullscreenchange','webkitfullscreenchange'])document.addEventListener(event,resumeLaunch);
   const prepareLaunch=go=>{
     if(isLandscapeDisplay(window,screen,landscape.matches)){void requestLandscape();go();return;}
     pendingLaunch=go;returnFocus=document.activeElement;
@@ -111,13 +145,26 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
   });
   document.querySelector('#tiltCenter').addEventListener('click',()=>{if(enabled){center=null;filtered=0;status.textContent='Hold still to center steering…';}else status.textContent='Enable tilt steering first, or use the arrow buttons.';});
   document.querySelector('#mobileCenter').addEventListener('click',()=>{center=null;filtered=0;});
-  const orientationChanged=()=>{clear();center=null;if(active())pause();};
-  screen.orientation?.addEventListener('change',orientationChanged);
-  if(!screen.orientation)addEventListener('orientationchange',orientationChanged);
+  // Pause an existing race before resuming a pending launch. Separate listeners
+  // previously let Android start a race and pause it in the same change event.
+  const rotationState=()=>Number.isFinite(window.orientation)?window.orientation:screen.orientation?.angle??screen.orientation?.type;
+  let lastRotation=rotationState();
+  const orientationChanged=()=>{
+    const rotation=rotationState();
+    const changed=rotation!==lastRotation;lastRotation=rotation;
+    clear();center=null;if(changed&&active())pause();
+    resumeLaunch();
+  };
+  screen.orientation?.addEventListener?.('change',orientationChanged);
+  addEventListener('orientationchange',orientationChanged);
   addEventListener('blur',clear);document.addEventListener('visibilitychange',clear);
   document.querySelector('#landscapeMode').addEventListener('click',async()=>{
-    try{await document.documentElement.requestFullscreen?.();await screen.orientation?.lock?.('landscape');}catch{}
-    document.querySelector('#screenHint').textContent='Rotate your phone sideways. If needed, turn off rotation lock.';
+    const result=await requestLandscape();
+    if(!result)return;
+    const zh=document.documentElement.lang.startsWith('zh');
+    document.querySelector('#screenHint').textContent=result.orientation.ok
+      ?(zh?'横屏请求已发送，请横放手机。':'Landscape requested. Turn your phone sideways.')
+      :(zh?'此浏览器或 App 未允许自动横屏。请打开自动旋转；仍无效时从浏览器打开游戏。':'This browser or app did not allow automatic landscape. Enable auto-rotate, or open the game in a browser.');
   });
   return {clear,prepareLaunch,update({boost,nitro,weapon,drift,empCooldown=0}){
     resumeLaunch();
