@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Static harbor scenery is batched by material; no per-building lights or animation.
-export function createHarbor(trackFrame,trackLength,halfWidth=()=>38){
+export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=>false){
  const root=new THREE.Group();root.name='Neon Harbor';
  const cube=new THREE.BoxGeometry(1,1,1),pose=new THREE.Object3D(),batches=new Map();
  const steel=new THREE.MeshStandardMaterial({color:0x354f69,metalness:.65,roughness:.36});
@@ -33,8 +33,9 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38){
  for(let i=0;i<480;i++){
   const f=trackFrame(i/480),w=halfWidth(i/480),len=trackLength/480+2;
   local(f,concrete,0,-7,0,w*2+15,12,len);
-  for(const side of [-1,1]){local(f,steel,side*(w+2),3,0,3,6,len);local(f,i%12<2?warm:cyan,side*(w+1),6.2,0,.7,.45,len-1);}
+  for(const side of [-1,1]){if(opening(i/480,side,f))continue;local(f,steel,side*(w+2),3,0,3,6,len);local(f,i%12<2?warm:cyan,side*(w+1),6.2,0,.7,.45,len-1);}
   if(i%4===0)for(const side of [-1,1]){
+   if(opening(i/480,side,f))continue;
    // Guardrail uprights, reflector housings and exposed fixing plates stay outside the road.
    const x=side*(w+3);local(f,alloy,x,3.2,0,1.6,7,2);
    local(f,rubber,side*(w+.3),3.5,0,.35,1.8,3.6);local(f,warm,side*(w+.08),3.5,0,.2,.7,2);
@@ -51,7 +52,7 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38){
  // A luminous launch gallery frames the first climb. All ribs share the box batches.
  const point=(f,x,y,z=0)=>f.p.clone().addScaledVector(f.side,x).addScaledVector(f.normal,y).addScaledVector(f.tan,z);
  function arch(t,index){
-  const f=trackFrame(t),w=halfWidth(t)+9,color=index%3?cyan:pink;
+  const f=trackFrame(t);if(opening(t,-1,f)||opening(t,1,f))return;const w=halfWidth(t)+9,color=index%3?cyan:pink;
   const vertices=[[-w,0],[-w,34],[-w+17,56],[w-17,56],[w,34],[w,0]];
   for(let j=0;j<vertices.length-1;j++){
    const a=point(f,...vertices[j]),b=point(f,...vertices[j+1]);beam(steel,a,b,3.8);

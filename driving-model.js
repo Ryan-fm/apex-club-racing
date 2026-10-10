@@ -3,12 +3,12 @@ export const DISTANCE_SCALE=.52;
 export const DISPLAY_SPEED=.42;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export function stepHandling(state,input,kart,dt){
- const {steer=0,throttle,brake,boosting}=input;
+ const {steer=0,throttle,brake,boosting,surfaceBoost=false}=input;
  // Hold brake at rest briefly to engage reverse, overriding auto throttle.
  state.reverseHold=brake&&state.speed<2?(state.reverseHold||0)+dt:0;
  const reversing=brake&&state.reverseHold>=.3;
- const target=brake?(reversing?-kart.max*.22:0):throttle?kart.max*(boosting?1.34:1):0;
- const accel=brake?(reversing?kart.accel*.65:520):target>state.speed?kart.accel*(boosting?2.4:1):125;
+ const target=brake?(reversing?-kart.max*.22:0):throttle?kart.max*Math.max(boosting?1.34:1,surfaceBoost?1.25:1):0;
+ const accel=brake?(reversing?kart.accel*.65:520):target>state.speed?kart.accel*(boosting?2.4:surfaceBoost?1.8:1):125;
  state.speed+=clamp(target-state.speed,-accel*dt,accel*dt);
  if(state.drift.active)state.speed=Math.max(0,state.speed-22*dt);
  state.wallContact=Math.max(0,(state.wallContact||0)-dt);

@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import * as THREE from '../vendor/three/build/three.module.min.js';
+import {createTrackRoutes} from '../track-routes.js';
 import {circuitPoints,roadHalfWidth} from '../track-layout.js';
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
 function harness(){
  const nodes=new Map(),history=[],buttons=['bay','citadel','harbor'].map(name=>({dataset:{scene:name},classList:{toggle(){}},setAttribute(k,v){this[k]=v;}}));
  const scene=new THREE.Scene();scene.background=new THREE.Color();scene.fog=new THREE.FogExp2();
- const context=vm.createContext({THREE,circuitPoints,roadHalfWidth,URL,URLSearchParams,gateSlice:false,up:new THREE.Vector3(0,1,0),scene,world:new THREE.Group(),location:{search:'',href:'https://game.test/?test=retained',assign(){throw Error('Map selection must not reload the document');}},history:{pushState(_s,_t,url){history.push(url.href);}},
+ const context=vm.createContext({THREE,circuitPoints,roadHalfWidth,createTrackRoutes,updateRouteMap(){},URL,URLSearchParams,gateSlice:false,up:new THREE.Vector3(0,1,0),scene,world:new THREE.Group(),location:{search:'',href:'https://game.test/?test=retained',assign(){throw Error('Map selection must not reload the document');}},history:{pushState(_s,_t,url){history.push(url.href);}},
  document:{body:{dataset:{}},querySelectorAll(){return buttons;},querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{setAttribute(k,v){this[k]=v;}});return nodes.get(selector);}},
  keyboard:{clear(){}},actions:new Set(),mobile:{clear(){}},ghost:new THREE.Group(),sea:new THREE.Group(),dir:{color:new THREE.Color()},ambientLight:{color:new THREE.Color()},race:null,craftIndex:4,launchElapsed:null,cameraReady:true});
  const geometry=source.slice(source.indexOf('let requestedScene='),source.indexOf('function createTrack()'));
