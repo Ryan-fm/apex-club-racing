@@ -3,6 +3,7 @@ import {mountRoomUI} from './multiplayer/ui.js';
 import {multiplayerEndpoint} from './multiplayer/config.js';
 import {PHYSICS_DT,idleInput,multiplayerTrack,stepRoomPlayer} from './multiplayer/simulation.js';
 import {RoomPrediction} from './multiplayer/prediction.js';
+import {createCanyon} from './canyon-scene.js';
 import {createHarbor} from './harbor-scene.js';
 import {createVehicleEnvironment} from './vehicle-finish.js';
 import {makeCraft,configureKart} from './kart-model.js';
@@ -13,7 +14,7 @@ import {mountKeyboardSettings} from './keyboard-settings.js';
 import {setupLanguage,tr,getLanguage,onLanguageChange,rememberTranslation} from './localization.js';
 import {createTrackRoutes,routeOpening,branchFrame} from './track-routes.js';
 import {createRouteView,updateRouteMap} from './track-route-view.js';
-import {circuitPoints,roadHalfWidth} from './track-layout.js';
+import {circuitPoints,roadHalfWidth,trackTension} from './track-layout.js';
 import {createLesson,stepLesson,createLapRecord,recordLap,canSubmitRace,ghostPose,medals,empTargets,assistedInput} from './race-experience.js';
 import {createPickupFactory} from './pickup-design.js';
 import {createStunts,boostOpportunity} from './stunt-model.js';
@@ -131,11 +132,11 @@ addEventListener('blur',()=>{keyboard.clear();actions.clear();mobile.clear();if(
 
 // Bay Circuit: a closed coastal course with gentle elevation changes.
 const GATE_SLICE_START=GATE_SPRINT.start;
-let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
+let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
 let curve,trackLength,roadSamples,trackRoutes;
 function setRouteGeometry(name){
  requestedScene=name;
- curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',name==='harbor'?.65:.35);
+ curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(name));
  if(name==='harbor')curve.arcLengthDivisions=2400;
  trackLength=curve.getLength();
  roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:gateSlice?undefined:p.y,z:p.z};});
@@ -167,12 +168,12 @@ function createTrack(){
   for(let i=0;i<seg;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2)); g.setIndex(idx); g.computeVertexNormals();
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,side:THREE.DoubleSide});
-  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0}};
+  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0}};
   m.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,m.uniforms);
     shader.vertexShader='varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;');
-    shader.fragmentShader='varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
+    shader.fragmentShader='varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
         float edge=1.-smoothstep(.009,.022,min(vRoadUv.x,1.-vRoadUv.x));
         float lane=(1.-smoothstep(.002,.006,abs(vRoadUv.x-.333)))+(1.-smoothstep(.002,.006,abs(vRoadUv.x-.667)));
@@ -195,7 +196,7 @@ function createTrack(){
         wet+=edge*vec3(.1,.8,.75);
         float sheen=pow(max(0.,sin(vRoadUv.y*.6+vRoadUv.x*8.)),18.)*.08;
         wet+=sheen*mix(vec3(.15,.65,.8),vec3(.8,.22,.38),step(.5,vRoadUv.x));
-        base=mix(base,wet,harbor);diffuseColor.rgb=base;
+        base=mix(base,wet,harbor);base=mix(base,base*vec3(1.35,1.05,.80)+vec3(.018,.009,0.),canyon);diffuseColor.rgb=base;
     `);
   };
   const mesh=new THREE.Mesh(g,m);mesh.receiveShadow=true; world.add(mesh); return m;
@@ -541,7 +542,7 @@ const startFrame=trackFrame(0),startGate=new THREE.Group();startGate.position.co
 startGate.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(startFrame.side.clone().negate(),startFrame.normal,startFrame.tan));
 const startHeight=requestedScene==='harbor'?65:35;
 for(const x of [-44,44]){const post=new THREE.Mesh(new THREE.BoxGeometry(3,startHeight,3),structureMat);post.position.set(x,startHeight/2,0);startGate.add(post);}
-const banner=new THREE.Mesh(new THREE.BoxGeometry(90,19,2),new THREE.MeshStandardMaterial({map:signTexture('APEX CLUB',requestedScene==='harbor'?'NEON HARBOR / START — FINISH':requestedScene==='citadel'?'JADE CITADEL / START — FINISH':'BAY CIRCUIT / START — FINISH'),roughness:.6}));banner.position.y=startHeight;startGate.add(banner);
+const banner=new THREE.Mesh(new THREE.BoxGeometry(90,19,2),new THREE.MeshStandardMaterial({map:signTexture('APEX CLUB',requestedScene==='canyon'?'REDROCK CANYON / START — FINISH':requestedScene==='harbor'?'NEON HARBOR / START — FINISH':requestedScene==='citadel'?'JADE CITADEL / START — FINISH':'BAY CIRCUIT / START — FINISH'),roughness:.6}));banner.position.y=startHeight;startGate.add(banner);
 const gridWhite=new THREE.MeshStandardMaterial({color:0xfff5d8}),gridDark=new THREE.MeshStandardMaterial({color:0x213841});
 for(let x=0;x<12;x++)for(let z=0;z<2;z++){const tile=new THREE.Mesh(new THREE.BoxGeometry(6.3,.12,3),((x+z)%2)?gridWhite:gridDark);tile.position.set((x-5.5)*6.3,.1,z*3);startGate.add(tile);}startGate.userData.sharedTrack=true;scene.add(startGate);
 for(let i=0;i<34;i++){
@@ -554,7 +555,7 @@ for(let i=0;i<34;i++){
 bayDecor=scene.children.filter(o=>!beforeBayDecor.has(o)&&!o.userData.sharedTrack);
 }
 buildDecor();
-let citadel=null,harbor=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
+let citadel=null,harbor=null,canyon=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
 if(diagnosticsEnabled)renderer.info.autoReset=false;
 const perf=createPerformanceProbe({
  enabled:diagnosticsEnabled,
@@ -573,17 +574,17 @@ const perf=createPerformanceProbe({
 });
 const sceneCache=new Map(),scenePreviews=new Set();
 let routeObjects=[...world.children],decorObjects=scene.children.filter(o=>bayDecor.includes(o)||o.userData.sharedTrack);
-function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,routeObjects,decorObjects});}
+function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,routeObjects,decorObjects});}
 function activateRoute(name){
  cacheRoute();
- routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;
+ routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;
  const cached=sceneCache.get(name);
  if(cached){
-  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,routeObjects,decorObjects}=cached);
+  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,routeObjects,decorObjects}=cached);
   routeObjects.forEach(o=>o.visible=true);decorObjects.forEach(o=>o.visible=true);
  }else{
   setRouteGeometry(name);const oldRoad=new Set(world.children),oldDecor=new Set(scene.children);
-  buildRoad();buildDecor();citadel=null;harbor=null;
+  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;
   routeObjects=world.children.filter(o=>!oldRoad.has(o));decorObjects=scene.children.filter(o=>!oldDecor.has(o));
  }
  for(const pickup of pickups){const f=trackFrame(pickup.t);pickup.m.position.copy(f.p).addScaledVector(f.side,pickup.lane).addScaledVector(f.normal,7);}
@@ -592,24 +593,25 @@ function activateRoute(name){
  keyboard.clear();actions.clear();mobile.clear();cameraReady=false;
 }
 function selectScene(name,{historyMode='push'}={}){
- name=['bay','citadel','harbor'].includes(name)?name:'bay';
+ name=['bay','citadel','harbor','canyon'].includes(name)?name:'bay';
  if(race||launchElapsed!==null)return;
  const changed=name!==requestedScene;
  if(changed)activateRoute(name);
- selectedScene=name;const ancient=name==='citadel',night=name==='harbor';const title=night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
+ selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon';const title=desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
  if(ancient&&!citadel){citadel=createCitadel(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(citadel);}
  if(citadel)citadel.visible=ancient;
  if(night&&!harbor){harbor=createHarbor(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(harbor);}if(harbor)harbor.visible=night;
- [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night);
- scene.background.set(night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=night?.00025:ancient?.00036:.00022;
- dir.color.set(night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
+ if(desert&&!canyon){canyon=createCanyon(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(canyon);}if(canyon)canyon.visible=desert;
+ [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert);
+ scene.background.set(desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=desert?.00025:night?.00025:ancient?.00036:.00022;
+ dir.color.set(desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
  scene.traverse(o=>{if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
- trackMat.uniforms.citadel.value=ancient?1:0;trackMat.uniforms.harbor.value=night?1:0;trackMat.roughness=night?.28:.86;trackMat.metalness=night?.25:0;
+ trackMat.uniforms.canyon.value=desert?1:0;trackMat.uniforms.citadel.value=ancient?1:0;trackMat.uniforms.harbor.value=night?1:0;trackMat.roughness=night?.28:.86;trackMat.metalness=night?.25:0;
  document.body.dataset.scene=selectedScene;
  document.querySelectorAll('button[data-scene]').forEach(b=>{const on=b.dataset.scene===selectedScene;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
  document.querySelector('.track-title').textContent=title;
- document.querySelector('#sceneCaption').textContent=night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
- document.querySelector('.navigation .label').textContent=night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
+ document.querySelector('#sceneCaption').textContent=desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
+ document.querySelector('.navigation .label').textContent=desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
  cacheRoute();
  if(changed){
   try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}
@@ -679,7 +681,7 @@ function finishRace(){
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
   document.querySelector('#resultTitle').textContent=race.mode==='team'?winner:ordered[0].id===0?'YOU WIN!':'Race complete';
-  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
+  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
   document.querySelector('#resultRows').innerHTML=ordered.map((r,i)=>`<tr class="${r.id===0?'you':''}"><td>${String(i+1).padStart(2,'0')}</td><td><i class="team-dot ${race.mode==='team'?r.team:'solo'}"></i>${r.name}${r.id===0?' / YOU':' / AI'}</td><td>${r.finishTime===null?'DNF':formatTime(r.finishTime)}</td><td>${r.finishTime===null?0:SCORE_TABLE[i]}</td></tr>`).join('');
 }
 function updateSprintHUD(){
@@ -850,8 +852,8 @@ function updateScenePreview(){
 }
 function setupClubLobby(){
  showroom.scene.environment=scene.environment;
- for(const type of ['bay','citadel','harbor']){
-  const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',type==='harbor'?.65:.35);
+ for(const type of ['bay','citadel','harbor','canyon']){
+  const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(type));
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
   try{const cached=localStorage.getItem(`apex-lobby-preview-v2-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
  }

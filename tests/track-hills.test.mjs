@@ -5,7 +5,7 @@ import {circuitPoints} from '../track-layout.js';
 import {stepPlayerSimulation} from '../runtime/player-simulation.js';
 import {craftDefs} from '../kart-catalog.js';
 
-for(const scene of ['bay','citadel','harbor'])test(`${scene}: hills have continuous ground, usable climbs and descents, and a bounded grade`,()=>{
+for(const scene of ['bay','citadel','harbor','canyon'])test(`${scene}: hills have continuous ground, usable climbs and descents, and a bounded grade`,()=>{
  assert.notDeepEqual(circuitPoints(scene),circuitPoints(scene,{classic:true}));
  const track=multiplayerTrack(scene),curve=track.curve;
  assert(curve.getPointAt(0).distanceTo(curve.getPointAt(1))<1e-6);

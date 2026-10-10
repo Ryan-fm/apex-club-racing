@@ -74,3 +74,14 @@ test('equal-progress multiplayer standings use server grid order for every clien
   assert.deepEqual(standings({racers:ordered}).map(r=>r.sortOrder),[0,1,2,3]);
  }
 });
+
+test('four-player canyon room uses the new shared circuit and retains the seat limit',()=>{
+ const f=setup(),members=[];
+ for(let i=0;i<4;i++){const connection=f.connect();const data=f.rooms.handle(connection,{type:i?'join':'create',code:members[0]?.data.room.code,name:`Driver${i}`,craft:i,scene:'canyon'});members.push({connection,data});}
+ const code=members[0].data.room.code,room=f.rooms.rooms.get(code);assert.equal(room.scene,'canyon');assert.equal(room.players.size,4);
+ assert.throws(()=>f.rooms.handle(f.connect(),{type:'join',code,name:'Fifth',craft:1,scene:'canyon'}),/最多 4/);
+ for(const member of members)f.rooms.handle(member.connection,{type:'ready',ready:true});
+ f.rooms.handle(members[0].connection,{type:'start'});assert.equal(room.phase,'countdown');
+ const track=multiplayerTrack('canyon');assert.equal(track.routes.length,4);assert(track.curve.getLength()>7000);
+ for(const player of room.players.values())assert(Number.isFinite(player.state.x)&&Number.isFinite(player.state.heading));
+});
