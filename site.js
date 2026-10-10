@@ -33,7 +33,8 @@ if(page==='home'){
     label.dataset.zh=playing?'暂停动效':'播放动效';
     label.dataset.en=playing?'Pause motion':'Play motion';
     label.textContent=local(label.dataset.zh,label.dataset.en);
-    toggle.querySelector('[aria-hidden]').textContent=playing?'Ⅱ':'▶';
+    toggle.querySelector('[aria-hidden]').className=playing?'motion-icon is-paused':'motion-icon is-playing';
+    toggle.querySelector('[aria-hidden]').textContent='';
   };
   const stop=()=>{video.pause();video.hidden=true;toggle.hidden=true;};
   const portraitPromo=matchMedia('(max-width: 600px) and (orientation: portrait)');

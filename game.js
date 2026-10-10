@@ -873,7 +873,7 @@ if(gateSlice){
   craftIndex=4;selectedMode='solo';document.body.classList.add('diagnostic-slice');
   document.querySelectorAll('[data-mode]').forEach(b=>{const on=b.dataset.mode==='solo';b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
   document.querySelector('#teamChoice').hidden=true;
-  document.querySelector('#raceStart').innerHTML='Launch gate sprint <span>↗</span>';
+  document.querySelector('#raceStart').innerHTML='Launch gate sprint <span class="action-arrow" aria-hidden="true"></span>';
   document.querySelector('.scene-options').hidden=true;document.querySelector('.mode-options').hidden=true;
   document.querySelector('.race-disclosure').textContent=replayData?'DIAGNOSTIC REPLAY · Recorded inputs · No records saved':'Three linked turns. Your controls. Separate challenge records.';
 }

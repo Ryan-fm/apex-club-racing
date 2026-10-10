@@ -54,7 +54,7 @@ export function createMobileControls({action,active,pause,handheld=isHandheldDev
     const zh=document.documentElement.lang.startsWith('zh');
     gate.querySelector('h2').textContent=zh?'横过来，准备出发':'Turn sideways to race';
     gate.querySelector('p').textContent=zh?'横屏后自动进入赛道。左手转向，右手漂移和加速。若屏幕没有旋转，请关闭手机的旋转锁定。':'Turn your phone sideways to begin. Steer on the left; drift and boost on the right. Disable rotation lock if needed.';
-    gate.querySelector('.primary').textContent=zh?'全屏并尝试横屏 ↗':'Fullscreen / landscape ↗';
+    gate.querySelector('.primary').textContent=zh?'全屏并尝试横屏':'Fullscreen / landscape';
     gate.querySelector('.secondary').textContent=zh?'返回选车与赛道':'Back to race setup';
     gate.hidden=false;gate.querySelector('.primary').focus();
   };
