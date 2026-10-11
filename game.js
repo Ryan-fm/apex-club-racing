@@ -22,7 +22,7 @@ import {createPickupFactory} from './pickup-design.js';
 import {createStunts,boostOpportunity} from './stunt-model.js';
 import {createShowroom,createCitadel} from './scene-design.js';
 import {createMobileControls,isHandheldDevice} from './mobile-controls.js';
-import {DISTANCE_SCALE, DISPLAY_SPEED} from './driving-model.js';
+import {DISTANCE_SCALE, DISPLAY_SPEED,projectTrack} from './driving-model.js';
 import {createRaceEffects} from './race-effects.js';
 import {createRaceAudio} from './race-audio.js';
 import {mountDriverStudio} from './driver-studio.js';
@@ -208,7 +208,7 @@ let trackMat,bayTrackObjects,structureMat;
 function buildRoad(){
 trackMat=createTrack();
 world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
-world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t)));
+world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t),trackFrame));
 bayTrackObjects=[];
 const beforeBayTrack=new Set(world.children);
 // Edge rails + cathedral ribs.
@@ -524,6 +524,7 @@ const trunk=new THREE.MeshStandardMaterial({color:0x806c55,roughness:.9});
 for(let i=0;i<26;i++){
   const f=trackFrame(i/26),island=new THREE.Group();
   island.position.copy(f.p).addScaledVector(f.side,(i%2?1:-1)*(150+(i%3)*40)).addScaledVector(f.normal,-95);
+  if(trackRoutes.some(r=>projectTrack(island.position.x,island.position.z,r.samples).d2<(r.halfWidth+145)**2))continue;
   const rock=new THREE.Mesh(new THREE.IcosahedronGeometry(1,2),cliff);rock.scale.set(125,78,115);island.add(rock);
   const lawn=new THREE.Mesh(new THREE.SphereGeometry(1,16,8),grass);lawn.scale.set(121,25,110);lawn.position.y=50;island.add(lawn);
   for(let n=0;n<4;n++){
