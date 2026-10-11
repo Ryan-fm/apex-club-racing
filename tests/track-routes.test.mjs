@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {multiplayerTrack,spawnPlayer,stepRoomPlayer,idleInput,recoverRoomPlayer} from '../multiplayer/simulation.js';
-import {projectRoad} from '../track-routes.js';
+import {projectRoad,routeWidth} from '../track-routes.js';
 import {projectTrack} from '../driving-model.js';
 
 for(const scene of ['bay','citadel','harbor','canyon']){
@@ -83,4 +83,21 @@ test('prediction reconciles an express-road state with server physics',async()=>
  prediction.reconcile(snapshot,{phase:'racing',elapsed:4/60,firstFinish:null});
  for(const key of ['x','z','speed','t'])assert(Math.abs(client.state[key]-server.state[key])<1e-8);
  assert.equal(client.state.routeId,server.state.routeId);assert.equal(client.state.surfaceBoost,server.state.surfaceBoost);
+});
+
+test('shortcut entries ease into distinct skill widths and fan out gently for the exit',()=>{
+ for(const scene of ['bay','citadel','harbor','canyon']){
+  const track=multiplayerTrack(scene),cuts=track.routes.filter(r=>r.kind==='shortcut');
+  assert(cuts[1].halfWidth<cuts[0].halfWidth);
+  for(const r of cuts){
+   assert(r.name.length>0);assert(r.savedDistance>0);
+   assert.equal(routeWidth(r,0,scene),track.halfWidth(r.start));assert.equal(routeWidth(r,1,scene),track.halfWidth(r.end));
+   assert.equal(routeWidth(r,.5,scene),r.halfWidth);
+   // Width has no abrupt wall at either end of the fork.
+   assert(Math.abs(routeWidth(r,.001,scene)-routeWidth(r,0,scene))<.01);
+   assert(Math.abs(routeWidth(r,.999,scene)-routeWidth(r,1,scene))<.01);
+  }
+ }
+ const cut=multiplayerTrack('bay').routes.find(r=>r.id==='cut-1');
+ assert(cut.savedDistance/cut.mainLength>.09,'advanced bay cut must save a meaningful distance');
 });

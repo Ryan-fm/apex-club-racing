@@ -5,17 +5,21 @@ import {roadHalfWidth} from './track-layout.js';
 // Shared authored roads: no branch crosses the finish line or supplies steering.
 const layout={
  canyon:{cuts:[[.10,.22],[.43,.54]],express:[[.015,.07,-80],[.85,.92,-80]]},
- bay:{cuts:[[.075,.225],[.41,.56]],express:[[.01,.065,-75],[.76,.815,-80]]},
+ bay:{cuts:[[.075,.225],[.38,.65]],express:[[.01,.065,-75],[.76,.815,-80]]},
  citadel:{cuts:[[.08,.145],[.16,.225]],express:[[.01,.065,-72],[.85,.93,72]]},
  harbor:{cuts:[[.08,.145],[.24,.305]],express:[[.005,.06,-72],[.69,.745,-75]]}
 };
 const up=new THREE.Vector3(0,1,0);
+const names={bay:['沿海内线','灯塔切弯'],citadel:['庭院穿行','城墙切弯'],harbor:['货场切线','码头内线'],canyon:['岩脊内线','峡谷切弯']};
+const ease=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
 export function createTrackRoutes(scene,curve){
  const spec=layout[scene];
  const mainSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};});
  return [...spec.cuts.map(([start,end],i)=>({id:`cut-${i}`,kind:'shortcut',start,end})),...spec.express.map(([start,end,offset],i)=>({id:`express-${i}`,kind:'express',start,end,offset}))].map(route=>{
   const {start,end}=route,a=curve.getPointAt(start),b=curve.getPointAt(end),distance=a.distanceTo(b);
-  const cut=new THREE.CubicBezierCurve3(a,a.clone().addScaledVector(curve.getTangentAt(start),distance*.18),b.clone().addScaledVector(curve.getTangentAt(end),-distance*.18),b);
+  const technical=route.kind==='shortcut'&&route.id==='cut-1';
+  const handle=technical?.22:.18;
+  const cut=new THREE.CubicBezierCurve3(a,a.clone().addScaledVector(curve.getTangentAt(start),distance*handle),b.clone().addScaledVector(curve.getTangentAt(end),-distance*handle),b);
   const samples=Array.from({length:121},(_,i)=>{
    const u=i/120,t=start+(end-start)*u,main=curve.getPointAt(t);
    const p=route.kind==='shortcut'?cut.getPointAt(u):main.clone().addScaledVector(new THREE.Vector3().crossVectors(curve.getTangentAt(t),up).normalize(),route.offset*Math.sin(Math.PI*u)**2);
@@ -35,11 +39,13 @@ export function createTrackRoutes(scene,curve){
    }
   }
   const length=samples.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-samples[i].x,p.y-samples[i].y,p.z-samples[i].z),0);
-  return {...route,samples,length,halfWidth:route.kind==='shortcut'?22:25};
+  const mainLength=curve.getLength()*(end-start);
+  return {...route,samples,length,mainLength,savedDistance:Math.max(0,mainLength-length),technical,name:route.kind==='shortcut'?names[scene][Number(route.id.at(-1))]:'快速路',halfWidth:route.kind==='shortcut'?(technical?18:21):25};
  });
 }
 export function routeWidth(route,u,scene){
- const blend=Math.min(1,Math.min(u,1-u)*10);
+ // Room for an intentional entry line, a narrow apex, then a longer exit fan.
+ const blend=route.kind==='shortcut'?Math.min(ease(u/.22),ease((1-u)/.28)):Math.min(1,Math.min(u,1-u)*10);
  return roadHalfWidth(scene,route.start+(route.end-route.start)*u)*(1-blend)+route.halfWidth*blend;
 }
 export function projectRoad(state,track){
