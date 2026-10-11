@@ -701,7 +701,7 @@ function updateSprintHUD(){
   ui.style(document.querySelector('#sprintProgress'),'transform',`scaleX(${clamp((race.racers[0].progress-GATE_SPRINT.start)/(GATE_SPRINT.finish-GATE_SPRINT.start),0,1)})`);
   ui.text(raceNodes.lap,'SPRINT');
 }
-function finishSprint(){
+function finishSprint(){if(!replayData)progression.flush();
   document.querySelector('#onlineNotice').textContent='';
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();state.speed=0;state.vx=0;state.vz=0;
   let saved=false;try{if(!replayData)saved=saveSprint(localStorage,sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked),sprint);}catch{}
