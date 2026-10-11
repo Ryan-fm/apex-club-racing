@@ -894,6 +894,7 @@ if(gateSlice){
   document.querySelector('.scene-options').hidden=true;document.querySelector('.mode-options').hidden=true;
   document.querySelector('.race-disclosure').textContent=replayData?'DIAGNOSTIC REPLAY · Recorded inputs · No records saved':'Three linked turns. Your controls. Separate challenge records.';
 }
+const progressionChoice=craftIndex;
 setCraft(!diagnosticsEnabled&&!progression.unlocked(craftIndex)?1:craftIndex);
 selectScene(requestedScene);
 setupExperience();
@@ -902,6 +903,8 @@ setupClubLobby();
 mountKeyboardSettings({getBindings:()=>bindings,setBindings:next=>{bindings=next;keyboard.clear();actions.clear();driftLatched=false;updateKeyboardDescription();try{localStorage.setItem('apex-keybindings',JSON.stringify(next));return true;}catch{return false;}}});
 setupLanguage();
 mountProgression(document.querySelector('#lobby'));
+let progressionChoiceRestored=false;
+progression.subscribe(()=>{if(!progression.ready||race||diagnosticsEnabled)return;if(!progressionChoiceRestored){progressionChoiceRestored=true;setCraft(progression.unlocked(progressionChoice)?progressionChoice:1);}else if(!progression.unlocked(craftIndex))setCraft(1);});
 const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
 loop();
 
