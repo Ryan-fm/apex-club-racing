@@ -11,11 +11,13 @@ export function applyCustomization(kart,value,factoryColor){
  removeLivery(model);
  if(config.livery!=='solid'){
   const decals=new THREE.Group();decals.name='Custom livery';model.add(decals);
-  const mat=new THREE.MeshStandardMaterial({color:config.accent,metalness:.3,roughness:.4,polygonOffset:true,polygonOffsetFactor:-2});
+  const signature={ember:'#ffb557',aurora:'#65f1da',champion:'#edcc73'};const mat=new THREE.MeshStandardMaterial({color:signature[config.livery]||config.accent,metalness:.3,roughness:.4,polygonOffset:true,polygonOffsetFactor:-2});
   const patch=(x,y,z,w,d)=>{const p=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);p.rotation.x=-Math.PI/2;p.position.set(x,y,z);p.userData.cosmeticDecal=true;decals.add(p);};
   const titan=!!kart.userData.fx,drift=kart.userData.kits?.drift.visible,retro=kart.userData.kits?.retro.visible;
   const frontY=titan?3.97:.75,rearY=titan?3.91:drift?4.22:2.92;
-  if(config.livery==='stripes'){
+  if(['stripes','ember','aurora','champion'].includes(config.livery)){
+   if(config.livery==='aurora'){for(let i=0;i<5;i++)patch((i-2)*.52,frontY,(titan?6.7:5.6)+Math.abs(i-2)*.45,.22,1.3);}
+   if(config.livery==='champion'){for(let i=0;i<3;i++)patch((i-1)*.7,frontY,(titan?6.8:5.3)+Math.abs(i-1)*.6,.52,.85);}
    for(const side of [-1,1]){patch(side*.69,frontY,titan?6.95:5.55,.42,titan?1.65:3.4);if(!retro)patch(side*(titan?5.95:4.1),rearY,-5.8,.4,titan?2.9:1.6);}
   }else{
    for(let i=0;i<5;i++)for(let j=0;j<2;j++)if((i+j)%2===0)patch((i-2)*.54,frontY,(titan?6.6:5.8)+j*.5,.48,.45);

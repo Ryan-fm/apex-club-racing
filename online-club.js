@@ -1,4 +1,5 @@
 import {ONLINE_CONFIG} from './online-config.js';
+import {readGarage} from './garage-config.js';
 import {tr} from './localization.js';
 
 const configured=!!(ONLINE_CONFIG.url&&ONLINE_CONFIG.publishableKey);
@@ -19,7 +20,10 @@ async function request(path,{method='GET',body}={}){
 }
 const rpc=(name,body)=>request(`/rest/v1/rpc/${name}`,{method:'POST',body});
 export const onlineClub={
-  configured,
+  configured,provider:'main',
+  progress({seconds=0,batch=null}={}){return rpc('club_progression',{p_token:token,p_seconds:seconds,p_batch:batch});},
+  claimReward(id){return rpc('club_progression',{p_token:token,p_claim:id});},
+  saveGarage(garage){return rpc('club_progression',{p_token:token,p_garage:garage});},
   signedIn(){return !!token;},
   async current(){if(!token)return null;const profile=await rpc('club_me',{p_token:token});if(!profile)save(null);return profile;},
   async register(name,password){
@@ -32,11 +36,11 @@ export const onlineClub={
   },
   async logout(){try{if(token)await rpc('club_logout',{p_token:token});}finally{save(null);}},
   async leaderboard(scene,assisted){
-    return request(`/rest/v1/club_race_leaderboard?select=player_name,time_ms,craft,achieved_at&scene=eq.${scene}&assisted=eq.${assisted}&rules_version=eq.${ONLINE_CONFIG.rulesVersion}&order=time_ms.asc,achieved_at.asc&limit=50`);
+    return request(`/rest/v1/club_race_leaderboard?select=player_name,time_ms,craft,achieved_at,customization&scene=eq.${scene}&assisted=eq.${assisted}&rules_version=eq.${ONLINE_CONFIG.rulesVersion}&order=time_ms.asc,achieved_at.asc&limit=50`);
   },
   async submit({scene,assisted,craft,time,laps}){
     if(!token)throw Error('Sign in to submit a race.');
-    return rpc('submit_best_race',{p_token:token,p_scene:scene,p_assisted:assisted,p_craft:craft,p_rules_version:ONLINE_CONFIG.rulesVersion,p_time_ms:Math.round(time*1000),p_laps:laps.map(lap=>({time_ms:Math.round(lap.time*1000),splits_ms:lap.splits.map(v=>Math.round(v*1000)),samples:lap.samples}))});
+    return rpc('submit_best_race',{p_token:token,p_scene:scene,p_assisted:assisted,p_craft:craft,p_rules_version:ONLINE_CONFIG.rulesVersion,p_time_ms:Math.round(time*1000),p_customization:readGarage().cars[craft]||{},p_laps:laps.map(lap=>({time_ms:Math.round(lap.time*1000),splits_ms:lap.splits.map(v=>Math.round(v*1000)),samples:lap.samples}))});
   },
 };
 

@@ -53,6 +53,7 @@ if(page==='leaderboard'){
   const query=new URLSearchParams(location.search);
   let scene=sceneNames[query.get('scene')]?query.get('scene'):'harbor';
   let assisted=query.get('assisted')==='true';
+  const showcase=await import('./leaderboard-showcase.js').then(m=>m.createLeaderboardShowcase(document.querySelector('.board-panel')));
   let records=[],requestId=0;
   const rows=document.querySelector('#globalRows'),empty=document.querySelector('#boardEmpty'),status=document.querySelector('#boardStatus');
   function renderBoard(){
@@ -66,12 +67,12 @@ if(page==='leaderboard'){
       for(const value of [String(index+1).padStart(2,'0'),record.player_name,`${String(minutes).padStart(2,'0')}:${seconds}`,craftDefs[record.craft]?.name||`#${record.craft+1}`]){
         const cell=document.createElement('td');cell.textContent=value;tr.append(cell);
       }
-      rows.append(tr);
+      tr.dataset.showcase='true';const button=document.createElement('button');button.type='button';button.textContent=record.player_name;button.onclick=()=>showcase(record);tr.children[1].replaceChildren(button);rows.append(tr);
     }
-    empty.hidden=records.length>0;
+    empty.hidden=records.length>0;showcase(records[0]);
   }
   async function load(){
-    const id=++requestId;records=[];empty.hidden=true;rows.replaceChildren();status.textContent=local('正在读取全球成绩…','Loading global records…');
+    const id=++requestId;showcase(null);records=[];empty.hidden=true;rows.replaceChildren();status.textContent=local('正在读取全球成绩…','Loading global records…');
     try{const data=await onlineClub.leaderboard(scene,assisted);if(id!==requestId)return;records=data;status.textContent=data.length?local(`共 ${data.length} 条完赛成绩`,`Showing ${data.length} completed races`):'';renderBoard();}
     catch(error){if(id!==requestId)return;status.textContent=error.message;empty.hidden=false;}
   }

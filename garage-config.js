@@ -1,7 +1,7 @@
 export const GARAGE_KEY='apex-garage-v1';
 export const DEFAULT_CUSTOMIZATION=Object.freeze({paint:null,finish:'gloss',livery:'solid',accent:'#f3e8ca',exhaust:'jet',flame:'#43cfff'});
 export const FINISHES=['gloss','satin','chrome'];
-export const LIVERIES=['solid','stripes','circuit'];
+export const LIVERIES=['solid','stripes','circuit','ember','aurora','champion'];
 export const EXHAUSTS=['jet','pulse','off'];
 const hex=v=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v);
 export function sanitizeCustomization(value={}){const v=value&&typeof value==='object'?value:{};return {paint:hex(v.paint)?v.paint:null,finish:FINISHES.includes(v.finish)?v.finish:'gloss',livery:LIVERIES.includes(v.livery)?v.livery:'solid',accent:hex(v.accent)?v.accent:DEFAULT_CUSTOMIZATION.accent,exhaust:EXHAUSTS.includes(v.exhaust)?v.exhaust:'jet',flame:hex(v.flame)?v.flame:DEFAULT_CUSTOMIZATION.flame};}
