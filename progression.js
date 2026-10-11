@@ -6,7 +6,7 @@ const listeners=new Set();
 const emit=()=>listeners.forEach(fn=>fn(state,status));
 function localSave(){try{localStorage.setItem(guestKey,JSON.stringify(state));}catch{}}
 export const progression={
- get state(){return state;},unlocked:index=>carUnlocked(state,index),
+ get ready(){return ready;},get state(){return state;},unlocked:index=>carUnlocked(state,index),
  subscribe(fn){listeners.add(fn);fn(state,status);return()=>listeners.delete(fn);},
  async refresh(){ready=false;pendingSeconds=0;batch=null;try{if(onlineClub.signedIn()){state=normalizeProgress(await onlineClub.progress());status='云端已同步';if(state.garage?.cars) localStorage.setItem(GARAGE_KEY,JSON.stringify(state.garage));}else{state=normalizeProgress(JSON.parse(localStorage.getItem(guestKey)||'{}'));status='游客进度仅保存在本机 · 登录后使用账户存档';}ready=true;}catch(e){status='云端暂不可用 · 点击重试';}emit();},
  tick(dt){if(!ready||!Number.isFinite(dt)||dt<=0)return;pendingSeconds+=Math.min(dt,.1);if(pendingSeconds>=30&&!busy)this.flush();},
