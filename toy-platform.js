@@ -24,9 +24,10 @@ export function createToyClub(getSDK=loadToySDK){
  const cache=new Map(),pending=new Map(),submissions=new Map();let profile=null,storageQueue=Promise.resolve();
  async function sdkFor(ability){const sdk=await getSDK();if(!await sdk.isSupport(ability))throw Error('请在 B站 Toy 中使用排行榜。');return sdk;}
  async function call(ability,args){try{return await (await sdkFor(ability))[ability](args);}catch(error){if(error.code===307044)throw Error('请求过于频繁，请稍后手动重试。');throw error;}}
- const storageKey='apex.progress.v1';
+ const storageKey='apex.progress.v1',optInKey='apex-toy-cloud-opt-in';
+ const hasCloudAccess=()=>{if(profile)return true;try{return localStorage.getItem(optInKey)==='1';}catch{return false;}};
  function updateProgress(mutate){const task=storageQueue.then(async()=>{
-  if(!profile)throw Error('请先连接 B站车手身份。');
+  if(!hasCloudAccess())throw Error('请先连接 B站车手身份。');
   const values=await call('getCloudStorage',[storageKey]);let raw={};
   if(values[storageKey]){try{raw=typeof values[storageKey]==='string'?JSON.parse(values[storageKey]):values[storageKey];if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error();}catch{throw Error('云端存档格式异常，未覆盖原存档。');}}
   const state=normalizeProgress(raw),receipts=Array.isArray(raw.receipts)?raw.receipts.filter(x=>typeof x==='string').slice(-128):[];
@@ -38,10 +39,10 @@ export function createToyClub(getSDK=loadToySDK){
   async claimReward(id){return updateProgress(state=>{const task=WEEKLY_TASKS.find(t=>t.id===id);if(!task)throw Error('Unknown activity.');if(state.claimed.includes(id))return;if(!taskReady(state,task))throw Error('任务尚未完成。');state.claimed.push(id);state.activity_points+=task.points;state.liveries=[...new Set([...state.liveries,task.reward])];});},
   async saveGarage(garage){return updateProgress(state=>{const cars={};for(const [index,value]of Object.entries(garage?.cars||{})){if(!/^[0-5]$/.test(index))continue;const config=sanitizeCustomization(value);if(!state.liveries.includes(config.livery))throw Error('涂装尚未解锁。');cars[index]=config;}state.garage={cars};});},
   async recordProgressRace(id=globalThis.crypto.randomUUID()){return updateProgress((state,receipts)=>{const key='race:'+id;if(receipts.includes(key))return;state.week_races++;receipts.push(key);});},
-  configured:true,provider:'toy',signedIn:()=>!!profile,current:async()=>profile,
+  configured:true,provider:'toy',signedIn:hasCloudAccess,current:async()=>profile,
   // Must be invoked by a user's click; never request profile on page load.
-  async connect(){const data=await call('getUserProfile');profile={player_name:data.nickname,avatar:data.avatar};globalThis.window?.dispatchEvent(new CustomEvent('apex-club-profile',{detail:profile}));return profile;},
-  async logout(){profile=null;},
+  async connect(){const data=await call('getUserProfile');profile={player_name:data.nickname,avatar:data.avatar};try{localStorage.setItem(optInKey,'1');}catch{}globalThis.window?.dispatchEvent(new CustomEvent('apex-club-profile',{detail:profile}));return profile;},
+  async logout(){profile=null;try{localStorage.removeItem(optInKey);}catch{}},
   async leaderboard(scene,assisted,{refresh=false,period='all'}={}){
    if(assisted)throw Error('新手辅助仅保存本地成绩，不参与 Toy 标准榜。');
    const board=TOY_BOARDS[scene];if(!board)throw Error('Unknown circuit.');

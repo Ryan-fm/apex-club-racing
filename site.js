@@ -85,6 +85,6 @@ if(page==='leaderboard'){
 }
 if(page==='account'){
  const button=document.querySelector('#toyConnect'),status=document.querySelector('#accountStatus');
- button.addEventListener('click',async()=>{button.disabled=true;try{const profile=await onlineClub.connect();status.textContent=local(`已连接：${profile.player_name}。完赛后点击提交成绩参与排名。`,`Connected: ${profile.player_name}. Submit your score after finishing.`);}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
+ button.addEventListener('click',async()=>{button.disabled=true;try{const profile=await onlineClub.connect();status.textContent=local(`已连接：${profile.player_name}。进度和涂装使用 B站云存档，完赛成绩自动提交。`,`Connected: ${profile.player_name}. Progress and liveries use Bilibili cloud storage. Scores submit automatically.`);}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
 }
 renderLanguage();loadNavAccount();
