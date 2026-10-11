@@ -1,3 +1,5 @@
+import {progression,mountProgression} from './progression.js';
+import {CAR_UNLOCKS} from './progression-rules.js';
 import {applyRoadFinish,createTrackFinish} from './track-finish.js';
 import {createChaseCamera} from './runtime/chase-camera.js';
 import {createChallengeUI} from './challenge-ui.js';
@@ -256,7 +258,7 @@ for(let i=0;i<stars;i++){ const r=500+Math.random()*5200,a=Math.random()*Math.PI
 starGeo.setAttribute('position',new THREE.BufferAttribute(arr,3));
 scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({size:1.5,color:0x7dfcff,transparent:true,opacity:.32,blending:THREE.AdditiveBlending,depthWrite:false})));
 
-let craftIndex=4;
+let craftIndex=1;
 function animateCraft(craft,time,power,boosting=false,drifting=false,steer=0){
   animateExhaust(craft,time,power,boosting,craft===player&&state.miniTurbo>0&&state.nitro<=0);
   craft.userData.wheels.forEach(w=>{w.hub.rotation.y=w.front?-steer*.35:0;w.tire.rotation.x=time*power*-8;});
@@ -307,10 +309,11 @@ function updateSpeedFX(time,meta){
 streaks.frustumCulled=false;
 const msg=document.querySelector('#centerMsg'), flash=document.querySelector('#flash');
 function ping(text,color='#fff'){msg.textContent=text;msg.style.color=color;msg.style.opacity=1;setTimeout(()=>msg.style.opacity=0,520)}
-function colorKart(kart,color){if(kart===player&&selectedMode==='solo'&&document.querySelector('#liverySetting').value==='reward'){try{if(Number(localStorage.getItem('apex-medal'))>=1)color=0xdab16b;}catch{}}kart.traverse(o=>{if(o.material?.userData.craftColor)o.material.color.setHex(color);});if(kart===player)applyCustomization(kart,readGarage().cars[craftIndex],craftDefs[craftIndex].style==='rally'?0x1497a0:color);}
+function colorKart(kart,color){if(kart===player&&selectedMode==='solo'&&document.querySelector('#liverySetting').value==='reward'){try{if(Number(localStorage.getItem('apex-medal'))>=1)color=0xdab16b;}catch{}}kart.traverse(o=>{if(o.material?.userData.craftColor)o.material.color.setHex(color);});if(kart===player)applyCustomization(kart,progression.state.liveries.includes(readGarage().cars[craftIndex]?.livery)?readGarage().cars[craftIndex]:undefined,craftDefs[craftIndex].style==='rally'?0x1497a0:color);}
 function setCraft(i){
   if(race&&race.phase!=='finished')return;
   if(!Number.isInteger(i)||!craftDefs[i]||(replayData&&i!==replayData.craft))return;
+  if(!diagnosticsEnabled&&!progression.unlocked(i)){ping('赛车尚未解锁 · 前往车库查看驾驶时长目标','#ffce73');return;}
   craftIndex=i;document.querySelector('.lobby-tools a[href*="garage.html"]').href=`./garage.html?craft=${i}&scene=${requestedScene}`;const d=craftDefs[i];configureKart(player,d);showroom.select();
   document.querySelector('#heroKartName').textContent=d.name;document.querySelector('#heroKartType').textContent=d.title;updateLobbyRecord();
   colorKart(player,selectedMode==='team'?TEAM_COLORS[selectedTeam]:d.color);
@@ -503,7 +506,7 @@ function updateHUD(){
 const mapPoints=Array.from({length:161},(_,i)=>{const p=curve.getPointAt(i/160);return `${(p.x/1350*63+90).toFixed(1)},${(p.z/1350*63+70).toFixed(1)}`}).join(' ');
 document.querySelector('#mapPath').setAttribute('points',mapPoints);
 updateRouteMap(trackRoutes,document.querySelector('#mapRoutes'));
-document.querySelector('.kart-options').innerHTML=craftDefs.map((d,i)=>`<button data-craft="${i}" aria-pressed="false" style="--kart-color:#${d.color.toString(16).padStart(6,'0')}"><span>${String(i+1).padStart(2,'0')}<i class="kart-swatch"></i></span><img alt="" width="216" height="124"><strong>${d.name}</strong><small>${d.tag}</small></button>`).join('');
+document.querySelector('.kart-options').innerHTML=craftDefs.map((d,i)=>`<button data-craft="${i}" aria-pressed="false" style="--kart-color:#${d.color.toString(16).padStart(6,'0')}"><span>${String(i+1).padStart(2,'0')}<i class="kart-swatch"></i></span><img alt="" width="216" height="124"><strong>${d.name}</strong><small>${CAR_UNLOCKS[i].tier}级 · ${CAR_UNLOCKS[i].minutes?CAR_UNLOCKS[i].minutes+'分钟解锁':'初始赛车'}</small></button>`).join('');
 document.querySelectorAll('[data-craft]').forEach(el=>el.addEventListener('click',()=>setCraft(Number(el.dataset.craft))));
 function signTexture(title,subtitle,color='#214554'){
   const c=document.createElement('canvas');c.width=1024;c.height=256;const ctx=c.getContext('2d');
@@ -671,7 +674,7 @@ function updateRaceHUD(){
 
 function finishRace(){
  drivingChallenges.finish({finished:race.racers[0].finishTime!==null,valid:!replayData&&canSubmitRace(race.racers[0].finishTime,raceLaps,raceValid),collisions:runStats.collisions,rank:standings(race).findIndex(r=>r.id===0)+1});
- finishExperience();
+ finishExperience();if(!replayData&&canSubmitRace(race.racers[0].finishTime,raceLaps,raceValid))progression.completed();progression.flush();
   const finishTime=race.racers[0].finishTime;
   const finishedRace=race;
   const notice=document.querySelector('#onlineNotice');
@@ -731,6 +734,7 @@ function loop(){
     dt=elapsed;race.elapsed+=dt;simulationTime=race.elapsed;
     if(actions.has('KeyR')){reset();dt=0;}
   }
+  if(dt>0&&!lesson&&!replayData&&race?.phase==='racing'&&race.racers[0].finishTime===null&&Math.abs(state.speed)>20&&!document.querySelector('#settingsDialog').open)progression.tick(dt);
   const time=simulationTime;
   if(!race){
     audio.update(0,false,false,false);
@@ -897,14 +901,15 @@ if(gateSlice){
   document.querySelector('.scene-options').hidden=true;document.querySelector('.mode-options').hidden=true;
   document.querySelector('.race-disclosure').textContent=replayData?'DIAGNOSTIC REPLAY · Recorded inputs · No records saved':'Three linked turns. Your controls. Separate challenge records.';
 }
-setCraft(craftIndex);
+setCraft(!diagnosticsEnabled&&!progression.unlocked(craftIndex)?1:craftIndex);
 selectScene(requestedScene);
 setupExperience();
 if(gateSlice)document.querySelector('#autoThrottle').checked=true;
 setupClubLobby();
 mountKeyboardSettings({getBindings:()=>bindings,setBindings:next=>{bindings=next;keyboard.clear();actions.clear();driftLatched=false;updateKeyboardDescription();try{localStorage.setItem('apex-keybindings',JSON.stringify(next));return true;}catch{return false;}}});
 setupLanguage();
-const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
+mountProgression(document.querySelector('#lobby'));
+const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{progression.refresh();document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
 loop();
 
 function startRoomRace(room,me){
@@ -944,6 +949,7 @@ function loopRoom(elapsed){
  if(!race||!roomSnapshot||!roomPrediction)return;
  if(document.hidden){keyboard.clear();actions.clear();mobile.clear();return;}
  const racing=roomSnapshot.phase==='racing'&&roomConnected&&!roomSnapshot.players.find(p=>p.id===roomUI.client.playerId)?.dnf;
+ if(racing&&race.racers[0].finishTime===null&&!helpOpen&&!roomUI.dialog.open&&!document.querySelector('#settingsDialog').open&&Math.abs(state.speed)>20)progression.tick(elapsed);
  if(racing&&race.racers[0].finishTime===null){
   roomAccumulator=Math.min(.1,roomAccumulator+elapsed);
   while(roomAccumulator>=PHYSICS_DT){

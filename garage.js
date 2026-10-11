@@ -1,3 +1,5 @@
+import {progression,mountProgression} from './progression.js';
+import {CAR_UNLOCKS} from './progression-rules.js';
 import {setupLanguage,tr} from './localization.js';
 setupLanguage();
 import * as THREE from 'three';
@@ -17,7 +19,15 @@ const car=makeCraft();scene.add(car);car.userData.shadow.visible=false;
 const query=new URLSearchParams(location.search);let selected=/^[0-5]$/.test(query.get('craft')||'')?Number(query.get('craft')):4,config,boostPreview=false,switchAt=-1000,switchDirection=1;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fields={paint:'#bodyColor',finish:'#paintFinish',livery:'#paintLivery',accent:'#accentColor',exhaust:'#exhaustStyle',flame:'#flameColor'};
+let garageSaveTimer;
 const status=document.querySelector('#customStatus');
+const unlockNote=document.createElement('p');unlockNote.className='car-unlock-note';document.querySelector('.intro').append(unlockNote);
+function updateUnlocks(){const c=CAR_UNLOCKS[selected],unlocked=progression.unlocked(selected);unlockNote.textContent=`${c.tier}级 · ${unlocked?'已解锁':`驾驶 ${c.minutes} 分钟解锁 · 当前 ${Math.floor(progression.state.total_seconds/60)} 分钟`}`;
+ const link=document.querySelector('#takeToRace');link.setAttribute('aria-disabled',String(!unlocked));link.textContent=unlocked?'驾驶这辆赛车':'预览中 · 赛车尚未解锁';
+ document.querySelectorAll('[data-choice="livery"]').forEach(b=>{const owned=progression.state.liveries.includes(b.dataset.value);b.disabled=!owned;b.title=owned?'已拥有':'完成每周任务并领取解锁';});}
+progression.subscribe(()=>{if(config){config={...DEFAULT_CUSTOMIZATION,...readGarage().cars[selected]};refreshCar();updateUnlocks();}});
+document.querySelector('#takeToRace').addEventListener('click',e=>{if(!progression.unlocked(selected)){e.preventDefault();status.textContent='完成驾驶时长目标后自动解锁';}});
+mountProgression(document.querySelector('aside'));
 function updateLinks(){const sceneName=['bay','citadel','harbor','canyon'].includes(query.get('scene'))?query.get('scene'):'bay';document.querySelectorAll('a[data-race-link]').forEach(a=>a.href=`./race.html?craft=${selected}&scene=${sceneName}`);}
 function refreshCar(){
  const d=craftDefs[selected];applyCustomization(car,config,d.style==='rally'?0x1497a0:d.color);
@@ -29,7 +39,7 @@ function refreshCar(){
  document.querySelectorAll('[data-flame]').forEach(b=>{const on=b.dataset.flame===config.flame;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));b.disabled=config.exhaust==='off';});
  document.querySelectorAll('[data-color]').forEach(b=>{const on=b.dataset.color===document.querySelector('#bodyColor').value;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
 }
-function persist(){const saved=saveCar(undefined,selected,config);refreshCar();status.textContent=tr(saved?'Saved on this device · Ready to race':'Preview only · Browser could not save changes');}
+function persist(){if(!progression.state.liveries.includes(config.livery)){status.textContent='请先领取此涂装奖励';return;}const saved=saveCar(undefined,selected,config);refreshCar();clearTimeout(garageSaveTimer);garageSaveTimer=setTimeout(()=>progression.saveGarage(),800);status.textContent=tr(saved?'Saved on this device · Ready to race':'Preview only · Browser could not save changes');}
 function selectCar(index,direction=1){switchDirection=direction;switchAt=performance.now();selected=(index+craftDefs.length)%craftDefs.length;index=selected;configureKart(car,craftDefs[index]);config={...DEFAULT_CUSTOMIZATION,...readGarage().cars[index]};refreshCar();
  document.querySelector('#garageName').textContent=craftDefs[index].name;document.querySelector('#garageType').textContent=tr(craftDefs[index].title);canvas.setAttribute('aria-label',craftDefs[index].name+' 3D vehicle. Drag to rotate.');document.querySelector('#previousCar').setAttribute('aria-label',tr('Previous car · '+craftDefs[(index+5)%6].name));document.querySelector('#nextCar').setAttribute('aria-label',tr('Next car · '+craftDefs[(index+1)%6].name));
  document.querySelectorAll('[data-garage-car]').forEach(b=>{const on=Number(b.dataset.garageCar)===index;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
@@ -37,7 +47,7 @@ function selectCar(index,direction=1){switchDirection=direction;switchAt=perform
  document.querySelector('#previousName').textContent=craftDefs[(index+5)%6].name;document.querySelector('#nextName').textContent=craftDefs[(index+1)%6].name;
  document.querySelector('#carStats').innerHTML=[['Speed',craftDefs[index].max/650],['Handling',craftDefs[index].turn/1.5],['Drift',craftDefs[index].drift/1.5]].map(([name,value])=>`<div><span>${tr(name)}</span><i><b style="width:${Math.round(value*100)}%"></b></i></div>`).join('');
  const intro=document.querySelector('.intro');intro.classList.remove('switching');void intro.offsetWidth;intro.classList.add('switching');
- const url=new URL(location.href);url.searchParams.set('craft',index);history.replaceState(null,'',url);updateLinks();status.textContent=tr('Saved on this device · Ready to race');
+ const url=new URL(location.href);url.searchParams.set('craft',index);history.replaceState(null,'',url);updateLinks();updateUnlocks();status.textContent=tr('Saved on this device · Ready to race');
 }
 const fleet=document.querySelector('#garageFleet');
 craftDefs.forEach((d,i)=>{const b=document.createElement('button');b.dataset.garageCar=i;b.style.setProperty('--car-color','#'+d.color.toString(16).padStart(6,'0'));b.textContent=String(i+1).padStart(2,'0');b.setAttribute('aria-label',d.name);b.title=d.name;b.addEventListener('click',()=>selectCar(i,i<selected?-1:1));fleet.append(b);});
@@ -57,7 +67,7 @@ document.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('[data-flame]').forEach(b=>b.addEventListener('click',()=>{config.flame=b.dataset.flame;persist();}));
 document.querySelector('#resetCustom').addEventListener('click',()=>{config={...DEFAULT_CUSTOMIZATION};persist();});
 document.querySelector('#previewBoost').addEventListener('click',e=>{boostPreview=!boostPreview;e.currentTarget.setAttribute('aria-pressed',String(boostPreview));e.currentTarget.textContent=tr(boostPreview?'Stop boost preview':'Test boost');if(boostPreview){yaw=Math.PI-.5;pitch=.3;rotate.checked=false;}});
-selectCar(selected);
+selectCar(selected);updateUnlocks();
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshStandardMaterial({color:0x0c1825,roughness:.7,metalness:.18}));floor.rotation.x=-Math.PI/2;floor.position.y=-3.85;floor.receiveShadow=true;scene.add(floor);
 const podium=new THREE.Mesh(new THREE.CylinderGeometry(15,15.3,.35,96),new THREE.MeshStandardMaterial({color:0x142636,metalness:.35,roughness:.5}));podium.position.y=-3.67;podium.receiveShadow=true;scene.add(podium);
 // Rings and radial markers anchor the vehicle in a physical studio stage.
