@@ -909,7 +909,7 @@ setupClubLobby();
 mountKeyboardSettings({getBindings:()=>bindings,setBindings:next=>{bindings=next;keyboard.clear();actions.clear();driftLatched=false;updateKeyboardDescription();try{localStorage.setItem('apex-keybindings',JSON.stringify(next));return true;}catch{return false;}}});
 setupLanguage();
 mountProgression(document.querySelector('#lobby'));
-const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{progression.refresh();document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
+const club=mountOnlineClub({scene:()=>requestedScene,assisted:()=>document.querySelector('#beginnerSetting').checked,craft:()=>craftIndex,onProfile:profile=>{document.querySelector('#profileName').textContent=profile?.player_name||'GUEST';document.querySelector('.club-online').lastChild.textContent=profile?' ONLINE CLUB':' LOCAL CLUB';}});
 loop();
 
 function startRoomRace(room,me){

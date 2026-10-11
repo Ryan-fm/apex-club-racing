@@ -5,6 +5,7 @@ loadToySDK().catch(()=>{});
 export const onlineClub=createToyClub();
 export function mountOnlineClub({onProfile}){
  let current=null;const notice=document.querySelector('#onlineNotice');
+ globalThis.window?.addEventListener('apex-club-profile',event=>{current=event.detail;onProfile(current);});
  const message=value=>{if(notice)notice.textContent=tr(value||'');};
- return {profile:()=>current,message,async connect(){current=await onlineClub.connect();onProfile(current);return current;}};
+ return {profile:()=>current,message,async connect(){current=await onlineClub.connect();const {progression}=await import('./progression.js');await progression.refresh();return current;}};
 }
