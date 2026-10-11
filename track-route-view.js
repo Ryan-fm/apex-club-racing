@@ -22,14 +22,15 @@ export function createRouteView(routes,scene,mainSamples,mainWidth,mainFrame=nul
    if(yaw)pose.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(up,yaw));
    pose.scale.set(sx,sy,sz);pose.updateMatrix();return pose.matrix.clone();
   };
-  function label(point,tan,side,normal,title,subtitle,color=0x8be6a8,width=36,height=11,elevation=17){
+  function label(point,tan,side,normal,title,subtitle,color=0x8be6a8,width=36,height=11,elevation=17,supportSide=1,supportOffset=17){
    const canvas=document.createElement('canvas');canvas.width=640;canvas.height=192;const ctx=canvas.getContext('2d');
    ctx.fillStyle='#102831';ctx.fillRect(0,0,640,192);ctx.strokeStyle='#'+color.toString(16).padStart(6,'0');ctx.lineWidth=9;ctx.strokeRect(5,5,630,182);
    ctx.fillStyle=ctx.strokeStyle;ctx.textAlign='center';ctx.font='bold 48px sans-serif';ctx.fillText(title,320,79);ctx.fillStyle='#e8f6ee';ctx.font='30px sans-serif';ctx.fillText(subtitle,320,142);
    const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
    const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}));mesh.position.copy(point);mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(side,normal,tan.clone().negate()));group.add(mesh);
    const poleHeight=elevation-height/2;
-   for(const x of [-width*.35,width*.35]){const pole=new THREE.Mesh(cube,dark);pole.position.copy(point).addScaledVector(side,x).addScaledVector(normal,-(elevation+height/2)/2);pole.quaternion.setFromUnitVectors(up,normal);pole.scale.set(.9,poleHeight,.9);group.add(pole);}
+   const pole=new THREE.Mesh(cube,dark);pole.position.copy(point).addScaledVector(side,-supportSide*supportOffset).addScaledVector(normal,-(elevation+height/2)/2);pole.quaternion.setFromUnitVectors(up,normal);pole.scale.set(1.2,poleHeight,1.2);group.add(pole);
+   const bracket=new THREE.Mesh(cube,dark);bracket.position.copy(point).addScaledVector(side,-supportSide*supportOffset/2).addScaledVector(normal,-height/2);bracket.quaternion.copy(mesh.quaternion);bracket.scale.set(supportOffset,.8,1.2);group.add(bracket);
    return mesh;
   }
   if(route.kind==='shortcut'){
@@ -44,7 +45,7 @@ export function createRouteView(routes,scene,mainSamples,mainWidth,mainFrame=nul
     const before=mainFrame(route.start-110/mainLength),at=mainFrame(route.start+(route.end-route.start)*26/120);
     const forkSide=Math.sign(split.point.clone().sub(at.p).dot(at.side))||1;
     const arrow=forkSide>0?'右侧近道':'左侧近道';
-    label(before.p.clone().addScaledVector(before.side,forkSide*(mainWidth(route.start)+13)).addScaledVector(before.normal,17),before.tan,before.side,before.normal,`${arrow} / ${route.name}`,route.technical?'提前入线 · 窄路切弯':'保持入线 · 顺弯通过',color,34,10);
+    label(before.p.clone().addScaledVector(before.side,forkSide*(mainWidth(route.start)+13)).addScaledVector(before.normal,17),before.tan,before.side,before.normal,`${arrow} / ${route.name}`,route.technical?'提前入线 · 窄路切弯':'保持入线 · 顺弯通过',color,34,10,17,forkSide,11);
     // Short approach marks identify the useful entry lane before it splits.
     for(const distance of [52,36,20]){
      const f=mainFrame(route.start-distance/mainLength),w=mainWidth(route.start);
