@@ -139,3 +139,22 @@ html.handheld-input .in-race .telemetry{bottom:22px}
  html.handheld-input .in-race #teamScore>small{display:none}
  html.handheld-input .in-race #rank{font-size:42px}
 }
+
+/* Move the left thumb cluster inward and give steering a larger touch target. */
+@media(orientation:landscape){
+ html.handheld-input #touchControls .touch-left{width:204px;height:172px;left:max(clamp(36px,8vw,88px),env(safe-area-inset-left));bottom:max(48px,12dvh,env(safe-area-inset-bottom))}
+ html.handheld-input #touchControls .steering-pair{gap:12px}
+ html.handheld-input #touchControls .steering-pair button{width:96px;height:96px;border-radius:28px}
+ html.handheld-input #touchControls .brake-control{bottom:108px;width:64px;height:64px}
+ html.handheld-input #touchControls .throttle-control{left:80px;bottom:108px;width:64px;height:64px}
+}
+@media(orientation:landscape) and (max-height:650px){
+ html.handheld-input .in-race #challengeHUD{top:84px}
+ html.handheld-input .in-race #lapDelta{top:58px;left:50%;transform:translateX(-50%)}
+}
+@media(orientation:landscape) and (max-height:360px){
+ html.handheld-input .in-race #challengeHUD{top:76px;padding:6px 8px}
+ html.handheld-input .in-race .challenge-live{border:0;padding-bottom:0;gap:3px}
+ html.handheld-input .in-race #challengeHUD .chain-live{display:none}
+}
+@media(orientation:landscape) and (max-height:300px){html.handheld-input .in-race #challengeHUD{display:none}}
