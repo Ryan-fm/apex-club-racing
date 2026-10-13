@@ -5,7 +5,8 @@ export function createChallengeUI({enabled=true}={}){
  let profile=careerProfile(),selected='flow',run=null;
  try{profile=careerProfile(JSON.parse(localStorage.getItem('apex-career-v1')));selected=localStorage.getItem('apex-challenge')||'flow';}catch{}
  selected=createChallenge(selected).id;
- const button=document.createElement('button');button.id='challengeSelect';button.type='button';button.hidden=!enabled;document.querySelector('.launch-dock').before(button);
+ const button=document.createElement('button');button.id='challengeSelect';button.type='button';button.hidden=!enabled;
+ const extras=document.querySelector('.setup-extras-content');if(extras)extras.prepend(button);else document.querySelector('.launch-dock').before(button);
  const dialog=document.createElement('dialog');dialog.id='challengeDialog';dialog.dataset.noTranslate='';dialog.setAttribute('aria-labelledby','challengeTitle');
  dialog.innerHTML='<header><div><small>APEX / DRIVER CAREER</small><h2 id="challengeTitle"></h2></div><button type="button" class="challenge-close"></button></header><section class="career-summary"><b></b><span></span><progress></progress><small></small></section><div class="challenge-options"></div><p class="challenge-rules"></p>';
  document.body.append(dialog);

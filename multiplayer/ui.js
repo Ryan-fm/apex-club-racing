@@ -18,7 +18,10 @@ export function mountRoomUI({endpoint,getSetup,onRoom,onExit,onStatus}){
   $('roomTitle').textContent=local('好友同玩 · 最多 4 人','Race with friends · Up to 4');
   $('roomCreate').textContent=local('创建房间','Create room');$('roomJoin').textContent=local('加入房间','Join');$('roomInvite').textContent=local('复制邀请链接','Copy invite');$('roomLeave').textContent=local('退出房间','Leave room');
   $('roomRules').textContent=local('标准三圈 · 漂移、小喷、氮气 · 无碰撞和 EMP。打开帮助不会暂停其他玩家。','Three standard laps · Drift, mini, nitro · No collisions or EMP. Help does not pause the race.');
-  open.textContent=room?local(`房间 ${room.code} · ${room.players.length}/4`,`Room ${room.code} · ${room.players.length}/4`):local('好友同玩 · 最多 4 人','Race with friends · Up to 4');
+  const openLabel=room?local(`房间 ${room.code}`,`Room ${room.code}`):local('好友同玩','Race with friends');
+  const openDetail=room?`${room.players.length}/4`:local('最多 4 人','Up to 4');
+  open.setAttribute('aria-label',`${openLabel} · ${openDetail}`);
+  const label=document.createElement('span'),detail=document.createElement('small');label.textContent=openLabel;detail.textContent=openDetail;label.append(detail);open.replaceChildren(label);
   dialog.classList.toggle('is-room',!!room);$('roomClose').textContent=room?local('返回车库','Garage'):'×';$('roomEntry').hidden=!!room;$('roomMembers').hidden=!room;if(!room)return;
   $('roomHeadline').textContent=local('集结，准备出发。','ASSEMBLE. THEN ACCELERATE.');$('roomSubtitle').textContent=local('你的赛车，你的伙伴。下一场精彩，从这里开始。','Your kart. Your crew. Your next great race starts here.');dialog.dataset.scene=room.scene;dialog.classList.toggle('all-ready',room.players.length>=2&&room.players.every(p=>p.ready&&p.connected));$('roomSignal').textContent=local('实时联机 · 最多 4 人','LIVE SESSION · MAX 4');
   const me=room.players.find(p=>p.id===client.playerId),host=room.host===client.playerId;

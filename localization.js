@@ -1,4 +1,5 @@
 const dictionary={
+'Practice & challenges':'练习与挑战',
 'Eleven City':'十一城','05 / ELEVEN CITY':'05 / 端游十一城','Classic downtown · Four corner cuts':'城市街区 · 四处街角近道','ELEVEN CITY / PC CLASSIC RECONSTRUCTION':'十一城 / 端游经典重建','ELEVEN CITY / LIVE MAP':'十一城 / 实时地图','PC city reconstruction · Four corner cuts · No express strips':'端游城市重建 · 四处街角近道 · 无快速路加速带','Eleven City personal records are saved on this device.':'十一城个人成绩保存在当前设备。',
 'Redrock Canyon':'赤岩峡谷','04 / REDROCK DESERT':'04 / 赤岩荒漠','Canyon cuts · Sunset climbs':'峡谷近道 · 落日起伏','REDROCK CANYON / SUNSET PASS':'赤岩峡谷 / 落日穿行','REDROCK CANYON / LIVE MAP':'赤岩峡谷 / 实时地图',
 'Neon Harbor':'霓虹港湾','03 / AFTER DARK':'03 / 午夜港口','Skybridge · Hairpins · Chicanes':'高架桥 · 发卡弯 · 连续变向','NEON HARBOR / MIDNIGHT RUN':'霓虹港湾 / 午夜竞速','NEON HARBOR / LIVE MAP':'霓虹港湾 / 实时地图',
