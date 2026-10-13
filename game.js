@@ -8,6 +8,8 @@ import {multiplayerEndpoint} from './multiplayer/config.js';
 import {PHYSICS_DT,idleInput,multiplayerTrack,stepRoomPlayer} from './multiplayer/simulation.js';
 import {RoomPrediction} from './multiplayer/prediction.js';
 import {createCanyon} from './canyon-scene.js';
+import {createElevenCity} from './eleven-city.js';
+import {applyCitySurface} from './city-materials.js';
 import {createHarbor} from './harbor-scene.js';
 import {createVehicleEnvironment} from './vehicle-finish.js';
 import {makeCraft,configureKart} from './kart-model.js';
@@ -136,12 +138,13 @@ addEventListener('blur',()=>{keyboard.clear();actions.clear();mobile.clear();if(
 
 // Bay Circuit: a closed coastal course with gentle elevation changes.
 const GATE_SLICE_START=GATE_SPRINT.start;
-let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
+let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon','eleven'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
 let curve,trackLength,roadSamples,trackRoutes;
 function setRouteGeometry(name){
  requestedScene=name;
  curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(name));
  if(name==='harbor')curve.arcLengthDivisions=2400;
+ if(name==='eleven')curve.arcLengthDivisions=3200;
  trackLength=curve.getLength();
  roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:gateSlice?undefined:p.y,z:p.z};});
  trackRoutes=createTrackRoutes(name,curve);
@@ -172,12 +175,12 @@ function createTrack(){
   for(let i=0;i<seg;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('shoulderOpen',new THREE.Float32BufferAttribute(shoulderOpen,1)); g.setIndex(idx); g.computeVertexNormals();
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,side:THREE.DoubleSide});
-  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0}};
+  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0}};
   m.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,m.uniforms);
     shader.vertexShader='attribute float shoulderOpen;varying float vShoulderOpen;varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;vShoulderOpen=shoulderOpen;');
-    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
+    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;uniform float city;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
         float edge=1.-smoothstep(.009,.022,min(vRoadUv.x,1.-vRoadUv.x));
         float lane=(1.-smoothstep(.002,.006,abs(vRoadUv.x-.333)))+(1.-smoothstep(.002,.006,abs(vRoadUv.x-.667)));
@@ -185,6 +188,7 @@ function createTrack(){
         float seam=line(vRoadUv.y*2.,.025);
         float shoulder=(1.-smoothstep(.035,.07,min(vRoadUv.x,1.-vRoadUv.x)))*(1.-edge);
         float grain=fract(sin(dot(floor(vPos.xz*9.),vec2(12.9898,78.233)))*43758.5453);
+        grain=mix(.5,grain,1.-smoothstep(.4,1.4,max(fwidth(vPos.x*9.),fwidth(vPos.z*9.))));
         vec3 base=vec3(.075,.105,.13)+seam*.024+grain*.015;
         base+=lane*dash*vec3(.09,.16,.20)*(1.-vShoulderOpen);
         base=mix(base,mix(vec3(.92,.92,.79),vec3(.95,.20,.16),step(.5,fract(vRoadUv.y*2.))),shoulder*.8*(1.-vShoulderOpen));
@@ -193,6 +197,7 @@ function createTrack(){
         base+=marker*vec3(.95,.28,.08);
         vec2 brick=vec2(vRoadUv.x*12.+mod(floor(vRoadUv.y*3.),2.)*.5,vRoadUv.y*3.);
         float mortar=step(.94,fract(brick.x))+step(.93,fract(brick.y));
+        mortar=mix(.13,mortar,1.-smoothstep(.15,.65,max(fwidth(brick.x),fwidth(brick.y))));
         vec3 paving=vec3(.32,.34,.31)+grain*.04-mortar*.06;
         paving=mix(paving,vec3(.58,.48,.30),edge*.7);base=mix(base,paving,citadel);
         vec3 wet=vec3(.055,.085,.12)+grain*.01;
@@ -200,18 +205,35 @@ function createTrack(){
         wet+=edge*vec3(.1,.8,.75);
         float sheen=pow(max(0.,sin(vRoadUv.y*.6+vRoadUv.x*8.)),18.)*.08;
         wet+=sheen*mix(vec3(.15,.65,.8),vec3(.8,.22,.38),step(.5,vRoadUv.x));
-        base=mix(base,wet,harbor);base=mix(base,base*vec3(1.35,1.05,.80)+vec3(.018,.009,0.),canyon);diffuseColor.rgb=base;
+        base=mix(base,wet,harbor);base=mix(base,base*vec3(1.35,1.05,.80)+vec3(.018,.009,0.),canyon);
+        float cityLanes=(1.-smoothstep(.003,.008,abs(vRoadUv.x-.23)))+(1.-smoothstep(.003,.008,abs(vRoadUv.x-.77)));
+        vec3 cityRoad=vec3(.073,.089,.126)+grain*.005;
+        #ifdef USE_MAP
+         float aggregateCity=dot(texture2D(map,cityUv()).rgb,vec3(.2126,.7152,.0722));cityRoad=vec3(aggregateCity)*vec3(.95,1.02,1.13)+vec3(.025);
+        #endif
+        cityRoad+=cityLanes*vec3(.38,.42,.43)*(1.-vShoulderOpen);
+        cityRoad+=edge*vec3(.25,.29,.3)*(1.-vShoulderOpen);
+        base=mix(base,cityRoad,city);diffuseColor.rgb=base;
     `);
   };
   applyRoadFinish(m);
-  const mesh=new THREE.Mesh(g,m);mesh.receiveShadow=true; world.add(mesh); return m;
+  if(requestedScene==='eleven'){applyCitySurface(m,'asphalt_pit_lane',.055,'main-road');m.normalScale.set(.12,.12);}
+  const mesh=new THREE.Mesh(g,m);mesh.userData.roadSurface=true;mesh.receiveShadow=true; world.add(mesh);
+  const skirt=[],skirtIndices=[];
+  for(let i=0;i<=seg;i++)for(let side=0;side<2;side++){
+   const k=i*6+side*3;skirt.push(pos[k],pos[k+1],pos[k+2],pos[k],pos[k+1]-3,pos[k+2]);
+   if(i<seg){const a=i*4+side*2,b=a+4;skirtIndices.push(a,b,a+1,a+1,b,b+1);}
+  }
+  const deckGeometry=new THREE.BufferGeometry();deckGeometry.setAttribute('position',new THREE.Float32BufferAttribute(skirt,3));deckGeometry.setIndex(skirtIndices);deckGeometry.computeVertexNormals();
+  const deck=new THREE.Mesh(deckGeometry,new THREE.MeshStandardMaterial({color:requestedScene==='canyon'?0x80624e:0x455760,roughness:.85,side:THREE.DoubleSide}));deck.name='Main road deck';deck.receiveShadow=true;world.add(deck);return m;
 }
 let trackMat,bayTrackObjects,structureMat;
 function buildRoad(){
 trackMat=createTrack();
-world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
+if(requestedScene!=='eleven')world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
 world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t),trackFrame));
 bayTrackObjects=[];
+if(requestedScene==='eleven')return;
 const beforeBayTrack=new Set(world.children);
 // Edge rails + cathedral ribs.
 const railMat=new THREE.MeshBasicMaterial({color:0xc3f3f1});
@@ -256,7 +278,7 @@ const starGeo=new THREE.BufferGeometry();
 const stars=240, arr=new Float32Array(stars*3);
 for(let i=0;i<stars;i++){ const r=500+Math.random()*5200,a=Math.random()*Math.PI*2;arr[i*3]=Math.cos(a)*r;arr[i*3+1]=-400+Math.random()*2200;arr[i*3+2]=Math.sin(a)*r; }
 starGeo.setAttribute('position',new THREE.BufferAttribute(arr,3));
-scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({size:1.5,color:0x7dfcff,transparent:true,opacity:.32,blending:THREE.AdditiveBlending,depthWrite:false})));
+const starMotes=new THREE.Points(starGeo,new THREE.PointsMaterial({size:1.5,color:0x7dfcff,transparent:true,opacity:.32,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(starMotes);
 
 let craftIndex=1;
 function animateCraft(craft,time,power,boosting=false,drifting=false,steer=0){
@@ -341,7 +363,7 @@ function reset(){
   const spawn=trackFrame(state.t);Object.assign(state,{x:spawn.p.x+spawn.side.x*state.lane,z:spawn.p.z+spawn.side.z*state.lane,heading:Math.atan2(spawn.tan.x,spawn.tan.z),vx:0,vz:0,roadIndex:null,routeId:null,roadHalfWidth:null,surfaceBoost:false});
   ai.forEach((a,i)=>{const r=race.racers[i+1];a.t=(r.progress+1)%1;a.lane=r.lane;a.speed=0;a.stun=0;a.target=525+i*10;colorKart(a.mesh,selectedMode==='team'?TEAM_COLORS[r.team]:craftDefs[i%craftDefs.length].color);});
   colorKart(player,selectedMode==='team'?TEAM_COLORS[selectedTeam]:craftDefs[craftIndex].color);
-  pickups.forEach(p=>{p.active=true;p.m.visible=true;p.respawn=0;});
+  pickups.forEach(p=>{p.active=true;p.m.visible=requestedScene!=='eleven';p.respawn=0;});
   document.querySelector('#results table').hidden=false;
   document.querySelector('#lobby').hidden=true;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;
   document.querySelector('#controlsToggle').setAttribute('aria-expanded','false');
@@ -450,7 +472,7 @@ function updateCombat(dt){
 }
 
 function updatePickups(dt,time){
-  if(lesson)return;
+  if(lesson||requestedScene==='eleven')return;
   for(const p of pickups){
     if(!p.active){p.respawn-=dt;if(p.respawn<=0){p.active=true;p.m.visible=true}continue;}
     p.m.userData.animate(time+p.t*30,reducedMotion);
@@ -471,7 +493,7 @@ function updateCamera(dt,meta){
   f.tan.set(Math.sin(cameraHeading),0,Math.cos(cameraHeading)).addScaledVector(f.normal,-f.tan.dot(f.normal)).normalize();
   const speedN=clamp(state.speed/650,0,1);
   if(!cameraReady)chaseCamera.reset();
-  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,dt,roots:[world,...bayDecor,citadel,harbor,canyon]});
+  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,distance:requestedScene==='eleven'?43:61,height:requestedScene==='eleven'?19:27,dt,roots:[world,...bayDecor,citadel,harbor,canyon,city]});
   const desired=view.position;
   const shake=reducedMotion?0:state.hit?.45:0;
   desired.x+=(Math.random()-.5)*shake*speedN;desired.z+=(Math.random()-.5)*shake*speedN;
@@ -479,7 +501,7 @@ function updateCamera(dt,meta){
   const look=player.position.clone().addScaledVector(view.forward,(23+speedN*14)*Math.max(.25,view.boom)).addScaledVector(view.up,4);
   camera.up.copy(view.up);
   camera.lookAt(look);
-  dir.position.copy(player.position).add(new THREE.Vector3(-110,220,90));dir.target.position.copy(player.position);
+  dir.position.copy(player.position).add(requestedScene==='eleven'?new THREE.Vector3(-150,420,120):new THREE.Vector3(-110,220,90));dir.target.position.copy(player.position);
   chaseLight.position.copy(camera.position).addScaledVector(f.normal,20);chaseLight.target.position.copy(player.position);
   camera.fov=lerp(camera.fov,60+(reducedMotion?0:speedN*4+(state.nitro>0?6:state.miniTurbo>0?3:0)),1-Math.pow(.002,dt));camera.updateProjectionMatrix();
   if(bloom)bloom.strength=.16+(meta.boosting?.06:0);
@@ -517,6 +539,7 @@ function signTexture(title,subtitle,color='#214554'){
 }
 let bayDecor;
 function buildDecor(){
+if(requestedScene==='eleven'){bayDecor=[];return;}
 const beforeBayDecor=new Set(scene.children);
 // A soft sky gradient, sculpted islands and trackside props give the course a readable scale.
 const sky=new THREE.Mesh(new THREE.SphereGeometry(6500,24,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,vertexShader:`varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vP;void main(){float h=normalize(vP).y;vec3 c=mix(vec3(.48,.73,.89),vec3(.08,.32,.62),smoothstep(-.05,.8,h));gl_FragColor=vec4(c,1.);}`}));scene.add(sky);
@@ -564,7 +587,7 @@ for(let i=0;i<34;i++){
 bayDecor=scene.children.filter(o=>!beforeBayDecor.has(o)&&!o.userData.sharedTrack);
 }
 buildDecor();
-let citadel=null,harbor=null,canyon=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
+let citadel=null,harbor=null,canyon=null,city=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
 if(diagnosticsEnabled)renderer.info.autoReset=false;
 const perf=createPerformanceProbe({
  enabled:diagnosticsEnabled,
@@ -583,17 +606,17 @@ const perf=createPerformanceProbe({
 });
 const sceneCache=new Map(),scenePreviews=new Set();
 let routeObjects=[...world.children],decorObjects=scene.children.filter(o=>bayDecor.includes(o)||o.userData.sharedTrack);
-function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,routeObjects,decorObjects});}
+function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects});}
 function activateRoute(name){
  cacheRoute();
- routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;
+ routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;if(city)city.visible=false;
  const cached=sceneCache.get(name);
  if(cached){
-  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,routeObjects,decorObjects}=cached);
+  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects}=cached);
   routeObjects.forEach(o=>o.visible=true);decorObjects.forEach(o=>o.visible=true);
  }else{
   setRouteGeometry(name);const oldRoad=new Set(world.children),oldDecor=new Set(scene.children);
-  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;
+  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;city=null;
   routeObjects=world.children.filter(o=>!oldRoad.has(o));decorObjects=scene.children.filter(o=>!oldDecor.has(o));
  }
  for(const pickup of pickups){const f=trackFrame(pickup.t);pickup.m.position.copy(f.p).addScaledVector(f.side,pickup.lane).addScaledVector(f.normal,7);}
@@ -602,25 +625,32 @@ function activateRoute(name){
  keyboard.clear();actions.clear();mobile.clear();cameraReady=false;
 }
 function selectScene(name,{historyMode='push'}={}){
- name=['bay','citadel','harbor','canyon'].includes(name)?name:'bay';
+ name=['bay','citadel','harbor','canyon','eleven'].includes(name)?name:'bay';
  if(race||launchElapsed!==null)return;
  const changed=name!==requestedScene;
  if(changed)activateRoute(name);
- selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon';const title=desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
+ selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon',urban=name==='eleven';const title=urban?'Eleven City':desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
  if(ancient&&!citadel){citadel=createCitadel(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(citadel);}
  if(citadel)citadel.visible=ancient;
- if(night&&!harbor){harbor=createHarbor(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(harbor);}if(harbor)harbor.visible=night;
+ if(night&&!harbor){harbor=createHarbor(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),trackRoutes);scene.add(harbor);}if(harbor)harbor.visible=night;
  if(desert&&!canyon){canyon=createCanyon(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(canyon);}if(canyon)canyon.visible=desert;
- [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert);
- scene.background.set(desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=desert?.00025:night?.00025:ancient?.00036:.00022;
- dir.color.set(desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
- scene.traverse(o=>{if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
+ if(urban&&!city){city=createElevenCity(trackFrame,trackLength,trackRoutes);scene.add(city);}if(city)city.visible=urban;
+ starMotes.visible=!urban;
+ [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert&&!urban);
+ scene.background.set(urban?0x79cce9:desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(urban?0xc6e2e4:desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=urban?.00019:desert?.00025:night?.00025:ancient?.00036:.00022;
+ dir.color.set(urban?0xfff3da:desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(urban?0xc9e9f4:desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
+ dir.intensity=urban?3.1:2.7;ambientLight.intensity=urban?1.12:1.35;
+ if(dir.shadow){dir.shadow.camera.far=urban?900:650;const extent=urban?190:150;Object.assign(dir.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent});dir.shadow.camera.updateProjectionMatrix();}
+ if(urban)city.userData.captureEnvironment?.(renderer,scene);
+ scene.traverse(o=>{if(o.userData.roadSurface){o.castShadow=false;o.receiveShadow=true;}else if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
  trackMat.uniforms.canyon.value=desert?1:0;trackMat.uniforms.citadel.value=ancient?1:0;trackMat.uniforms.harbor.value=night?1:0;trackMat.roughness=night?.28:.86;trackMat.metalness=night?.25:0;
+ trackMat.uniforms.city.value=urban?1:0;
  document.body.dataset.scene=selectedScene;
  document.querySelectorAll('button[data-scene]').forEach(b=>{const on=b.dataset.scene===selectedScene;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
  document.querySelector('.track-title').textContent=title;
- document.querySelector('#sceneCaption').textContent=desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
- document.querySelector('.navigation .label').textContent=desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
+ document.querySelector('#sceneCaption').textContent=urban?'ELEVEN CITY / PC CLASSIC RECONSTRUCTION':desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
+ document.querySelector('.navigation .label').textContent=urban?'ELEVEN CITY / LIVE MAP':desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
+ document.querySelector('.route-guide').textContent=urban?'PC city reconstruction · Four corner cuts · No express strips':'Green: narrow shortcuts · Cyan: express acceleration strips';
  cacheRoute();
  if(changed){
   try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}
@@ -690,7 +720,7 @@ function finishRace(){
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
   document.querySelector('#resultTitle').textContent=race.mode==='team'?winner:ordered[0].id===0?'YOU WIN!':'Race complete';
-  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
+  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='eleven'?'Eleven City':selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
   document.querySelector('#resultRows').innerHTML=ordered.map((r,i)=>`<tr class="${r.id===0?'you':''}"><td>${String(i+1).padStart(2,'0')}</td><td><i class="team-dot ${race.mode==='team'?r.team:'solo'}"></i>${r.name}${r.id===0?' / YOU':' / AI'}</td><td>${r.finishTime===null?'DNF':formatTime(r.finishTime)}</td><td>${r.finishTime===null?0:SCORE_TABLE[i]}</td></tr>`).join('');
 }
 function updateSprintHUD(){
@@ -770,7 +800,7 @@ function resetExperience(){
  document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');
  runStats={collisions:0,boosts:0,drifts:0,recoveries:[],recoveryStart:null};lapRecord=createLapRecord();lapNumber=0;raceLaps=[];raceValid=true;
  lapAssisted=document.querySelector('#beginnerSetting').checked;raceAssisted=lapAssisted;
- recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene+'-hills-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
+ recordKey=gateSlice?sprintRecordKey(craftIndex,document.querySelector('#beginnerSetting').checked):`apex-best-v2-${requestedScene+'-roads-v2'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`;
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
 function startLesson(){
@@ -842,7 +872,7 @@ function launchPrepared(action){
 }
 function updateLobbyRecord(){
  const names=['CLUB DRIVER','BRONZE DRIVER','SILVER DRIVER','GOLD DRIVER'];let medal=0,record=null;
- try{medal=Math.min(3,Number(localStorage.getItem('apex-medal')||0));record=JSON.parse(localStorage.getItem(`apex-best-v2-${requestedScene+'-hills-v1'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`)||'null');}catch{}
+ try{medal=Math.min(3,Number(localStorage.getItem('apex-medal')||0));record=JSON.parse(localStorage.getItem(`apex-best-v2-${requestedScene+'-roads-v2'}-${craftIndex}-${document.querySelector('#beginnerSetting').checked?'assisted':'standard'}`)||'null');}catch{}
  document.querySelector('#profileMedal').textContent=drivingChallenges.title()||names[medal]||names[0];document.querySelector('#sceneBest').textContent=record?.time?`PERSONAL BEST ${formatTime(record.time)}`:'PERSONAL BEST —';
 }
 function snapshot(s,c,width,height){
@@ -862,7 +892,7 @@ function updateScenePreview(){
 }
 function setupClubLobby(){
  showroom.scene.environment=scene.environment;
- for(const type of ['bay','citadel','harbor','canyon']){
+ for(const type of ['bay','citadel','harbor','canyon','eleven']){
   const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(type));
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
   try{const cached=localStorage.getItem(`apex-lobby-preview-v3-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
@@ -977,7 +1007,7 @@ roomUI=mountRoomUI({endpoint:multiplayerEndpoint(location),getSetup:()=>race?nul
  const banner=document.querySelector('#roomConnection');if(value==='connected'||value==='reconnected'){roomConnected=true;banner.hidden=true;}else if(value==='disconnected'){roomConnected=false;keyboard.clear();actions.clear();mobile.clear();banner.textContent='网络中断，正在重连；比赛仍在进行。';banner.hidden=!multiplayerActive;}else if(value==='closed')banner.hidden=true;else if(multiplayerActive){banner.textContent=value;banner.hidden=false;}
 }});
 if(gateSlice)document.querySelector('#openRoom').hidden=true;
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer?.setSize(innerWidth,innerHeight)});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);composer?.setSize(innerWidth,innerHeight);if(composer&&document.querySelector('#qualitySetting').value==='quality')composer.render();else renderer.render(scene,camera);});
 
 const settingsDialog=document.querySelector('#settingsDialog');
 document.querySelector('#openSettings').addEventListener('click',()=>settingsDialog.showModal());

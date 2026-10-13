@@ -1,5 +1,7 @@
+import {cityCircuitPoints} from './eleven-layout.js';
 // Distinct authored loops. Each begins with an open straight before the first landmark.
 export function circuitPoints(scene,{classic=false}={}){
+ if(scene==='eleven')return cityCircuitPoints();
  // Harbor: launch climb → crown hairpins → dock chicane → lower switchbacks.
  // No crossing in XZ: physics projects onto a 2D road, so stacked crossings are unsafe.
  let points;
@@ -13,6 +15,7 @@ export function circuitPoints(scene,{classic=false}={}){
  return points.map(([x,y,z],i)=>[x,y+(hills[i]||0),z]);
 }
 export function roadHalfWidth(scene,t){
+ if(scene==='eleven')return 44;
  if(scene!=='citadel')return 38;
  // Smoothly narrowed gate approaches with wider courtyard exits.
  const gates=[.025,.275,.525,.775];let proximity=1;
@@ -20,4 +23,4 @@ export function roadHalfWidth(scene,t){
  return 30+8*Math.min(1,proximity);
 }
 
-export function trackTension(scene){return scene==='harbor'?.65:scene==='canyon'?.55:.35;}
+export function trackTension(scene){return scene==='eleven'?.35:scene==='harbor'?.65:scene==='canyon'?.55:.35;}

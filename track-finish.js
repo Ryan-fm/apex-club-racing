@@ -1,7 +1,23 @@
 import * as THREE from './vendor/three/build/three.module.min.js';
 
+let roadNormal;
+function roadNormalTexture(){
+ if(roadNormal)return roadNormal;
+ const size=128,heights=new Float32Array(size*size),data=new Uint8Array(size*size*4);let seed=317;
+ for(let i=0;i<heights.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;heights[i]=(seed>>>24)/255;}
+ const height=(x,y)=>heights[((y+size)%size)*size+(x+size)%size];
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const normal=new THREE.Vector3((height(x-1,y)-height(x+1,y))*.65,(height(x,y-1)-height(x,y+1))*.65,1).normalize();
+  data.set([Math.round((normal.x*.5+.5)*255),Math.round((normal.y*.5+.5)*255),Math.round((normal.z*.5+.5)*255),255],(y*size+x)*4);
+ }
+ roadNormal=new THREE.DataTexture(data,size,size);roadNormal.wrapS=roadNormal.wrapT=THREE.RepeatWrapping;
+ roadNormal.repeat.set(8,2);roadNormal.magFilter=THREE.LinearFilter;roadNormal.minFilter=THREE.LinearMipmapLinearFilter;roadNormal.generateMipmaps=true;roadNormal.anisotropy=4;roadNormal.needsUpdate=true;
+ return roadNormal;
+}
+
 // Shared road finish across main and optional roads, without texture downloads.
 export function applyRoadFinish(material){
+ material.normalMap=roadNormalTexture();material.normalScale.set(.24,.24);
  const previous=material.onBeforeCompile;
  material.onBeforeCompile=shader=>{
   previous?.call(material,shader);
@@ -14,6 +30,7 @@ export function applyRoadFinish(material){
    aggregate=mix(.5,aggregate,detail);
    float wear=.5+.5*sin(vFinishPosition.x*.035+vFinishPosition.z*.013);
    diffuseColor.rgb*=.92+aggregate*.12+wear*.035;
+   roughnessFactor=clamp(roughnessFactor+(aggregate-.5)*.1*detail,.22,1.);
   `);
  };
  return material;

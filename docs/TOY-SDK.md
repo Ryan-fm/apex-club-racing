@@ -2,15 +2,15 @@
 
 Official SDK reviewed on 2026-10-09: https://www.bilibili.com/toy/publish/sdk
 
-Branch: `codex/toy-leaderboard`, based on main after ramp removal. This branch uses Toy instead of Supabase for public rankings and score submission. It does not publish a Toy automatically.
+Current branch: `codex/toy-eleven-city`, merges the generic Eleven City release from `main` into the existing `codex/toy-leaderboard` integration. This branch uses Toy instead of Supabase for public rankings and score submission. It does not publish a Toy automatically.
 
 ## Ranking contract
 
 - SDK URL: `https://s1.hdslb.com/bfs/seed/toy/app/sdk/toy-sdk.js`; lazy loaded outside the driving loop, with timeout and capability checks.
-- Board 1: Bay standard; board 2: Citadel standard; board 3: Harbor standard. Boards 4–5 reserved. Toy exposes five boards, so all six circuit/assist combinations cannot be split independently. Assisted races remain local.
+- Board 1: Bay standard; board 2: Citadel standard; board 3: Harbor standard; board 4: Canyon standard; board 5: Eleven City standard. The existing four assignments are preserved. Toy exposes five boards; assisted races remain local.
 - Score = negative completed three-lap race time in integer milliseconds. Toy retains the highest score and sorts descending, so shorter time wins. Supported score range -16777216 to 16777215; reject out-of-range race times. Toy resolves ties by earliest achievement.
 - `getRankList({board,period,limit:50})` returns rank, score, nickname, avatar only; it does not store kart or replay metadata. Rules replace the old kart column. Periods: all/month/week/day. Board reads require no login.
-- `submitScore({board,score})` is triggered by the results button for a valid standard three-lap finish. Platform handles Bilibili login/profile confirmation. No custom account/password is needed; no Supabase fallback.
+- `submitScore({board,score})` is triggered once after a valid standard three-lap finish. Platform handles Bilibili login/profile confirmation. No custom account/password is needed; no Supabase fallback.
 - Profile access is optional and click-triggered on the account page. Do not retain or log toyOpenId. A profile connection is scoped to this page; it is not a separate game login.
 - Reads are cached per board/period, in-flight requests are coalesced, refresh is manual. Submissions are deduplicated per result in the current page. No polling, no driving-loop SDK calls, no immediate automatic retries; rate limit 307044 displays a later manual retry message. All players share a Toy quota; exact limits are not public.
 - Public board layout and error handling are testable locally; live identity, confirmation, score persistence and cross-device ranks require the published/preview Toy container. SDK loading alone does not grant Toy capabilities on localhost/Vercel.

@@ -31,3 +31,13 @@ test('canyon uses a separate fourth board and keeps existing harbor records isol
  await club.submit({...race,scene:'canyon'});assert.deepEqual(scores,[{board:4,score:-123456}]);
  assert.deepEqual(raceScore(race),{board:3,score:-123456});
 });
+
+test('Eleven City uses board five without reading or writing the existing circuit boards',async()=>{
+ const reads=[],scores=[],sdk={isSupport:async()=>true,getRankList:async request=>{reads.push(request);return [{rank:1,score:-180000,nickname:'City Driver'}];},submitScore:async request=>scores.push(request)};
+ const club=createToyClub(async()=>sdk);
+ const first=await club.leaderboard('eleven',false,{period:'week'});
+ assert.equal(first[0].time_ms,180000);await club.leaderboard('eleven',false,{period:'week'});
+ await club.submit({...race,scene:'eleven'});assert.deepEqual(scores,[{board:5,score:-123456}]);
+ assert.deepEqual(reads,[{board:5,period:'week',limit:50}]);
+ await assert.rejects(club.submit({...race,scene:'eleven',assisted:true}),/辅助/);assert.equal(scores.length,1);
+});

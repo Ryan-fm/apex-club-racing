@@ -37,16 +37,18 @@ export function createCitadel(trackFrame,trackLength,halfWidth=()=>38,opening=()
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));g.setIndex(idx);g.computeVertexNormals();const m=new THREE.Mesh(g,roof);m.material.side=THREE.DoubleSide;parent.add(m);
  }
  for(let i=0;i<12;i++){
-  const f=trackFrame((i+.3)/12),tower=new THREE.Group();tower.position.copy(f.p);tower.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(f.side.clone().negate(),f.normal,f.tan));group.add(tower);
-  for(const x of [-53,53]){
+  const t=(i+.3)/12,f=trackFrame(t),tower=new THREE.Group();tower.position.copy(f.p);tower.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(f.side.clone().negate(),f.normal,f.tan));group.add(tower);
+  // A branch is a real road corridor, including the space needed by its chase camera.
+  for(const side of [-1,1]){const x=side*(opening(t,-side,f)?145:53);
    box(tower,stone,x,9,0,20,42,30);box(tower,cap,x,31,0,23,3,33);
    const pavilion=new THREE.Group();pavilion.position.set(x,32,0);tower.add(pavilion);
    for(const a of [-9,9])for(const b of [-12,12])box(pavilion,red,a,10,b,2,20,2);
    box(pavilion,red,0,7,0,16,12,19);box(pavilion,gold,0,13,10,13,2,.4);
    eaves(pavilion,19,19);eaves(pavilion,14,28);
   }
-  if(i%3===0)buildGate(tower);
+  if(i%3===0&&!opening(t,-1,f)&&!opening(t,1,f))buildGate(tower);
   for(const x of [-33,33]){
+   if(opening(t,-Math.sign(x),f))continue;
    box(tower,red,x,14,12,1,28,1);box(tower,gold,x,27,12,9,.7,1);
    const lantern=new THREE.Mesh(new THREE.SphereGeometry(3.2,10,8),glow);lantern.scale.y=1.35;lantern.position.set(x+(x<0?3:-3),23,12);tower.add(lantern);
    box(tower,gold,lantern.position.x,17,12,.3,5,.3);
