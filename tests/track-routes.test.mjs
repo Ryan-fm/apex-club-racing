@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {multiplayerTrack,spawnPlayer,stepRoomPlayer,idleInput,recoverRoomPlayer} from '../multiplayer/simulation.js';
-import {projectRoad,routeWidth} from '../track-routes.js';
+import {projectRoad,routeWidth,branchFrame} from '../track-routes.js';
 import {projectTrack} from '../driving-model.js';
 
 for(const scene of ['bay','citadel','harbor','canyon']){
@@ -100,4 +100,20 @@ test('shortcut entries ease into distinct skill widths and fan out gently for th
  }
  const cut=multiplayerTrack('bay').routes.find(r=>r.id==='cut-1');
  assert(cut.savedDistance/cut.mainLength>.09,'advanced bay cut must save a meaningful distance');
+});
+
+test('branch presentation normals are continuous across samples and match the main road at both merges',()=>{
+ for(const scene of ['bay','citadel','harbor','canyon']){
+  const track=multiplayerTrack(scene);
+  for(const r of track.routes){
+   for(const t of [r.start,r.end])assert(branchFrame(track.routes,r.id,t).tan.angleTo(track.curve.getTangentAt(t))<1e-6);
+   for(let i=1;i<120;i++){
+    const t=r.start+(r.end-r.start)*i/120,epsilon=(r.end-r.start)*1e-7;
+    const a=branchFrame(track.routes,r.id,t-epsilon),b=branchFrame(track.routes,r.id,t+epsilon);
+    assert(a.normal.angleTo(b.normal)<.0001,'road sampling must not snap the vehicle or camera up vector');
+   }
+   assert(Math.abs(routeWidth(r,.001,scene)-track.halfWidth(r.start+(r.end-r.start)*.001))<.01);
+   assert(Math.abs(routeWidth(r,.999,scene)-track.halfWidth(r.start+(r.end-r.start)*.999))<.01);
+  }
+ }
 });

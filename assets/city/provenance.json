@@ -1,0 +1,227 @@
+[
+  {
+    "file": "asphalt_pit_lane-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_pit_lane/asphalt_pit_lane_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/asphalt_pit_lane",
+    "authors": {
+      "Dimitrios Savva": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 313045,
+    "sha256": "bb5a307d39898b42ea06ae3342901f142db0457105e978ae50ef0751f6361c89",
+    "source_sha256": "8aad5097f6de913aebc33f2b9b9271834b55c6942359955722db3196a9ce9bca",
+    "source_bytes": 1015369,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "asphalt_pit_lane-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_pit_lane/asphalt_pit_lane_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/asphalt_pit_lane",
+    "authors": {
+      "Dimitrios Savva": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 553740,
+    "sha256": "546e5db8f33bb6e3efbdbccc2b4e84c8ab044f78a67905ffcad747c8d4742481",
+    "source_sha256": "a215356a1180664fbbf94076f3720a4620a1121e137780ce98059621bf8b444e",
+    "source_bytes": 1066208,
+    "transformation": "JPEG recompression, quality 92"
+  },
+  {
+    "file": "asphalt_pit_lane-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_pit_lane/asphalt_pit_lane_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/asphalt_pit_lane",
+    "authors": {
+      "Dimitrios Savva": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 71860,
+    "sha256": "076f53c90fde7a17b70328da7933fa3b668a8fee4f73b4b98336defafedbf30d",
+    "source_sha256": "c6341db99340082f93b5f5252e9b0d320379d48783984618812feb238b940b67",
+    "source_bytes": 443992,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "concrete_floor_02-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_02/concrete_floor_02_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/concrete_floor_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 425489,
+    "sha256": "7b83b7aae84553e40bcd7659d191d07579e5e87ae760b62d27ba7e146a77a9d5",
+    "source_sha256": "6db84a6d87dc50508b9d134d6fbd2b7e876b8081a5f43a118a249ca18de73af5",
+    "source_bytes": 776097,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "concrete_floor_02-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_02/concrete_floor_02_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/concrete_floor_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 266383,
+    "sha256": "830d282c854f8ed04409b7db39e88c65fbe10a7273389eb6b15cbbc9ab62c6f7",
+    "source_sha256": "fcda391b57a816d646ae15544688be53790478da5cd48dbe514b3c6901415e61",
+    "source_bytes": 192757,
+    "transformation": "JPEG recompression, quality 92"
+  },
+  {
+    "file": "concrete_floor_02-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_floor_02/concrete_floor_02_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/concrete_floor_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 145920,
+    "sha256": "3621f803095dd2c8a7e782685a155d8ecf7dfa72547976e5292bfd1517a470d1",
+    "source_sha256": "c7f026a611b7859903c61ec7fd4574944157223e9e7796413dd6e2a66eaeac7a",
+    "source_bytes": 318550,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "pavement_03-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/pavement_03/pavement_03_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/pavement_03",
+    "authors": {
+      "Dario Barresi": "Processing",
+      "Charlotte Baglioni": "Photography"
+    },
+    "license": "CC0-1.0",
+    "bytes": 408291,
+    "sha256": "96bf87c879c88f3deceebb7774e69b0b70569b74e10f42765ec7f982bd1f4f41",
+    "source_sha256": "27cb62f96c03ac300aed5d1a67a10fe57eed7c58904a31da9d2f45a851d19e90",
+    "source_bytes": 1119611,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "pavement_03-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/pavement_03/pavement_03_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/pavement_03",
+    "authors": {
+      "Dario Barresi": "Processing",
+      "Charlotte Baglioni": "Photography"
+    },
+    "license": "CC0-1.0",
+    "bytes": 635122,
+    "sha256": "63d020c152785839c054630667088fa4413ca70ca0f2eabc12e48132a45ba526",
+    "source_sha256": "92d30168e2aed1f44fa779b8906566dbf00d77d4195e13a7f92b7c555cae9f85",
+    "source_bytes": 1180142,
+    "transformation": "JPEG recompression, quality 92"
+  },
+  {
+    "file": "pavement_03-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/pavement_03/pavement_03_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/pavement_03",
+    "authors": {
+      "Dario Barresi": "Processing",
+      "Charlotte Baglioni": "Photography"
+    },
+    "license": "CC0-1.0",
+    "bytes": 84884,
+    "sha256": "78bbbb41794a5377737ae3a609a0a4b76aef32499b7d17d8190e98a0af7f8c0c",
+    "source_sha256": "ba7547ecaaddf5136a312b4e189bb187983164490154ffa228da08bd952d75c7",
+    "source_bytes": 498023,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "grass_ground-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/grass_ground",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 236223,
+    "sha256": "b5dfa3212811b9a94582d3161d4b99d67b5a9df0792930e90536229d38d75ae6",
+    "source_sha256": "a79cc5ed65af0f80261b39a383b64a8c5272c5144d724deb43dbc29f0e4cd19b",
+    "source_bytes": 876584,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "grass_ground-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/grass_ground",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 724183,
+    "sha256": "4e0517d31791d6b14d220457a04caf1bd44e9720775bf5bad53d26de0bc0ad59",
+    "source_sha256": "7000e2ccd479bb7b66dcdf4faef7b47554324566886314ca620cbf03e274e826",
+    "source_bytes": 1310516,
+    "transformation": "JPEG recompression, quality 92"
+  },
+  {
+    "file": "grass_ground-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground/grass_ground_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/grass_ground",
+    "authors": {
+      "Charlotte Baglioni": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 36736,
+    "sha256": "7b2ae91e477829fd55ea341aa62191acc9bb349da9363ab42cd2090ac37c3b54",
+    "source_sha256": "111341f948b7e073edf7ac6add8777e1bf10df8959400df3863243e89bbc8c08",
+    "source_bytes": 328190,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "bark_brown_02-color.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_diff_1k.jpg",
+    "asset": "https://polyhaven.com/a/bark_brown_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 317845,
+    "sha256": "1fbbdc14bc8ca894addcb750f39a611743501f2fc69bf9f5c2739821ab1cd764",
+    "source_sha256": "920fa0bed0c9d78c1d530e99795113afd532d7db746de440f4a85d7c83ed0f1a",
+    "source_bytes": 659592,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "bark_brown_02-normal.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_nor_gl_1k.jpg",
+    "asset": "https://polyhaven.com/a/bark_brown_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 894277,
+    "sha256": "ddf3e3b32fb9585bc69187304c247b1b1b3a775724f30e03fe834bf3ddef62be",
+    "source_sha256": "0d5e691e8ad8bcd093a3587887fda2a6b4a948b5708a4f256f7919584c6eb857",
+    "source_bytes": 1015623,
+    "transformation": "JPEG recompression, quality 92"
+  },
+  {
+    "file": "bark_brown_02-roughness.jpg",
+    "source": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_rough_1k.jpg",
+    "asset": "https://polyhaven.com/a/bark_brown_02",
+    "authors": {
+      "Rob Tuytel": "All"
+    },
+    "license": "CC0-1.0",
+    "bytes": 177096,
+    "sha256": "a8e8a7116c4cc1eb43c64559f96d6973d3afb0f1aeb712dcf61ec372820c8d47",
+    "source_sha256": "68125592de36e15bae7aa6db85c4d135aeb7e5653199ba226483a70f6d69837d",
+    "source_bytes": 337946,
+    "transformation": "JPEG recompression, quality 85"
+  },
+  {
+    "file": "daylight-sky.hdr",
+    "source": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr",
+    "asset": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+    "authors": {
+      "Greg Zaal": "Original",
+      "Jarod Guest": "Sky edits"
+    },
+    "license": "CC0-1.0",
+    "bytes": 1435119,
+    "sha256": "fd94c84997b8a3c353b62c2125a9b44e19509956986a126e472684432a02d798"
+  }
+]

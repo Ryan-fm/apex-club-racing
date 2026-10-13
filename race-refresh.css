@@ -83,4 +83,5 @@ html.handheld-input .in-race .telemetry{bottom:22px}
 @media(orientation:landscape) and (max-height:550px){#lobby .route-guide{display:none}}
 
 #lobby .scene-options button[data-scene="canyon"]{background:linear-gradient(125deg,#764931,#c99061)}
+#lobby .scene-options button[data-scene="eleven"]{background:linear-gradient(125deg,#357689,#bdc9b5)}
 @media(orientation:landscape) and (max-height:550px) and (max-width:1100px){#lobby .scene-options button{height:32px;min-height:32px}#lobby .scene-options{gap:4px}}

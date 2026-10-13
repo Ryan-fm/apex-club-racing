@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Static harbor scenery is batched by material; no per-building lights or animation.
-export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=>false){
+export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=>false,routes=[]){
  const root=new THREE.Group();root.name='Neon Harbor';
  const cube=new THREE.BoxGeometry(1,1,1),pose=new THREE.Object3D(),batches=new Map();
  const steel=new THREE.MeshStandardMaterial({color:0x354f69,metalness:.65,roughness:.36});
@@ -46,7 +46,7 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=
    for(let slot=-2;slot<=2;slot++)local(f,rubber,side*(w-2),.05,slot*1.1,2,.06,.38);
    local(f,rubber,side*(w+5),-.1,0,5,.2,.55);
   }
-  if(i%16===0)for(const side of [-1,1]){local(f,steel,side*(w+11),22,0,1.6,44,1.6);local(f,steel,side*(w+5),43,0,14,1.5,2);local(f,warm,side*(w+4),42,0,12,.45,2);}
+  if(i%16===0)for(const side of [-1,1]){if(opening(i/480,side,f))continue;local(f,steel,side*(w+11),22,0,1.6,44,1.6);local(f,steel,side*(w+5),43,0,14,1.5,2);local(f,warm,side*(w+4),42,0,12,.45,2);}
  }
 
  // A luminous launch gallery frames the first climb. All ribs share the box batches.
@@ -73,6 +73,7 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=
   const t=i/100,f=trackFrame(t),after=trackFrame(t+.008),bend=f.tan.clone().cross(after.tan).y;
   if(Math.abs(bend)<.25)continue;
   const side=bend>0?1:-1,w=halfWidth(t)+7;
+  if(opening(t,side,f))continue;
   local(f,steel,side*w,15,0,2,19,36);
   for(let k=-1;k<=1;k++){
    const a=point(f,side*(w-1.2),19,k*10-3),b=point(f,side*(w-1.2),14,k*10+3),c=point(f,side*(w-1.2),9,k*10-3);
@@ -93,7 +94,7 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=
  fragmentShader:'varying vec3 vSky;void main(){vec3 d=normalize(vSky);float h=smoothstep(-.08,.65,d.y);vec3 c=mix(vec3(.045,.035,.115),vec3(.012,.035,.09),h);float band=pow(max(0.,1.-abs(d.y-.12)*3.),4.);c+=vec3(.02,.025,.05)*band;gl_FragColor=vec4(c,1.);}' }));root.add(sky);
  const moon=new THREE.Mesh(new THREE.SphereGeometry(115,24,16),new THREE.MeshBasicMaterial({color:0xb7d7ef,fog:false}));moon.position.set(-1750,1750,2700);root.add(moon);
  // Warehouses and container stacks flank the route; corrugated ribs catch the light.
- const roadClearance=Array.from({length:400},(_,i)=>trackFrame(i/400).p);
+ const roadClearance=[...Array.from({length:400},(_,i)=>trackFrame(i/400).p),...routes.flatMap(r=>r.samples)];
  for(let i=0;i<36;i++){
   const f=trackFrame((i+.3)/36),side=i%2?1:-1,offset=side*(140+(i%3)*25);
   const center=point(f,offset,0);if(roadClearance.some(p=>Math.hypot(p.x-center.x,p.z-center.z)<112))continue;
@@ -142,7 +143,7 @@ export function createHarbor(trackFrame,trackLength,halfWidth=()=>38,opening=()=
  }
  // Two crane silhouettes and suspension bridge pylons provide turn landmarks.
  for(const t of [.18,.66]){const f=trackFrame(t);for(const x of [-95,95])local(f,containers[2],x,70,0,8,140,9);local(f,containers[2],0,140,0,230,9,12);local(f,warm,0,134,0,220,1,2);local(f,steel,34,112,0,1,50,1);local(f,steel,34,87,0,14,3,10);}
- for(const t of [.04,.085]){const f=trackFrame(t);for(const side of [-1,1]){local(f,concrete,side*53,61,0,10,122,12);local(f,pink,side*48,68,0,.8,95,1);for(const z of [-140,-110,-80,-50,50,80,110,140]){const a=f.p.clone().addScaledVector(f.side,side*53).addScaledVector(f.normal,119),b=f.p.clone().addScaledVector(f.side,side*43).addScaledVector(f.tan,z).addScaledVector(f.normal,8);beam(steel,a,b,.9);}}local(f,steel,0,120,0,116,5,12);}
+ for(const t of [.04,.085,.36]){const f=trackFrame(t);if(opening(t,-1,f)||opening(t,1,f))continue;for(const side of [-1,1]){local(f,concrete,side*53,61,0,10,122,12);local(f,pink,side*48,68,0,.8,95,1);for(const z of [-140,-110,-80,-50,50,80,110,140]){const a=f.p.clone().addScaledVector(f.side,side*53).addScaledVector(f.normal,119),b=f.p.clone().addScaledVector(f.side,side*43).addScaledVector(f.tan,z).addScaledVector(f.normal,8);beam(steel,a,b,.9);}}local(f,steel,0,120,0,116,5,12);}
  // Gantry bracing, warning stripes and lit cabins give the cranes mechanical scale.
  for(const t of [.18,.66]){const f=trackFrame(t);
   for(const side of [-1,1])for(let y=10;y<125;y+=25){beam(steel,point(f,side*99,y,-6),point(f,side*91,y+25,6),2);local(f,warm,side*95,y,0,8.3,2,9.3);}
