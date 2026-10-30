@@ -1,5 +1,7 @@
 # Toy 万圣节更新
 
+当前状态：**已发布**。正式入口：https://www.bilibili.com/toy/apex-club-racing/index.html 。构建号：`ace5fa9bb41c`。
+
 日期：2026-10-30。平台分支：`codex/toy-halloween`。通用代码基于 `main` 的 `2bb6f8f`，从既有 `codex/toy-eleven-city` 接入分支合入；未将 Toy SDK 反向加入 `main`。
 
 ## 本次包体
@@ -48,3 +50,10 @@ Toy 初次容器预览已验证桌面首页、三条赛道切换、开赛、暂�
 - 上传后的本地包摘要与已自检包体一致；新预览首页确认同一构建号，主视觉加载正常。
 
 审核中不等于新版已经上线；正式入口的切换结果另行记录。
+
+
+## 审核通过与正式入口复核
+
+后续 `toy mylist --json` 返回 `published`。正式入口已切换为资源版本 `35519224606720-v36501`，首页脚本构建号为 `ace5fa9bb41c`，万圣节主视觉正常加载。正式霓虹港湾榜仍返回原有 34 条成绩；南瓜谷页面正确显示独立本地成绩说明。标题、封面、图标、分类、可见性和原 slug 均保持原值。
+
+正式容器再次开赛成功，比赛计时增长，新增资源无加载失败；submitScore、getRankList、getCloudStorage 和 getUserProfile 能力均为可用。仍未发送任何测试成绩或写入真实云存档。
