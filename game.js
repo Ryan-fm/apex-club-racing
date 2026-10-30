@@ -9,6 +9,7 @@ import {PHYSICS_DT,idleInput,multiplayerTrack,stepRoomPlayer} from './multiplaye
 import {RoomPrediction} from './multiplayer/prediction.js';
 import {createCanyon} from './canyon-scene.js';
 import {createElevenCity} from './eleven-city.js';
+import {createHalloween} from './halloween-scene.js';
 import {applyCitySurface} from './city-materials.js';
 import {createHarbor} from './harbor-scene.js';
 import {createVehicleEnvironment} from './vehicle-finish.js';
@@ -138,12 +139,12 @@ addEventListener('blur',()=>{keyboard.clear();actions.clear();mobile.clear();if(
 
 // Bay Circuit: a closed coastal course with gentle elevation changes.
 const GATE_SLICE_START=GATE_SPRINT.start;
-let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon','eleven'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
+let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon','eleven','halloween'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
 let curve,trackLength,roadSamples,trackRoutes;
 function setRouteGeometry(name){
  requestedScene=name;
  curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(name));
- if(name==='harbor')curve.arcLengthDivisions=2400;
+ if(name==='harbor'||name==='halloween')curve.arcLengthDivisions=2400;
  if(name==='eleven')curve.arcLengthDivisions=3200;
  trackLength=curve.getLength();
  roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:gateSlice?undefined:p.y,z:p.z};});
@@ -175,12 +176,12 @@ function createTrack(){
   for(let i=0;i<seg;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('shoulderOpen',new THREE.Float32BufferAttribute(shoulderOpen,1)); g.setIndex(idx); g.computeVertexNormals();
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,side:THREE.DoubleSide});
-  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0}};
+  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0},halloween:{value:0}};
   m.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,m.uniforms);
     shader.vertexShader='attribute float shoulderOpen;varying float vShoulderOpen;varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;vShoulderOpen=shoulderOpen;');
-    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;uniform float city;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
+    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;uniform float city;uniform float halloween;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
         float edge=1.-smoothstep(.009,.022,min(vRoadUv.x,1.-vRoadUv.x));
         float lane=(1.-smoothstep(.002,.006,abs(vRoadUv.x-.333)))+(1.-smoothstep(.002,.006,abs(vRoadUv.x-.667)));
@@ -213,7 +214,12 @@ function createTrack(){
         #endif
         cityRoad+=cityLanes*vec3(.38,.42,.43)*(1.-vShoulderOpen);
         cityRoad+=edge*vec3(.25,.29,.3)*(1.-vShoulderOpen);
-        base=mix(base,cityRoad,city);diffuseColor.rgb=base;
+        base=mix(base,cityRoad,city);
+        vec3 hollowRoad=vec3(.095,.115,.13)+grain*.018;
+        hollowRoad+=lane*dash*vec3(.35,.39,.36)*(1.-vShoulderOpen);
+        hollowRoad=mix(hollowRoad,mix(vec3(.95,.44,.12),vec3(.32,.25,.19),step(.5,fract(vRoadUv.y*2.))),shoulder*.85*(1.-vShoulderOpen));
+        hollowRoad+=edge*vec3(.75,.3,.06)*(1.-vShoulderOpen);
+        base=mix(base,hollowRoad,halloween);diffuseColor.rgb=base;
     `);
   };
   applyRoadFinish(m);
@@ -233,7 +239,7 @@ trackMat=createTrack();
 if(requestedScene!=='eleven')world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
 world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t),trackFrame));
 bayTrackObjects=[];
-if(requestedScene==='eleven')return;
+if(requestedScene==='eleven'||requestedScene==='halloween')return;
 const beforeBayTrack=new Set(world.children);
 // Edge rails + cathedral ribs.
 const railMat=new THREE.MeshBasicMaterial({color:0xc3f3f1});
@@ -493,7 +499,7 @@ function updateCamera(dt,meta){
   f.tan.set(Math.sin(cameraHeading),0,Math.cos(cameraHeading)).addScaledVector(f.normal,-f.tan.dot(f.normal)).normalize();
   const speedN=clamp(state.speed/650,0,1);
   if(!cameraReady)chaseCamera.reset();
-  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,distance:requestedScene==='eleven'?43:61,height:requestedScene==='eleven'?19:27,dt,roots:[world,...bayDecor,citadel,harbor,canyon,city]});
+  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,distance:requestedScene==='eleven'?43:61,height:requestedScene==='eleven'?19:27,dt,roots:[world,...bayDecor,citadel,harbor,canyon,city,halloween]});
   const desired=view.position;
   const shake=reducedMotion?0:state.hit?.45:0;
   desired.x+=(Math.random()-.5)*shake*speedN;desired.z+=(Math.random()-.5)*shake*speedN;
@@ -539,7 +545,7 @@ function signTexture(title,subtitle,color='#214554'){
 }
 let bayDecor;
 function buildDecor(){
-if(requestedScene==='eleven'){bayDecor=[];return;}
+if(requestedScene==='eleven'||requestedScene==='halloween'){bayDecor=[];return;}
 const beforeBayDecor=new Set(scene.children);
 // A soft sky gradient, sculpted islands and trackside props give the course a readable scale.
 const sky=new THREE.Mesh(new THREE.SphereGeometry(6500,24,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,vertexShader:`varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vP;void main(){float h=normalize(vP).y;vec3 c=mix(vec3(.48,.73,.89),vec3(.08,.32,.62),smoothstep(-.05,.8,h));gl_FragColor=vec4(c,1.);}`}));scene.add(sky);
@@ -587,7 +593,7 @@ for(let i=0;i<34;i++){
 bayDecor=scene.children.filter(o=>!beforeBayDecor.has(o)&&!o.userData.sharedTrack);
 }
 buildDecor();
-let citadel=null,harbor=null,canyon=null,city=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
+let citadel=null,harbor=null,canyon=null,city=null,halloween=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
 if(diagnosticsEnabled)renderer.info.autoReset=false;
 const perf=createPerformanceProbe({
  enabled:diagnosticsEnabled,
@@ -606,17 +612,17 @@ const perf=createPerformanceProbe({
 });
 const sceneCache=new Map(),scenePreviews=new Set();
 let routeObjects=[...world.children],decorObjects=scene.children.filter(o=>bayDecor.includes(o)||o.userData.sharedTrack);
-function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects});}
+function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,halloween,routeObjects,decorObjects});}
 function activateRoute(name){
  cacheRoute();
- routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;if(city)city.visible=false;
+ routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;if(city)city.visible=false;if(halloween)halloween.visible=false;
  const cached=sceneCache.get(name);
  if(cached){
-  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects}=cached);
+  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,halloween,routeObjects,decorObjects}=cached);
   routeObjects.forEach(o=>o.visible=true);decorObjects.forEach(o=>o.visible=true);
  }else{
   setRouteGeometry(name);const oldRoad=new Set(world.children),oldDecor=new Set(scene.children);
-  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;city=null;
+  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;city=null;halloween=null;
   routeObjects=world.children.filter(o=>!oldRoad.has(o));decorObjects=scene.children.filter(o=>!oldDecor.has(o));
  }
  for(const pickup of pickups){const f=trackFrame(pickup.t);pickup.m.position.copy(f.p).addScaledVector(f.side,pickup.lane).addScaledVector(f.normal,7);}
@@ -625,32 +631,36 @@ function activateRoute(name){
  keyboard.clear();actions.clear();mobile.clear();cameraReady=false;
 }
 function selectScene(name,{historyMode='push'}={}){
- name=['bay','citadel','harbor','canyon','eleven'].includes(name)?name:'bay';
+ name=['bay','citadel','harbor','canyon','eleven','halloween'].includes(name)?name:'bay';
  if(race||launchElapsed!==null)return;
  const changed=name!==requestedScene;
  if(changed)activateRoute(name);
- selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon',urban=name==='eleven';const title=urban?'Eleven City':desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
+ selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon',urban=name==='eleven',spooky=name==='halloween';const title=spooky?'Lantern Hollow':urban?'Eleven City':desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
  if(ancient&&!citadel){citadel=createCitadel(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(citadel);}
  if(citadel)citadel.visible=ancient;
  if(night&&!harbor){harbor=createHarbor(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),trackRoutes);scene.add(harbor);}if(harbor)harbor.visible=night;
  if(desert&&!canyon){canyon=createCanyon(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(canyon);}if(canyon)canyon.visible=desert;
  if(urban&&!city){city=createElevenCity(trackFrame,trackLength,trackRoutes);scene.add(city);}if(city)city.visible=urban;
- starMotes.visible=!urban;
- [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert&&!urban);
- scene.background.set(urban?0x79cce9:desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(urban?0xc6e2e4:desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=urban?.00019:desert?.00025:night?.00025:ancient?.00036:.00022;
- dir.color.set(urban?0xfff3da:desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(urban?0xc9e9f4:desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
- dir.intensity=urban?3.1:2.7;ambientLight.intensity=urban?1.12:1.35;
+ if(spooky&&!halloween){halloween=createHalloween(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(halloween);}if(halloween)halloween.visible=spooky;
+ starMotes.visible=!urban&&!spooky;
+ [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert&&!urban&&!spooky);
+ scene.background.set(spooky?0x111c26:urban?0x79cce9:desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(spooky?0x273941:urban?0xc6e2e4:desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=spooky?.00034:urban?.00019:desert?.00025:night?.00025:ancient?.00036:.00022;
+ dir.color.set(spooky?0xb7d9e2:urban?0xfff3da:desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(spooky?0xa7c0c7:urban?0xc9e9f4:desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
+ dir.intensity=spooky?2.1:urban?3.1:2.7;ambientLight.intensity=spooky?1.25:urban?1.12:1.35;
  if(dir.shadow){dir.shadow.camera.far=urban?900:650;const extent=urban?190:150;Object.assign(dir.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent});dir.shadow.camera.updateProjectionMatrix();}
  if(urban)city.userData.captureEnvironment?.(renderer,scene);
- scene.traverse(o=>{if(o.userData.roadSurface){o.castShadow=false;o.receiveShadow=true;}else if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
+ scene.traverse(o=>{if(o.userData.roadSurface){o.castShadow=false;o.receiveShadow=true;}else if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&!o.userData.authoredShadows&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
  trackMat.uniforms.canyon.value=desert?1:0;trackMat.uniforms.citadel.value=ancient?1:0;trackMat.uniforms.harbor.value=night?1:0;trackMat.roughness=night?.28:.86;trackMat.metalness=night?.25:0;
  trackMat.uniforms.city.value=urban?1:0;
+ trackMat.uniforms.halloween.value=spooky?1:0;
+ showroom.setSeason?.(spooky?'halloween':'default');
  document.body.dataset.scene=selectedScene;
+ document.querySelector('#seasonNotice').textContent=spooky?'New circuit · Three laps · Personal records on this device':'Six circuits. One haunted detour.';
  document.querySelectorAll('button[data-scene]').forEach(b=>{const on=b.dataset.scene===selectedScene;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
  document.querySelector('.track-title').textContent=title;
- document.querySelector('#sceneCaption').textContent=urban?'ELEVEN CITY / PC CLASSIC RECONSTRUCTION':desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
- document.querySelector('.navigation .label').textContent=urban?'ELEVEN CITY / LIVE MAP':desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
- document.querySelector('.route-guide').textContent=urban?'PC city reconstruction · Four corner cuts · No express strips':'Green: narrow shortcuts · Cyan: express acceleration strips';
+ document.querySelector('#sceneCaption').textContent=spooky?'LANTERN HOLLOW / HALLOWEEN NIGHT RUN':urban?'ELEVEN CITY / PC CLASSIC RECONSTRUCTION':desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
+ document.querySelector('.navigation .label').textContent=spooky?'LANTERN HOLLOW / LIVE MAP':urban?'ELEVEN CITY / LIVE MAP':desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
+ document.querySelector('.route-guide').textContent=spooky?'Amber: circuit edges · Green: graveyard cut · Cyan: express strips':urban?'PC city reconstruction · Four corner cuts · No express strips':'Green: narrow shortcuts · Cyan: express acceleration strips';
  cacheRoute();
  if(changed){
   try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}
@@ -706,16 +716,17 @@ function finishRace(){
  drivingChallenges.finish({finished:race.racers[0].finishTime!==null,valid:!replayData&&canSubmitRace(race.racers[0].finishTime,raceLaps,raceValid),collisions:runStats.collisions,rank:standings(race).findIndex(r=>r.id===0)+1});
  finishExperience();if(!replayData&&canSubmitRace(race.racers[0].finishTime,raceLaps,raceValid))progression.completed();progression.flush();
   const finishTime=race.racers[0].finishTime;
-  if(requestedScene!=='eleven'&&!replayData&&canSubmitRace(finishTime,raceLaps,raceValid)&&onlineClub.configured&&club.profile())
+  if(!['eleven','halloween'].includes(requestedScene)&&!replayData&&canSubmitRace(finishTime,raceLaps,raceValid)&&onlineClub.configured&&club.profile())
     progression.flush().then(()=>onlineClub.submit({scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps})).then(async result=>{await progression.refresh();return result;})
       .then(saved=>{if(saved)club.message('New global race record submitted.');})
       .catch(error=>club.message(`Race upload failed: ${error.message}`));
   race.phase='finished';keyboard.clear();actions.clear();mobile.clear();document.querySelector('#results').hidden=false;document.querySelector('#raceAgain').focus();
   if(requestedScene==='eleven')club.message('Eleven City personal records are saved on this device.');
+  if(requestedScene==='halloween')club.message('Lantern Hollow personal records are saved on this device.');
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
   document.querySelector('#resultTitle').textContent=race.mode==='team'?winner:ordered[0].id===0?'YOU WIN!':'Race complete';
-  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='eleven'?'Eleven City':selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
+  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='halloween'?'Lantern Hollow':selectedScene==='eleven'?'Eleven City':selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
   document.querySelector('#resultRows').innerHTML=ordered.map((r,i)=>`<tr class="${r.id===0?'you':''}"><td>${String(i+1).padStart(2,'0')}</td><td><i class="team-dot ${race.mode==='team'?r.team:'solo'}"></i>${r.name}${r.id===0?' / YOU':' / AI'}</td><td>${r.finishTime===null?'DNF':formatTime(r.finishTime)}</td><td>${r.finishTime===null?0:SCORE_TABLE[i]}</td></tr>`).join('');
 }
 function updateSprintHUD(){
@@ -886,7 +897,7 @@ function updateScenePreview(){
 }
 function setupClubLobby(){
  showroom.scene.environment=scene.environment;
- for(const type of ['bay','citadel','harbor','canyon','eleven']){
+ for(const type of ['bay','citadel','harbor','canyon','eleven','halloween']){
   const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(type));
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
   try{const cached=localStorage.getItem(`apex-lobby-preview-v3-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
@@ -1015,3 +1026,10 @@ document.querySelectorAll('[data-settings]').forEach(button=>button.addEventList
 
 document.querySelector('.lobby-tools a[href*="garage.html"]').addEventListener('click',()=>{try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}});
 addEventListener('storage',e=>{if(e.key===GARAGE_KEY&&!race)setCraft(craftIndex);});
+
+// Read-only runtime evidence is available only when diagnostics were requested.
+if(diagnosticsEnabled)globalThis.__THREE_GAME_DIAGNOSTICS__={
+ renderer:renderer.info,
+ get state(){return {scene:requestedScene,phase:race?.phase||'lobby',progress:race?.racers[0]?.progress??null,speed:state.speed,lap:state.lap,collisions:runStats?.collisions??0,routeId:state.routeId,scenery:halloween?.userData.diagnostics??null};},
+ performance:()=>perf.summary()
+};

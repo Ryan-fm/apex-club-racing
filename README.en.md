@@ -4,7 +4,7 @@
 
 [简体中文](README.md) · **English** · [日本語](README.ja.md) · [한국어](README.ko.md)
 
-**Six karts. Three worlds. Make the next corner your chance to overtake.**
+**Six karts. Six circuits. Make the next corner your chance to overtake.**
 
 Drift racing · Garage customization · Solo & AI team races
 
@@ -18,7 +18,7 @@ APEX CLUB is a 3D arcade racer you can play in your browser. Take your kart thro
 
 No game client to download. The game interface supports English and Simplified Chinese; switch languages in the top-right corner.
 
-## Three tracks, three rhythms
+## Six tracks, six rhythms
 
 **Bay Circuit**
 
@@ -35,6 +35,18 @@ Pass through city gates and follow ancient walls toward distant mountains. Linke
 Race through neon arches, climb to the top of an elevated bridge, then tackle linked hairpins, dockside S-bends and a lower turnaround section. A central ring landmark, bridge cables and harbor cranes shape the midnight skyline. Brake early and plan your drift through the tight turns.
 
 ![Neon Harbor in-game screenshot](docs/images/harbor.jpg)
+
+**Redrock Canyon**
+
+Sunset canyon S-bends, gentle climbs, two shortcuts and two express roads.
+
+**Eleven City**
+
+An authored reconstruction inspired by the PC circuit, with downtown hairpins and four street-corner cuts. Personal records stay on this device.
+
+**Lantern Hollow — Halloween night race**
+
+Follow pumpkin lanterns through the manor sweep, graveyard shortcut and twisted forest. Three-lap AI racing and four-player rooms; separate device-local personal records. See [Halloween design and optimization notes](docs/HALLOWEEN.md).
 
 *Screenshots show the current development version. The online build's visuals and features may differ as updates roll out.*
 

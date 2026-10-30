@@ -1,0 +1,27 @@
+/* A seasonal motorsport skin. Route colours retain their driving meaning. */
+body[data-season="halloween"]{--season-amber:#ffad62;--season-ink:#141a20;--season-paper:#f5e9d5}
+body[data-season="halloween"]:not(.in-race) #vignette{background:linear-gradient(90deg,#10141977,transparent 46%,#11171b33),linear-gradient(0deg,#101419cc,transparent 36%)}
+body[data-season="halloween"] .brand .apex-emblem{background-color:#ffad62}
+body[data-season="halloween"] #lobby .race-setup{background:#141b20f5;border-color:#d6ad7440;border-radius:12px}
+body[data-season="halloween"] #lobby .setup-heading>b{color:var(--season-paper)}
+body[data-season="halloween"] #lobby .scene-options button{border-radius:6px}
+body[data-season="halloween"] #lobby .scene-options button[data-scene="halloween"]{background:linear-gradient(115deg,#392e2d,#1d3b42);border-color:#f0a45c75}
+body[data-season="halloween"] #lobby .scene-options button[data-scene="halloween"]>span{color:#ffd0a0}
+body[data-season="halloween"] #lobby .scene-options button.active{border-color:#ffbc74;box-shadow:inset 3px 0 #ffb667,0 0 0 1px #ffad6222}
+body[data-season="halloween"] #lobby #raceStart{background:#ffb46b;color:#241b19;border-color:#ffd6a4;box-shadow:0 6px 25px #d1772925;border-radius:5px}
+body[data-season="halloween"] #lobby #raceStart:hover{background:#ffc389}
+body[data-season="halloween"] #lobby .garage-status{color:#ffbd83}
+body[data-season="halloween"] #lobby .garage-status i{background:#ffb26b;box-shadow:0 0 8px #ffad6244}
+body[data-season="halloween"] #lobby .lobby-copy .eyebrow{color:#d4b9a2}
+body[data-season="halloween"] #lobby .showroom-caption span{color:#e6aa70}
+body[data-season="halloween"] .season-notice{font-size:10px;line-height:1.6;color:#e8b988;padding:9px 0 7px;margin:3px 0 0;border-bottom:1px solid #bba58b29}
+body[data-scene="halloween"] .navigation{border-color:#bca18048;background:#141e24d9}
+body[data-scene="halloween"] .navigation #mapPath{stroke:#f0ac68}
+body[data-scene="halloween"] .top .track-title{color:#ffcc96}
+body[data-scene="halloween"] #controlsPanel .controls-card,body[data-scene="halloween"] .results-card{background:#162027f5;border-color:#c39a6e66}
+body[data-scene="halloween"] #launchCurtain{background:#131b22}
+body[data-scene="halloween"] #launchCurtain>b{color:#ffbc7e}
+body[data-season="halloween"] button:focus-visible,body[data-season="halloween"] a:focus-visible{outline:2px solid #ffd29a;outline-offset:4px}
+@media(orientation:landscape) and (max-height:550px){body[data-season="halloween"] .season-notice{display:none}}
+@media(max-width:1024px) and (orientation:portrait){body[data-season="halloween"] #lobby{background:linear-gradient(180deg,transparent 250px,#111b21dc 370px,#111b21 540px)}}
+@media(prefers-reduced-motion:reduce){body[data-season="halloween"] *,body[data-season="halloween"] *::before,body[data-season="halloween"] *::after{scroll-behavior:auto!important}}

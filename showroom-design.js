@@ -21,7 +21,7 @@ export function createClubShowroom(){
  box(scene,graphite,-56,17,-40,24,46,3);box(scene,graphite,51,17,-40,28,46,3);box(scene,graphite,0,40,-40,112,8,3);
  box(scene,steel,-42,14,-38,2,42,4);box(scene,steel,35,14,-38,2,42,4);
  box(scene,warm,-40.6,15,-35,.25,32,.25);box(scene,cool,33.6,15,-35,.25,32,.25);
- const portal=new THREE.Mesh(new THREE.PlaneGeometry(75,48),new THREE.ShaderMaterial({vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:'varying vec2 vUv;void main(){vec3 sea=mix(vec3(.03,.18,.23),vec3(.16,.38,.43),vUv.y);vec3 sky=mix(vec3(.55,.68,.69),vec3(.17,.37,.49),vUv.y);vec3 c=mix(sea,sky,smoothstep(.40,.42,vUv.y));c+=vec3(.4,.27,.10)*exp(-70.*distance(vUv,vec2(.25,.55)));gl_FragColor=vec4(c,1.);}'}));portal.position.set(-3,16,-52);scene.add(portal);
+ const portal=new THREE.Mesh(new THREE.PlaneGeometry(75,48),new THREE.ShaderMaterial({vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',uniforms:{halloween:{value:0}},fragmentShader:'uniform float halloween;varying vec2 vUv;void main(){vec3 sea=mix(vec3(.03,.18,.23),vec3(.16,.38,.43),vUv.y);vec3 sky=mix(vec3(.55,.68,.69),vec3(.17,.37,.49),vUv.y);vec3 c=mix(sea,sky,smoothstep(.40,.42,vUv.y));c+=vec3(.4,.27,.10)*exp(-70.*distance(vUv,vec2(.25,.55)));vec3 night=mix(vec3(.045,.075,.09),vec3(.12,.18,.22),vUv.y);night+=vec3(.55,.6,.53)*(1.-smoothstep(.045,.052,distance(vUv,vec2(.70,.72))));c=mix(c,night,halloween);gl_FragColor=vec4(c,1.);}'}));portal.position.set(-3,16,-52);scene.add(portal);
  const horizonMat=material(0x21434a,0,1);
  for(let i=0;i<5;i++){const hill=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),horizonMat);hill.scale.set(9+i*2,4+i%2*3,2);hill.position.set(-28+i*14,10,-50);scene.add(hill);}
  const beaconBase=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.8,12,16),material(0xe1d6bc));beaconBase.position.set(-18,14,-48);scene.add(beaconBase);box(scene,warm,-18,20.5,-48,2.5,1.5,2.5);const cap=new THREE.Mesh(new THREE.ConeGeometry(2,2,16),graphite);cap.position.set(-18,22,-48);scene.add(cap);
@@ -36,19 +36,28 @@ export function createClubShowroom(){
  for(const z of [-16,-21])for(let i=0;i<3;i++){const tire=new THREE.Mesh(new THREE.TorusGeometry(2.9,1,10,24),rubber);tire.rotation.x=Math.PI/2;tire.position.set(26,-4.4+i*1.7,z);scene.add(tire);}
  const signCanvas=document.createElement('canvas');signCanvas.width=512;signCanvas.height=128;const ctx=signCanvas.getContext('2d');ctx.fillStyle='#142736';ctx.fillRect(0,0,512,128);ctx.fillStyle='#f1d9ad';ctx.font='700 59px sans-serif';ctx.fillText('APEX / 01',35,85);const signMap=new THREE.CanvasTexture(signCanvas);signMap.colorSpace=THREE.SRGBColorSpace;
  const sign=new THREE.Mesh(new THREE.PlaneGeometry(22,5.5),new THREE.MeshBasicMaterial({map:signMap}));sign.position.set(-26,22,-36.3);scene.add(sign);
+ // Seasonal props share geometry/materials and stay out of the selected kart silhouette.
+ const seasonal=new THREE.Group();seasonal.visible=false;scene.add(seasonal);
+ const pumpkinGeometry=new THREE.SphereGeometry(1,16,10),stemGeometry=new THREE.CylinderGeometry(.12,.19,.5,6),eyeGeometry=new THREE.ConeGeometry(.19,.35,3),pumpkinMat=material(0xcc6228,.05,.65),stemMat=material(0x46342b),faceMat=new THREE.MeshBasicMaterial({color:0xffce74});
+ for(const [x,z,r] of [[-22,-8,2.3],[-25,-10,1.6],[23,-13,2.5],[26,-10,1.7],[-19,10,1.4]]){
+  const fruit=new THREE.Mesh(pumpkinGeometry,pumpkinMat);fruit.position.set(x,-5.5+r*.75,z);fruit.scale.set(r,r*.75,r);seasonal.add(fruit);
+  const stem=new THREE.Mesh(stemGeometry,stemMat);stem.position.set(x,fruit.position.y+r*.8,z);seasonal.add(stem);
+  for(const side of [-1,1]){const eye=new THREE.Mesh(eyeGeometry,faceMat);eye.position.set(x+side*r*.34,fruit.position.y+r*.15,z+r*.88);eye.rotation.x=Math.PI/2;seasonal.add(eye);}
+ }
+ const viewport=new THREE.Vector2();let projectionKey='';
  let selectionAt=-10,lastTime=0;
- return {scene,camera,select(){selectionAt=lastTime;},render(renderer,player,time,reduced,launch=0){
+
+ return {scene,camera,setSeason(season){const spooky=season==='halloween';seasonal.visible=spooky;warm.color.set(spooky?0xffa34e:0xffdeac);cool.color.set(spooky?0xb3c8bc:0x67d7e4);portal.material.uniforms.halloween.value=spooky?1:0;ctx.clearRect(0,0,512,128);ctx.fillStyle=spooky?'#221c20':'#142736';ctx.fillRect(0,0,512,128);ctx.fillStyle=spooky?'#ffb66d':'#f1d9ad';ctx.font=spooky?'700 44px sans-serif':'700 59px sans-serif';ctx.fillText(spooky?'APEX / NIGHT RUN':'APEX / 01',25,85);signMap.needsUpdate=true;},select(){selectionAt=lastTime;},render(renderer,player,time,reduced,launch=0){
   lastTime=time;if(player.parent!==scene)scene.add(player);
   const switchMotion=reduced?0:Math.max(0,1-(time-selectionAt)/.65);
   player.position.set(0,0,0);player.rotation.set(0,-.48+switchMotion*.3+(reduced?0:Math.sin(time*.14)*.05),0);
   door.position.y=launch*23;
-  const {width,height}=renderer.domElement.getBoundingClientRect(),desktop=width>1024,landscape=width/height>1.5;
+  renderer.getSize(viewport);const width=viewport.x,height=viewport.y,desktop=width>1024,landscape=width/height>1.5;
   const entrance=reduced||!desktop?1:Math.min(1,time/1.5),ease=1-(1-entrance)**3;
   const phoneLandscape=!desktop&&landscape&&height<=550;
-  camera.aspect=width/height;camera.fov=desktop?43:phoneLandscape?35:landscape?55:70;
+  const nextProjection=`${width}:${height}`;if(nextProjection!==projectionKey){camera.aspect=width/height;camera.fov=desktop?43:phoneLandscape?35:landscape?55:70;camera.setViewOffset(width,height,desktop?width*.15:landscape?width*.19:0,desktop?-height*.035:landscape?0:height*.20,width,height);projectionKey=nextProjection;}
   camera.position.set(28+ease*3,12+ease*5,35+ease*8-launch*3).multiplyScalar(player.userData.fx?1:.86);camera.lookAt(0,0,-launch*5);
   if(phoneLandscape){camera.position.multiplyScalar(.56);camera.lookAt(0,1,-launch*5);}
-  camera.setViewOffset(width,height,desktop?width*.15:landscape?width*.19:0,desktop?-height*.035:landscape?0:height*.20,width,height);camera.updateProjectionMatrix();
   renderer.render(scene,camera);
  }};
 }

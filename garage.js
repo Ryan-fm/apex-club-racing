@@ -28,7 +28,7 @@ function updateUnlocks(){const c=CAR_UNLOCKS[selected],unlocked=progression.unlo
 progression.subscribe(()=>{if(config){config={...DEFAULT_CUSTOMIZATION,...readGarage().cars[selected]};refreshCar();updateUnlocks();}});
 document.querySelector('#takeToRace').addEventListener('click',e=>{if(!progression.unlocked(selected)){e.preventDefault();status.textContent='完成驾驶时长目标后自动解锁';}});
 mountProgression(document.querySelector('aside'));
-function updateLinks(){const sceneName=['bay','citadel','harbor','canyon','eleven'].includes(query.get('scene'))?query.get('scene'):'bay';document.querySelectorAll('a[data-race-link]').forEach(a=>a.href=`./race.html?craft=${selected}&scene=${sceneName}`);}
+function updateLinks(){const sceneName=['bay','citadel','harbor','canyon','eleven','halloween'].includes(query.get('scene'))?query.get('scene'):'bay';document.querySelectorAll('a[data-race-link]').forEach(a=>a.href=`./race.html?craft=${selected}&scene=${sceneName}`);}
 function refreshCar(){
  const d=craftDefs[selected];applyCustomization(car,config,d.style==='rally'?0x1497a0:d.color);
  car.traverse(o=>{if(o.isMesh){o.castShadow=!o.material?.isShaderMaterial&&!o.userData.cosmeticDecal;o.receiveShadow=!o.userData.cosmeticDecal;if(o.material&&!o.material.isShaderMaterial)o.material.wireframe=document.querySelector('#wireframe').checked;}});

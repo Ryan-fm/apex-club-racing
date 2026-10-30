@@ -5,13 +5,14 @@ import {CITY_WAYPOINTS,CITY_CUT_CORNERS} from './eleven-layout.js';
 
 // Shared authored roads: no branch crosses the finish line or supplies steering.
 const layout={
+ halloween:{cuts:[[.28,.37]],express:[[.005,.075,-76],[.83,.90,-76]]},
  canyon:{cuts:[[.10,.22],[.43,.54]],express:[[.01,.085,-80],[.85,.92,-80]]},
  bay:{cuts:[[.075,.225],[.38,.65]],express:[[.005,.072,-75],[.75,.825,-80]]},
  citadel:{cuts:[[.08,.145],[.16,.225]],express:[[.008,.075,-72],[.85,.93,72]]},
  harbor:{cuts:[[.08,.145],[.24,.305]],express:[[.005,.075,-72],[.69,.745,-75]]}
 };
 const up=new THREE.Vector3(0,1,0);
-const names={bay:['沿海内线','灯塔切弯'],citadel:['庭院穿行','城墙切弯'],harbor:['货场切线','码头内线'],canyon:['岩脊内线','峡谷切弯']};
+const names={halloween:['墓园近道'],bay:['沿海内线','灯塔切弯'],citadel:['庭院穿行','城墙切弯'],harbor:['货场切线','码头内线'],canyon:['岩脊内线','峡谷切弯']};
 const ease=x=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
 export function createTrackRoutes(scene,curve){
  const mainSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,z:p.z};});

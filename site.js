@@ -22,7 +22,7 @@ async function loadNavAccount(){
   try{const profile=await onlineClub.current();if(profile){nav.textContent=profile.player_name;nav.removeAttribute('data-zh');nav.removeAttribute('data-en');}}catch{}
 }
 
-if(page==='home'){
+if(page==='home'&&document.body.dataset.season!=='halloween'){
   const video=document.querySelector('#homePromo');
   const toggle=document.querySelector('#heroMotionToggle');
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
