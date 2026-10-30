@@ -22,6 +22,11 @@ async function loadNavAccount(){
   try{const profile=await onlineClub.current();if(profile){nav.textContent=profile.player_name;nav.removeAttribute('data-zh');nav.removeAttribute('data-en');}}catch{}
 }
 
+if(page==='home'&&document.body.dataset.season==='halloween'){
+  const {mountHalloweenHome}=await import('./halloween-home.js');
+  renderPage=mountHalloweenHome().render;
+}
+
 if(page==='home'&&document.body.dataset.season!=='halloween'){
   const video=document.querySelector('#homePromo');
   const toggle=document.querySelector('#heroMotionToggle');
