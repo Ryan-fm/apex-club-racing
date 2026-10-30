@@ -75,11 +75,12 @@ if(page==='leaderboard'){
       }
       rows.append(tr);
     }
-    empty.hidden=records.length>0;
+    empty.hidden=!ranked||records.length>0;
+    if(!ranked)status.textContent=local('幽光南瓜谷成绩保存在本机，暂不参与 Toy 全球榜。可在赛道大厅查看个人最佳成绩。','Lantern Hollow records stay on this device. View your personal best in the race lobby.');
   }
   async function load(refresh=false){
     const id=++requestId;records=[];empty.hidden=true;rows.replaceChildren();status.textContent=local('正在读取全球成绩…','Loading global records…');
-    if(!onlineClub.ranked(scene)){renderBoard();empty.hidden=true;status.textContent=local('幽光南瓜谷成绩保存在本机，暂不参与 Toy 全球榜。可在赛道大厅查看个人最佳成绩。','Lantern Hollow records stay on this device. View your personal best in the race lobby.');return;}
+    if(!onlineClub.ranked(scene)){renderBoard();return;}
     try{const data=await onlineClub.leaderboard(scene,assisted,{refresh,period});if(id!==requestId)return;records=data;status.textContent=data.length?local(`共 ${data.length} 条完赛成绩`,`Showing ${data.length} completed races`):'';renderBoard();}
     catch(error){if(id!==requestId)return;status.textContent=error.message;empty.hidden=true;}
   }
@@ -87,7 +88,7 @@ if(page==='leaderboard'){
   document.querySelectorAll('[data-scene]').forEach(button=>button.addEventListener('click',()=>select(button.dataset.scene,assisted)));
   document.querySelectorAll('[data-assisted]').forEach(button=>button.addEventListener('click',()=>select(scene,button.dataset.assisted==='true')));
   document.querySelector('#boardRefresh').addEventListener('click',()=>load(true));
-  document.querySelector('#boardMine').addEventListener('click',async event=>{const id=requestId;event.currentTarget.disabled=true;try{const mine=await onlineClub.myRank(scene,period);if(id===requestId)status.textContent=mine?local(`我的排名：第 ${mine.rank} 名 · ${(mine.time_ms/1000).toFixed(3)} 秒`,`My rank: ${mine.rank} · ${(mine.time_ms/1000).toFixed(3)} s`):local('当前榜单暂无你的成绩。','You have no result on this board.');}catch(error){if(id===requestId)status.textContent=error.message;}finally{document.querySelector('#boardMine').disabled=false;}});
+  document.querySelector('#boardMine').addEventListener('click',async event=>{const id=requestId;event.currentTarget.disabled=true;try{const mine=await onlineClub.myRank(scene,period);if(id===requestId)status.textContent=mine?local(`我的排名：第 ${mine.rank} 名 · ${(mine.time_ms/1000).toFixed(3)} 秒`,`My rank: ${mine.rank} · ${(mine.time_ms/1000).toFixed(3)} s`):local('当前榜单暂无你的成绩。','You have no result on this board.');}catch(error){if(id===requestId)status.textContent=error.message;}finally{document.querySelector('#boardMine').disabled=!onlineClub.ranked(scene);}});
   document.querySelector('#boardPeriod').addEventListener('change',event=>{period=event.target.value;renderBoard();load();});
   renderPage=renderBoard;load();
 }

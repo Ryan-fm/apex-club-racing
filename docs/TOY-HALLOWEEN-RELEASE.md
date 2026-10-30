@@ -13,12 +13,12 @@
 ## 发布前检查
 
 - `npm test`：170 项，168 通过、2 个可选分布式检查跳过、0 失败。新增验证南瓜谷不触发 SDK 或旧榜、长时间驾驶不访问云存档以及关键节点完整批量保存。
-- `npm run build`：`f75b99c5ea0b`。
+- `npm run build`：`ace5fa9bb41c`。
 - `toy_doctor.py dist --slug apex-club-racing --json`：通过，无 ERROR/WARN。
 - 包含 120 个文件，新增模块和图片均有对应相对资源；无账号资料、测试输出、`.git`、`node_modules`、环境文件或旧 `toy.yaml`。
 - 通用赛道脚本驾驶与四人上限测试通过；没有向真实排行榜发送测试成绩。
 
-Toy 容器预览和最终审核结果由本次发布记录补充。预览、截图和完整 CLI 响应保存在忽略的 `output/toy-halloween/`，不进入上传包。
+Toy 初次容器预览已验证桌面首页、三条赛道切换、开赛、暂停及返回。平台当前 SDK 对预览页显式禁止 submitScore/setCloudStorage 等写操作；getRankList/getCloudStorage/getUserProfile 能力可识别。本次不向正式榜提交测试成绩。修正了本地成绩说明在语言切换时的显示状态，最终包再次构建与预检通过；最终容器预览和审核结果由发布记录补充。预览、截图和完整 CLI 响应保存在忽略的 `output/toy-halloween/`，不进入上传包。
 
 ## 既有服务状态
 
