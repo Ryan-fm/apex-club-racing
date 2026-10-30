@@ -158,3 +158,18 @@ html.handheld-input .in-race .telemetry{bottom:22px}
  html.handheld-input .in-race #challengeHUD .chain-live{display:none}
 }
 @media(orientation:landscape) and (max-height:300px){html.handheld-input .in-race #challengeHUD{display:none}}
+
+/* Practice is a visible choice; the primary action always starts the race. */
+#lobby .practice-shortcut{display:block;width:100%;min-height:44px;margin-top:6px;padding:8px;border:1px solid #b9c8cb38;border-radius:5px;background:transparent;color:#c6d8d9;font:inherit;font-size:12px;cursor:pointer}
+#lobby .practice-shortcut:hover{border-color:#edbd84;color:#ffe1bd}
+.preparing-race #loadingScreen span{color:#dce9e7;max-width:28em;line-height:1.7}
+@media(orientation:landscape) and (max-height:650px) and (max-width:1400px){#lobby .practice-shortcut{min-height:32px;font-size:10px;margin-top:2px;padding:4px}.preparing-race #loadingScreen{padding:16px}}
+
+@media(orientation:landscape) and (max-height:650px) and (max-width:1400px){
+ #lobby .setup-footer{grid-template-columns:1fr 1fr;grid-template-rows:44px 44px;gap:4px 6px}
+ #lobby .setup-footer .launch-dock{display:contents}
+ #lobby .setup-footer #raceStart{height:44px;grid-row:1;grid-column:1/-1}
+ #lobby .setup-footer #practiceStart{grid-row:2;grid-column:1;min-height:44px;margin:0;text-decoration:none}
+ #lobby .setup-footer #openRoom{grid-row:2;grid-column:2;height:44px;min-height:44px}
+}
+@media(max-width:1024px) and (orientation:portrait){#lobby{padding-bottom:170px!important}#lobby .launch-dock #practiceStart{margin-top:6px;min-height:44px}}

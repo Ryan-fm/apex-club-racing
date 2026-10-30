@@ -1,4 +1,5 @@
 const dictionary={
+'Preparing your race…':'正在准备赛车与赛道…','Practice driving · Optional':'驾驶练习 · 可选教学',
 'New circuit · Three laps · Personal records on this device':'全新赛道 · 三圈竞速 · 成绩保存在本机',
 'Lantern Hollow':'幽光南瓜谷','06 / HALLOWEEN NIGHT':'06 / 万圣节夜赛','Pumpkin trail · Moonlit bends':'南瓜灯径 · 月下连续弯','LANTERN HOLLOW / HALLOWEEN NIGHT RUN':'幽光南瓜谷 / 万圣节夜赛','LANTERN HOLLOW / LIVE MAP':'幽光南瓜谷 / 实时地图','Amber: circuit edges · Green: graveyard cut · Cyan: express strips':'琥珀色：赛道边缘 · 绿色：墓园近道 · 青色：快速路','Lantern Hollow personal records are saved on this device.':'幽光南瓜谷个人成绩保存在当前设备。','APEX MOTOR CLUB / HALLOWEEN GARAGE':'APEX 赛车俱乐部 / 万圣节车库','READY FOR THE NIGHT':'夜赛就绪','HALLOWEEN NIGHT RUN / 10.31':'万圣节夜赛 / 10.31','Follow the lanterns. Find your line.':'循着南瓜灯，找到你的路线。','Six circuits. One haunted detour.':'六条赛道，一次奇妙的夜间冒险。',
 

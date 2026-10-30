@@ -14,6 +14,7 @@ import {applyCitySurface} from './city-materials.js';
 import {createHarbor} from './harbor-scene.js';
 import {createVehicleEnvironment} from './vehicle-finish.js';
 import {makeCraft,configureKart} from './kart-model.js';
+import {batchKartMeshes,restoreKartMeshes} from './kart-render-batches.js';
 import {applyCustomization,animateExhaust} from './kart-customization.js';
 import {readGarage,GARAGE_KEY} from './garage-config.js';
 import {loadBindings,createKeyboardState,formatKeys} from './keyboard-controls.js';
@@ -27,6 +28,7 @@ import {createPickupFactory} from './pickup-design.js';
 import {createStunts,boostOpportunity} from './stunt-model.js';
 import {createShowroom,createCitadel} from './scene-design.js';
 import {createMobileControls,isHandheldDevice} from './mobile-controls.js';
+import {mountTouchLayout} from './touch-layout.js';
 import {DISTANCE_SCALE, DISPLAY_SPEED,projectTrack} from './driving-model.js';
 import {createRaceEffects} from './race-effects.js';
 import {createRaceAudio} from './race-audio.js';
@@ -38,6 +40,7 @@ import {GATE_SPRINT,createSprint,updateSprint,sprintRecordKey,saveSprint,sprintI
 import {chaseHeading,createSuspension,stepSuspension} from './runtime/race-presenter.js';
 import {createInputFrame} from './runtime/input-frame.js';
 import {createPerformanceProbe,frameTiming} from './runtime/performance.js';
+import {createRacePreparation} from './runtime/race-preparation.js';
 import {cacheRaceNodes,createDomWriter} from './runtime/race-ui.js';
 import {onlineClub,mountOnlineClub} from './online-club.js';
 import * as THREE from 'three';
@@ -93,8 +96,9 @@ let roomUI=null,multiplayerActive=false,startingMultiplayer=false,roomConnected=
 const safeName=name=>String(name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const drivingChallenges=createChallengeUI({enabled:!gateSlice});
 const mobile=createMobileControls({active:()=>race?.phase==='racing'&&!helpOpen,action:name=>actions.add(name==='nitro'?'ShiftLeft':name==='mini'?'KeyE':'KeyQ'),pause:()=>toggleControls(true)});
+mountTouchLayout({handheld:mobileDevice,onChange:()=>mobile.clear()});
 function toggleControls(open=!helpOpen){
-  if(!race || race.phase==='finished')return;
+  if(!race || race.phase==='finished'||racePreparation.busy)return;
   helpOpen=open;keyboard.clear();actions.clear();mobile.clear();driftLatched=false;document.querySelector('#controlsPanel').hidden=!open;
   document.querySelector('#controlsToggle').setAttribute('aria-expanded',String(open));
   if(open)document.querySelector('#startDriving').focus();else renderer.domElement.focus();
@@ -300,8 +304,13 @@ const state={yaw:0,hop:0,t:0,lane:0,laneVel:0,speed:0,reverseHold:0,wallContact:
 const raceEffects=createRaceEffects(scene);
 const ai=[];
 for(let i=0;i<7;i++){
-  const def=craftDefs[i%craftDefs.length]; const mesh=makeCraft(def.color,.9);configureKart(mesh,def);scene.add(mesh);
-  ai.push({mesh,t:(.012+i*.018)%1,lane:(Math.random()-.5)*42,speed:360+Math.random()*170,target:380+Math.random()*210,stun:0,aggression:.4+Math.random()*.6});
+  const def=craftDefs[i%craftDefs.length]; const mesh=makeCraft(def.color,.9);configureKart(mesh,def);batchKartMeshes(mesh);scene.add(mesh);
+  ai.push({mesh,renderCraft:i%craftDefs.length,t:(.012+i*.018)%1,lane:(Math.random()-.5)*42,speed:360+Math.random()*170,target:380+Math.random()*210,stun:0,aggression:.4+Math.random()*.6});
+}
+
+function configureOpponent(opponent,craft){
+ if(opponent.renderCraft===craft)return;
+ restoreKartMeshes(opponent.mesh);configureKart(opponent.mesh,craftDefs[craft]);batchKartMeshes(opponent.mesh);opponent.renderCraft=craft;
 }
 
 // pickups
@@ -352,7 +361,7 @@ function setCraft(i){
   const stats=[['Speed',d.max,650,`${Math.round(d.max*DISPLAY_SPEED)} KM/H`],['Accel.',d.accel,300,`${Math.round(d.accel/210*100)}%`],['Handling',d.turn,1.5,`${Math.round(d.turn*100)}%`],['Drift',d.drift,1.5,`${Math.round(d.drift*100)}%`]];
   document.querySelector('#kartStats').innerHTML=stats.map(([label,value,max,text])=>`<div class="kart-stat"><span>${label}</span><i><b style="width:${Math.min(100,value/max*100)}%"></b></i><strong>${text}</strong></div>`).join('');
 }
-function reset(){
+function reset({practice=false}={}){
  if(roomUI?.client.room&&!startingMultiplayer){roomUI.open();return;}
  drivingChallenges.reset();resetExperience();replayTick=0;replayAccumulator=0;sprint=createSprint();Object.assign(suspension,createSuspension());cameraHeading=null;
   Object.assign(stunts,createStunts());
@@ -376,7 +385,8 @@ function reset(){
   document.body.classList.add('in-race');document.querySelector('#countdown').hidden=false;
   document.querySelector('#modeLabel').textContent=gateSlice?'GATE SPRINT / SOLO PRACTICE':selectedMode==='team'?'4V4 AI TEAM RACE':'SOLO / 7 AI RIVALS';
   document.querySelector('#teamScore').hidden=selectedMode!=='team';
-  renderer.domElement.focus();perf.startRun();
+  renderer.domElement.focus();
+  if(!startingMultiplayer)prepareRace(practice);else perf.startRun();
 }
 let playerMeta={steer:0,boosting:false};
 function updatePlayer(dt,time){
@@ -750,8 +760,8 @@ ${tr('CUT BOOST')} ${sprint.cut}
   if(replayData){let output=document.querySelector('#replayReport');if(!output){output=document.createElement('output');output.id='replayReport';output.hidden=true;output.dataset.noTranslate='';document.body.append(output);}output.textContent=JSON.stringify({inputHash:replayData.inputHash,ticks:replayTick,sprint,performance:perf.exportReport()});}
 }
 function formatTime(t){return `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toFixed(2).padStart(5,'0')}`;}
-function returnLobby({keepRoom=false}={}){progression.flush();drivingChallenges.hide();if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureKart(a.mesh,craftDefs[i%craftDefs.length]);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
-document.querySelector('#raceStart').addEventListener('click',()=>{if(roomUI?.client.room){roomUI.open();return;}let trained=gateSlice;try{trained=trained||localStorage.getItem('apex-trained')==='yes';}catch{}beginLaunch(trained?reset:startLesson);});
+function returnLobby({keepRoom=false}={}){racePreparation.cancel();progression.flush();drivingChallenges.hide();if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureOpponent(a,i%craftDefs.length);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
+document.querySelector('#raceStart').addEventListener('click',()=>{if(roomUI?.client.room){roomUI.open();return;}beginLaunch(reset);});
 document.querySelector('#raceAgain').addEventListener('click',()=>{if(multiplayerActive){roomDismissedRound=roomRound;returnLobby({keepRoom:true});roomUI.open();}else reset();});
 document.querySelectorAll('[data-lobby]').forEach(el=>el.addEventListener('click',returnLobby));
 document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{selectedMode=el.dataset.mode;document.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('active',b===el);b.setAttribute('aria-pressed',String(b===el));});document.querySelector('#teamChoice').hidden=selectedMode!=='team';setCraft(craftIndex);}));
@@ -760,6 +770,7 @@ function loop(){
   requestAnimationFrame(loop);const timing=frameTiming(clock.getDelta()),elapsed=timing.dt;
   uiWritesThisFrame=0;perf.beginFrame(timing.frameMs,{droppedMs:timing.droppedMs});if(diagnosticsEnabled)renderer.info.reset();
   if(multiplayerActive){loopRoom(elapsed);perf.endFrame({phase:'multiplayer'});return;}
+  if(racePreparation.busy){perf.endFrame({phase:'preparing'});return;}
   if(document.hidden||helpOpen||lesson?.timedOut){audio.update(0,false,false,false);perf.endFrame({phase:'paused'});return;}
   let dt=0;
   if(race?.phase==='countdown'){
@@ -809,7 +820,7 @@ function resetExperience(){
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
 function startLesson(){
- reset();lesson=createLesson();race.phase='racing';race.racers[0].progress=.002;state.t=.002;placeLesson();
+ reset({practice:true});lesson=createLesson();race.phase='racing';race.racers[0].progress=.002;state.t=.002;placeLesson();
  document.querySelector('#countdown').hidden=true;document.querySelector('#lessonHUD').hidden=false;document.querySelector('#retryLesson').hidden=true;document.body.classList.add('in-lesson');
  updateLesson(0,{steer:0,speed:0,brake:false,charge:0,fired:false});presentLesson();
 }
@@ -866,6 +877,39 @@ function setupExperience(){
  const rules=document.createElement('p');rules.className='challenge-rules';rules.textContent=tr('Bronze: finish. Silver: finish with ≤3 collisions. Gold: also complete 6 drifts and 6 mini boosts.');document.querySelector('[data-settings-panel="controls"]').append(rules);
 }
 
+const loadingScreen=document.querySelector('#loadingScreen');
+const racePreparation=createRacePreparation({
+ setBusy:busy=>{
+  loadingScreen.hidden=!busy;
+  document.body.classList.toggle('preparing-race',busy);
+  if(busy)loadingScreen.querySelector('span').textContent='Preparing your race…';
+ },
+ onError:error=>console.warn('Race preparation fell back to normal rendering:',error),
+ prepare:async({cached,isCurrent})=>{
+  if(!race||!isCurrent())return;
+  // Let the opaque preparation screen paint before CPU/GPU initialization.
+  if(!cached)await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  if(!race||!isCurrent())return;
+  const meta=presentPlayer(0,0);presentAI(0);updateCamera(1/60,meta);
+  scene.updateMatrixWorld(true);
+  if(cached)return;
+  if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
+  else renderer.compile(scene,camera);
+  if(!isCurrent())return;
+  // Warm the exact display pipeline behind the opaque loading screen, including
+  // shadow uploads and the final output colour-space shader. Race time is frozen.
+  const previousTarget=renderer.getRenderTarget();
+  try{
+   if(composer&&document.querySelector('#qualitySetting').value==='quality')composer.render(0);
+   else renderer.render(scene,camera);
+  }finally{renderer.setRenderTarget(previousTarget);}
+
+ }
+});
+function prepareRace(practice=false){
+ const key=`${requestedScene}/${craftIndex}/${document.querySelector('#qualitySetting').value}/${gateSlice||practice?'practice':'race'}`;
+ const startingRace=race;racePreparation.run(key).then(()=>{if(!racePreparation.busy&&race===startingRace){clock.getDelta();perf.startRun();}});
+}
 let launchElapsed=null,launchAction=null;
 function beginLaunch(action){
  mobile.prepareLaunch(()=>launchPrepared(action));
@@ -973,7 +1017,7 @@ function receiveRoom(room,client){
   if(!roomPrediction){roomPrediction=new RoomPrediction({state,stunts,racer:race.racers[0],craft:me.craft},multiplayerTrack(room.scene));}
   const wasFinished=race.phase==='finished';roomPrediction.player.racer=race.racers[0];roomPrediction.reconcile(me,room);race.phase=room.phase;race.elapsed=room.elapsed;race.firstFinish=room.firstFinish;simulationTime=room.elapsed;
   state.rank=standings(race).findIndex(r=>r.id===0)+1;
-  for(const [i,a] of ai.entries()){const p=ordered[i+1];a.remote=p||null;if(p&&a.remoteCraft!==p.craft){configureKart(a.mesh,craftDefs[p.craft]);colorKart(a.mesh,craftDefs[p.craft].color);a.remoteCraft=p.craft;}a.mesh.visible=!!p;}
+  for(const [i,a] of ai.entries()){const p=ordered[i+1];a.remote=p||null;if(p&&a.remoteCraft!==p.craft){configureOpponent(a,p.craft);colorKart(a.mesh,craftDefs[p.craft].color);a.remoteCraft=p.craft;}a.mesh.visible=!!p;}
   if(room.phase==='finished'&&!wasFinished)finishRoomRace();
 }
 function presentRoomOpponents(){
@@ -1030,6 +1074,6 @@ addEventListener('storage',e=>{if(e.key===GARAGE_KEY&&!race)setCraft(craftIndex)
 // Read-only runtime evidence is available only when diagnostics were requested.
 if(diagnosticsEnabled)globalThis.__THREE_GAME_DIAGNOSTICS__={
  renderer:renderer.info,
- get state(){return {scene:requestedScene,phase:race?.phase||'lobby',progress:race?.racers[0]?.progress??null,speed:state.speed,lap:state.lap,collisions:runStats?.collisions??0,routeId:state.routeId,scenery:halloween?.userData.diagnostics??null};},
+ get state(){return {scene:requestedScene,phase:race?.phase||'lobby',progress:race?.racers[0]?.progress??null,speed:state.speed,lap:state.lap,collisions:runStats?.collisions??0,routeId:state.routeId,scenery:halloween?.userData.diagnostics??null,preparing:racePreparation.busy,preparation:racePreparation.report()};},
  performance:()=>perf.summary()
 };

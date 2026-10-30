@@ -22,3 +22,16 @@
 
 @media(orientation:landscape) and (max-height:360px){#challengeHUD{top:95px;width:190px}.chain-live span{display:none}.challenge-live{padding-bottom:4px}.chain-live{padding-top:4px}}
 @media(orientation:landscape) and (max-height:550px){.challenge-live b,.challenge-live span{line-height:1.3}.chain-live{gap:3px}.chain-live strong{line-height:1.2}.chain-live span{line-height:1.3}}
+
+/* Keep the driving line open on phones; expand only for a new goal milestone. */
+html.handheld-input .in-race #challengeHUD{left:max(12px,env(safe-area-inset-left));right:auto;top:84px;width:min(235px,calc(100vw - 24px));padding:6px 9px;border-radius:7px;box-shadow:none}
+html.handheld-input .in-race #challengeHUD .challenge-live{display:block;border:0;padding:0}
+html.handheld-input .in-race #challengeHUD .challenge-live b,html.handheld-input .in-race #challengeHUD .chain-live{display:none}
+html.handheld-input .in-race #challengeHUD .challenge-live>span{display:block;font-size:10px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.handheld-input .in-race #challengeHUD.is-notice{border-color:#e9c58970;background:#112733ed}
+html.handheld-input .in-race #challengeHUD.is-notice .challenge-live b{display:block;margin-bottom:3px;font-size:10px}
+html.handheld-input .in-race #challengeHUD.is-notice .chain-live{display:grid;padding-top:4px;gap:3px}
+html.handheld-input .in-race #challengeHUD.is-notice .chain-live strong{font-size:12px;line-height:1.2}
+html.handheld-input .in-race #challengeHUD.is-notice .chain-live>span{display:none}
+@media(orientation:portrait){html.handheld-input .in-race #challengeHUD{top:145px}}
+@media(orientation:landscape) and (max-height:360px){html.handheld-input .in-race #challengeHUD{top:76px}}

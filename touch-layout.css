@@ -1,0 +1,27 @@
+/* Size real targets instead of scaling the whole cluster; hit regions match the artwork. */
+html.handheld-input #touchControls[data-touch-layout]{--touch-steer:calc(92px * var(--touch-size));--touch-primary:calc(96px * var(--touch-size));--touch-nitro:max(64px,calc(76px * var(--touch-size)));--touch-utility:max(44px,calc(52px * var(--touch-size)));--touch-gap:10px;--touch-edge:var(--touch-inset)}
+html.handheld-input #touchControls[data-touch-layout] .touch-left,html.handheld-input #touchControls[data-touch-layout] .touch-right{transform:none;bottom:max(20px,env(safe-area-inset-bottom))}
+html.handheld-input #touchControls[data-touch-layout] .touch-left{left:max(var(--touch-edge),env(safe-area-inset-left));right:auto;width:calc(var(--touch-steer) * 2 + var(--touch-gap));height:calc(var(--touch-steer) + var(--touch-gap) + var(--touch-utility))}
+html.handheld-input #touchControls[data-touch-layout] .touch-right{right:max(var(--touch-edge),env(safe-area-inset-right));left:auto;width:calc(var(--touch-primary) + var(--touch-gap) + var(--touch-nitro));height:calc(var(--touch-primary) + var(--touch-gap) + var(--touch-utility))}
+html.handheld-input #touchControls[data-touch-layout] .steering-pair{left:0;right:auto;gap:var(--touch-gap)}
+html.handheld-input #touchControls[data-touch-layout] .steering-pair button{width:var(--touch-steer);height:var(--touch-steer);min-width:44px;min-height:44px;border-radius:24px}
+html.handheld-input #touchControls[data-touch-layout] button.held{transform:none}
+html.handheld-input #touchControls[data-touch-layout] .brake-control,html.handheld-input #touchControls[data-touch-layout] .throttle-control{width:var(--touch-utility);height:var(--touch-utility);bottom:calc(var(--touch-steer) + var(--touch-gap));left:0;right:auto}
+html.handheld-input #touchControls[data-touch-layout] .throttle-control{left:calc(var(--touch-utility) + var(--touch-gap))}
+html.handheld-input #touchControls[data-touch-layout] .drift-control{left:auto;right:0;width:var(--touch-primary);height:var(--touch-primary)}
+html.handheld-input #touchControls[data-touch-layout] .nitro-control{left:auto;right:calc(var(--touch-primary) + var(--touch-gap));bottom:0;width:var(--touch-nitro);height:calc(var(--touch-nitro) + 8px)}
+html.handheld-input #touchControls[data-touch-layout] .mini-control{left:auto;right:calc(var(--touch-primary) + var(--touch-gap));bottom:calc(var(--touch-nitro) + 20px);width:var(--touch-nitro);height:max(44px,calc(54px * var(--touch-size)))}
+html.handheld-input #touchControls[data-touch-layout] .emp-control{left:auto;right:calc((var(--touch-primary) - var(--touch-utility)) / 2);bottom:calc(var(--touch-primary) + var(--touch-gap));width:var(--touch-utility);height:var(--touch-utility)}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .touch-left{left:auto;right:max(var(--touch-edge),env(safe-area-inset-right))}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .touch-right{right:auto;left:max(var(--touch-edge),env(safe-area-inset-left))}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .steering-pair{left:auto;right:0}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .brake-control{left:auto;right:0}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .throttle-control{left:auto;right:calc(var(--touch-utility) + var(--touch-gap))}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .drift-control{right:auto;left:0}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .nitro-control,html.handheld-input #touchControls[data-touch-layout="mirrored"] .mini-control{right:auto;left:calc(var(--touch-primary) + var(--touch-gap))}
+html.handheld-input #touchControls[data-touch-layout="mirrored"] .emp-control{right:auto;left:calc((var(--touch-primary) - var(--touch-utility)) / 2)}
+#touchLayoutSettings{margin-top:18px;padding-top:16px;border-top:1px solid #a6bdce26}
+.touch-layout-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}.touch-layout-heading h3{font-size:15px;margin:0}.touch-layout-heading button{font-size:11px}
+.touch-layout-fields{display:grid;grid-template-columns:1fr;gap:12px}.touch-layout-fields label{display:grid;grid-template-columns:100px 1fr;gap:10px;align-items:center;font-size:12px}.touch-layout-fields select{min-height:44px;width:100%;border:1px solid #a6bdce55;border-radius:7px;background:#142f3d;color:#e2edf0;padding:8px 10px;font:inherit}.touch-layout-status{min-height:2.4em}
+@media(orientation:portrait){html.handheld-input #touchControls[data-touch-layout]{--touch-edge:12px;--touch-steer:max(60px,min(calc(76px * var(--touch-size)),calc((100vw - 64px) / 4)));--touch-primary:max(70px,min(calc(84px * var(--touch-size)),calc((100vw - 80px) / 4)));--touch-nitro:max(56px,calc(64px * var(--touch-size)))}}
+@media(prefers-reduced-motion:reduce){html.handheld-input #touchControls[data-touch-layout] button{transition:none}}
