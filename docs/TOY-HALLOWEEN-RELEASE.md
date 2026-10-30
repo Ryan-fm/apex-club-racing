@@ -23,3 +23,28 @@ Toy 初次容器预览已验证桌面首页、三条赛道切换、开赛、暂�
 ## 既有服务状态
 
 发布前，现有 Vercel 好友房服务 `/api/rooms/health` 返回 HTTP 503，响应 `{"ok":false,"configured":true}`。这是独立后端服务状态，不能用单人比赛成功声称联网好友房通过验证。本次包体不修改后端服务配置或来源白名单。
+
+
+## 最终容器自检
+
+提交前自检预览：https://www.bilibili.com/toy/preview/author_tLeXXGwA/index.html 。容器确认构建号 `ace5fa9bb41c`。
+
+- 桌面 1440×1000：首页主视觉和导览正常，墓园近道标签可切换；海湾→十一城→南瓜谷连续切换后正常开赛，倒计时后比赛计时增加，新增资源无 HTTP 加载失败。
+- 手机模拟：390×844 竖屏首页无横向溢出，开赛按钮可见；844×390 横屏大厅开赛按钮高 44px，三项开赛动作可用；实机容器中的比赛计时增长，触控左右方向按下、松开状态正确，触控未越界。
+- 南瓜谷排行榜页中英文切换后都保留本地成绩说明，空榜招募提示不出现，周期、刷新、我的排名禁用，不读取或提交旧榜。
+- Toy SDK 对 preview 路径禁止成绩与存档写入；预览路径还没有正式 Toy ID，真实榜单读取返回 `toy id not available on host`。这不是改写分榜的理由。发布前直接读取正式站点霓虹港湾旧榜成功，共 34 条；发布后须再次核对正式榜与新构建。
+- Toy 手机容器的权限策略拒绝 accelerometer/deviceorientation；屏幕触控正常。桌面没有运行时错误，手机日志中的该传感器策略报错与场景资源加载分开记录；Three.js 原有环境贴图卷积警告不影响本次场景加载。
+
+本次没有连接新身份、写入真实云存档或向正式排行榜提交测试成绩。
+
+
+## 提交记录
+
+`toy update 35519224606720 <Toy 工作区>/dist --json --yes` 已成功返回 `status: auditing`，随后 `toy mylist --json` 也确认同一作品为审核中。
+
+- 提交后的最新预览：https://www.bilibili.com/toy/preview/author_GOQSKLbT/index.html
+- 正式入口：https://www.bilibili.com/toy/apex-club-racing/index.html
+- 游戏代码版本：`f066a42`；构建号：`ace5fa9bb41c`。
+- 上传后的本地包摘要与已自检包体一致；新预览首页确认同一构建号，主视觉加载正常。
+
+审核中不等于新版已经上线；正式入口的切换结果另行记录。
