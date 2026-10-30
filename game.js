@@ -9,10 +9,12 @@ import {PHYSICS_DT,idleInput,multiplayerTrack,stepRoomPlayer} from './multiplaye
 import {RoomPrediction} from './multiplayer/prediction.js';
 import {createCanyon} from './canyon-scene.js';
 import {createElevenCity} from './eleven-city.js';
+import {createHalloween} from './halloween-scene.js';
 import {applyCitySurface} from './city-materials.js';
 import {createHarbor} from './harbor-scene.js';
 import {createVehicleEnvironment} from './vehicle-finish.js';
 import {makeCraft,configureKart} from './kart-model.js';
+import {batchKartMeshes,restoreKartMeshes} from './kart-render-batches.js';
 import {applyCustomization,animateExhaust} from './kart-customization.js';
 import {readGarage,GARAGE_KEY} from './garage-config.js';
 import {loadBindings,createKeyboardState,formatKeys} from './keyboard-controls.js';
@@ -26,6 +28,7 @@ import {createPickupFactory} from './pickup-design.js';
 import {createStunts,boostOpportunity} from './stunt-model.js';
 import {createShowroom,createCitadel} from './scene-design.js';
 import {createMobileControls,isHandheldDevice} from './mobile-controls.js';
+import {mountTouchLayout} from './touch-layout.js';
 import {DISTANCE_SCALE, DISPLAY_SPEED,projectTrack} from './driving-model.js';
 import {createRaceEffects} from './race-effects.js';
 import {createRaceAudio} from './race-audio.js';
@@ -37,6 +40,7 @@ import {GATE_SPRINT,createSprint,updateSprint,sprintRecordKey,saveSprint,sprintI
 import {chaseHeading,createSuspension,stepSuspension} from './runtime/race-presenter.js';
 import {createInputFrame} from './runtime/input-frame.js';
 import {createPerformanceProbe,frameTiming} from './runtime/performance.js';
+import {createRacePreparation} from './runtime/race-preparation.js';
 import {cacheRaceNodes,createDomWriter} from './runtime/race-ui.js';
 import {onlineClub,mountOnlineClub} from './online-club.js';
 import * as THREE from 'three';
@@ -92,9 +96,11 @@ let roomUI=null,multiplayerActive=false,startingMultiplayer=false,roomConnected=
 const safeName=name=>String(name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const drivingChallenges=createChallengeUI({enabled:!gateSlice});
 const mobile=createMobileControls({active:()=>race?.phase==='racing'&&!helpOpen,action:name=>actions.add(name==='nitro'?'ShiftLeft':name==='mini'?'KeyE':'KeyQ'),pause:()=>toggleControls(true)});
+mountTouchLayout({handheld:mobileDevice,onChange:()=>mobile.clear()});
 function toggleControls(open=!helpOpen){
-  if(!race || race.phase==='finished')return;
+  if(!race || race.phase==='finished'||racePreparation.busy)return;
   helpOpen=open;keyboard.clear();actions.clear();mobile.clear();driftLatched=false;document.querySelector('#controlsPanel').hidden=!open;
+  if(open)progression.flush();
   document.querySelector('#controlsToggle').setAttribute('aria-expanded',String(open));
   if(open)document.querySelector('#startDriving').focus();else renderer.domElement.focus();
 }
@@ -138,12 +144,12 @@ addEventListener('blur',()=>{keyboard.clear();actions.clear();mobile.clear();if(
 
 // Bay Circuit: a closed coastal course with gentle elevation changes.
 const GATE_SLICE_START=GATE_SPRINT.start;
-let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon','eleven'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
+let requestedScene=gateSlice?'citadel':(['bay','citadel','harbor','canyon','eleven','halloween'].includes(new URLSearchParams(location.search).get('scene'))?new URLSearchParams(location.search).get('scene'):'bay');
 let curve,trackLength,roadSamples,trackRoutes;
 function setRouteGeometry(name){
  requestedScene=name;
  curve=new THREE.CatmullRomCurve3(circuitPoints(name,{classic:gateSlice}).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(name));
- if(name==='harbor')curve.arcLengthDivisions=2400;
+ if(name==='harbor'||name==='halloween')curve.arcLengthDivisions=2400;
  if(name==='eleven')curve.arcLengthDivisions=3200;
  trackLength=curve.getLength();
  roadSamples=Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:gateSlice?undefined:p.y,z:p.z};});
@@ -175,12 +181,12 @@ function createTrack(){
   for(let i=0;i<seg;i++){ const a=i*2,b=a+1,c=a+2,d=a+3; idx.push(a,c,b,b,c,d); }
   const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setAttribute('shoulderOpen',new THREE.Float32BufferAttribute(shoulderOpen,1)); g.setIndex(idx); g.computeVertexNormals();
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.86,side:THREE.DoubleSide});
-  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0}};
+  m.uniforms={time:{value:0},speed:{value:0},citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0},halloween:{value:0}};
   m.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,m.uniforms);
     shader.vertexShader='attribute float shoulderOpen;varying float vShoulderOpen;varying vec2 vRoadUv; varying vec3 vPos;\n'+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRoadUv=uv;vPos=position;vShoulderOpen=shoulderOpen;');
-    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;uniform float city;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
+    shader.fragmentShader='varying float vShoulderOpen;varying vec2 vRoadUv;varying vec3 vPos;uniform float citadel;uniform float harbor;uniform float canyon;uniform float city;uniform float halloween;float line(float x,float w){return 1.-smoothstep(0.,w,abs(fract(x)-.5));}\n'+shader.fragmentShader;
     shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
         float edge=1.-smoothstep(.009,.022,min(vRoadUv.x,1.-vRoadUv.x));
         float lane=(1.-smoothstep(.002,.006,abs(vRoadUv.x-.333)))+(1.-smoothstep(.002,.006,abs(vRoadUv.x-.667)));
@@ -213,7 +219,12 @@ function createTrack(){
         #endif
         cityRoad+=cityLanes*vec3(.38,.42,.43)*(1.-vShoulderOpen);
         cityRoad+=edge*vec3(.25,.29,.3)*(1.-vShoulderOpen);
-        base=mix(base,cityRoad,city);diffuseColor.rgb=base;
+        base=mix(base,cityRoad,city);
+        vec3 hollowRoad=vec3(.095,.115,.13)+grain*.018;
+        hollowRoad+=lane*dash*vec3(.35,.39,.36)*(1.-vShoulderOpen);
+        hollowRoad=mix(hollowRoad,mix(vec3(.95,.44,.12),vec3(.32,.25,.19),step(.5,fract(vRoadUv.y*2.))),shoulder*.85*(1.-vShoulderOpen));
+        hollowRoad+=edge*vec3(.75,.3,.06)*(1.-vShoulderOpen);
+        base=mix(base,hollowRoad,halloween);diffuseColor.rgb=base;
     `);
   };
   applyRoadFinish(m);
@@ -233,7 +244,7 @@ trackMat=createTrack();
 if(requestedScene!=='eleven')world.add(createTrackFinish(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),requestedScene));
 world.add(createRouteView(trackRoutes,requestedScene,roadSamples,t=>roadHalfWidth(requestedScene,t),trackFrame));
 bayTrackObjects=[];
-if(requestedScene==='eleven')return;
+if(requestedScene==='eleven'||requestedScene==='halloween')return;
 const beforeBayTrack=new Set(world.children);
 // Edge rails + cathedral ribs.
 const railMat=new THREE.MeshBasicMaterial({color:0xc3f3f1});
@@ -294,8 +305,13 @@ const state={yaw:0,hop:0,t:0,lane:0,laneVel:0,speed:0,reverseHold:0,wallContact:
 const raceEffects=createRaceEffects(scene);
 const ai=[];
 for(let i=0;i<7;i++){
-  const def=craftDefs[i%craftDefs.length]; const mesh=makeCraft(def.color,.9);configureKart(mesh,def);scene.add(mesh);
-  ai.push({mesh,t:(.012+i*.018)%1,lane:(Math.random()-.5)*42,speed:360+Math.random()*170,target:380+Math.random()*210,stun:0,aggression:.4+Math.random()*.6});
+  const def=craftDefs[i%craftDefs.length]; const mesh=makeCraft(def.color,.9);configureKart(mesh,def);batchKartMeshes(mesh);scene.add(mesh);
+  ai.push({mesh,renderCraft:i%craftDefs.length,t:(.012+i*.018)%1,lane:(Math.random()-.5)*42,speed:360+Math.random()*170,target:380+Math.random()*210,stun:0,aggression:.4+Math.random()*.6});
+}
+
+function configureOpponent(opponent,craft){
+ if(opponent.renderCraft===craft)return;
+ restoreKartMeshes(opponent.mesh);configureKart(opponent.mesh,craftDefs[craft]);batchKartMeshes(opponent.mesh);opponent.renderCraft=craft;
 }
 
 // pickups
@@ -346,7 +362,7 @@ function setCraft(i){
   const stats=[['Speed',d.max,650,`${Math.round(d.max*DISPLAY_SPEED)} KM/H`],['Accel.',d.accel,300,`${Math.round(d.accel/210*100)}%`],['Handling',d.turn,1.5,`${Math.round(d.turn*100)}%`],['Drift',d.drift,1.5,`${Math.round(d.drift*100)}%`]];
   document.querySelector('#kartStats').innerHTML=stats.map(([label,value,max,text])=>`<div class="kart-stat"><span>${label}</span><i><b style="width:${Math.min(100,value/max*100)}%"></b></i><strong>${text}</strong></div>`).join('');
 }
-function reset(){
+function reset({practice=false}={}){
  if(roomUI?.client.room&&!startingMultiplayer){roomUI.open();return;}
  drivingChallenges.reset();resetExperience();replayTick=0;replayAccumulator=0;sprint=createSprint();Object.assign(suspension,createSuspension());cameraHeading=null;
   Object.assign(stunts,createStunts());
@@ -370,7 +386,8 @@ function reset(){
   document.body.classList.add('in-race');document.querySelector('#countdown').hidden=false;
   document.querySelector('#modeLabel').textContent=gateSlice?'GATE SPRINT / SOLO PRACTICE':selectedMode==='team'?'4V4 AI TEAM RACE':'SOLO / 7 AI RIVALS';
   document.querySelector('#teamScore').hidden=selectedMode!=='team';
-  renderer.domElement.focus();perf.startRun();
+  renderer.domElement.focus();
+  if(!startingMultiplayer)prepareRace(practice);else perf.startRun();
 }
 let playerMeta={steer:0,boosting:false};
 function updatePlayer(dt,time){
@@ -493,7 +510,7 @@ function updateCamera(dt,meta){
   f.tan.set(Math.sin(cameraHeading),0,Math.cos(cameraHeading)).addScaledVector(f.normal,-f.tan.dot(f.normal)).normalize();
   const speedN=clamp(state.speed/650,0,1);
   if(!cameraReady)chaseCamera.reset();
-  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,distance:requestedScene==='eleven'?43:61,height:requestedScene==='eleven'?19:27,dt,roots:[world,...bayDecor,citadel,harbor,canyon,city]});
+  const view=chaseCamera.solve({position:player.position,forward:f.tan,normal:f.normal,speed:speedN,distance:requestedScene==='eleven'?43:61,height:requestedScene==='eleven'?19:27,dt,roots:[world,...bayDecor,citadel,harbor,canyon,city,halloween]});
   const desired=view.position;
   const shake=reducedMotion?0:state.hit?.45:0;
   desired.x+=(Math.random()-.5)*shake*speedN;desired.z+=(Math.random()-.5)*shake*speedN;
@@ -539,7 +556,7 @@ function signTexture(title,subtitle,color='#214554'){
 }
 let bayDecor;
 function buildDecor(){
-if(requestedScene==='eleven'){bayDecor=[];return;}
+if(requestedScene==='eleven'||requestedScene==='halloween'){bayDecor=[];return;}
 const beforeBayDecor=new Set(scene.children);
 // A soft sky gradient, sculpted islands and trackside props give the course a readable scale.
 const sky=new THREE.Mesh(new THREE.SphereGeometry(6500,24,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,vertexShader:`varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying vec3 vP;void main(){float h=normalize(vP).y;vec3 c=mix(vec3(.48,.73,.89),vec3(.08,.32,.62),smoothstep(-.05,.8,h));gl_FragColor=vec4(c,1.);}`}));scene.add(sky);
@@ -587,7 +604,7 @@ for(let i=0;i<34;i++){
 bayDecor=scene.children.filter(o=>!beforeBayDecor.has(o)&&!o.userData.sharedTrack);
 }
 buildDecor();
-let citadel=null,harbor=null,canyon=null,city=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
+let citadel=null,harbor=null,canyon=null,city=null,halloween=null,selectedScene='bay';const showroom=createShowroom();let lobbyTime=0;
 if(diagnosticsEnabled)renderer.info.autoReset=false;
 const perf=createPerformanceProbe({
  enabled:diagnosticsEnabled,
@@ -606,17 +623,17 @@ const perf=createPerformanceProbe({
 });
 const sceneCache=new Map(),scenePreviews=new Set();
 let routeObjects=[...world.children],decorObjects=scene.children.filter(o=>bayDecor.includes(o)||o.userData.sharedTrack);
-function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects});}
+function cacheRoute(){sceneCache.set(requestedScene,{curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,halloween,routeObjects,decorObjects});}
 function activateRoute(name){
  cacheRoute();
- routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;if(city)city.visible=false;
+ routeObjects.forEach(o=>o.visible=false);decorObjects.forEach(o=>o.visible=false);if(citadel)citadel.visible=false;if(harbor)harbor.visible=false;if(canyon)canyon.visible=false;if(city)city.visible=false;if(halloween)halloween.visible=false;
  const cached=sceneCache.get(name);
  if(cached){
-  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,routeObjects,decorObjects}=cached);
+  requestedScene=name;({curve,trackLength,roadSamples,trackRoutes,trackMat,bayTrackObjects,structureMat,bayDecor,citadel,harbor,canyon,city,halloween,routeObjects,decorObjects}=cached);
   routeObjects.forEach(o=>o.visible=true);decorObjects.forEach(o=>o.visible=true);
  }else{
   setRouteGeometry(name);const oldRoad=new Set(world.children),oldDecor=new Set(scene.children);
-  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;city=null;
+  buildRoad();buildDecor();citadel=null;harbor=null;canyon=null;city=null;halloween=null;
   routeObjects=world.children.filter(o=>!oldRoad.has(o));decorObjects=scene.children.filter(o=>!oldDecor.has(o));
  }
  for(const pickup of pickups){const f=trackFrame(pickup.t);pickup.m.position.copy(f.p).addScaledVector(f.side,pickup.lane).addScaledVector(f.normal,7);}
@@ -625,32 +642,36 @@ function activateRoute(name){
  keyboard.clear();actions.clear();mobile.clear();cameraReady=false;
 }
 function selectScene(name,{historyMode='push'}={}){
- name=['bay','citadel','harbor','canyon','eleven'].includes(name)?name:'bay';
+ name=['bay','citadel','harbor','canyon','eleven','halloween'].includes(name)?name:'bay';
  if(race||launchElapsed!==null)return;
  const changed=name!==requestedScene;
  if(changed)activateRoute(name);
- selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon',urban=name==='eleven';const title=urban?'Eleven City':desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
+ selectedScene=name;const ancient=name==='citadel',night=name==='harbor',desert=name==='canyon',urban=name==='eleven',spooky=name==='halloween';const title=spooky?'Lantern Hollow':urban?'Eleven City':desert?'Redrock Canyon':night?'Neon Harbor':ancient?'Jade Citadel':'Bay Circuit';
  if(ancient&&!citadel){citadel=createCitadel(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(citadel);}
  if(citadel)citadel.visible=ancient;
  if(night&&!harbor){harbor=createHarbor(trackFrame,trackLength,t=>roadHalfWidth(requestedScene,t),(t,side,f)=>routeOpening(trackRoutes,t,side,f),trackRoutes);scene.add(harbor);}if(harbor)harbor.visible=night;
  if(desert&&!canyon){canyon=createCanyon(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(canyon);}if(canyon)canyon.visible=desert;
  if(urban&&!city){city=createElevenCity(trackFrame,trackLength,trackRoutes);scene.add(city);}if(city)city.visible=urban;
- starMotes.visible=!urban;
- [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert&&!urban);
- scene.background.set(urban?0x79cce9:desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(urban?0xc6e2e4:desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=urban?.00019:desert?.00025:night?.00025:ancient?.00036:.00022;
- dir.color.set(urban?0xfff3da:desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(urban?0xc9e9f4:desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
- dir.intensity=urban?3.1:2.7;ambientLight.intensity=urban?1.12:1.35;
+ if(spooky&&!halloween){halloween=createHalloween(trackFrame,trackLength,trackRoutes,(t,side,f)=>routeOpening(trackRoutes,t,side,f));scene.add(halloween);}if(halloween)halloween.visible=spooky;
+ starMotes.visible=!urban&&!spooky;
+ [...bayTrackObjects,...bayDecor,sea].forEach(o=>o.visible=!ancient&&!night&&!desert&&!urban&&!spooky);
+ scene.background.set(spooky?0x111c26:urban?0x79cce9:desert?0xe3b48a:night?0x111c34:ancient?0xc9baa0:0x83bed8);scene.fog.color.set(spooky?0x273941:urban?0xc6e2e4:desert?0xcb9975:night?0x14263d:ancient?0x9cabb7:0xa8d3e5);scene.fog.density=spooky?.00034:urban?.00019:desert?.00025:night?.00025:ancient?.00036:.00022;
+ dir.color.set(spooky?0xb7d9e2:urban?0xfff3da:desert?0xffc080:night?0xa8c9f4:ancient?0xffd49b:0xffedc9);ambientLight.color.set(spooky?0xa7c0c7:urban?0xc9e9f4:desert?0xe9c6a3:night?0x759dc2:ancient?0xa7bfd9:0xdbefff);
+ dir.intensity=spooky?2.1:urban?3.1:2.7;ambientLight.intensity=spooky?1.25:urban?1.12:1.35;
  if(dir.shadow){dir.shadow.camera.far=urban?900:650;const extent=urban?190:150;Object.assign(dir.shadow.camera,{left:-extent,right:extent,top:extent,bottom:-extent});dir.shadow.camera.updateProjectionMatrix();}
  if(urban)city.userData.captureEnvironment?.(renderer,scene);
- scene.traverse(o=>{if(o.userData.roadSurface){o.castShadow=false;o.receiveShadow=true;}else if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
+ scene.traverse(o=>{if(o.userData.roadSurface){o.castShadow=false;o.receiveShadow=true;}else if(o.userData.cosmeticDecal){o.castShadow=false;o.receiveShadow=false;}else if(o.isMesh&&!o.userData.authoredShadows&&o.material?.isMeshStandardMaterial&&!o.material.transparent){o.castShadow=true;o.receiveShadow=true;}});ghost.traverse(o=>o.castShadow=false);
  trackMat.uniforms.canyon.value=desert?1:0;trackMat.uniforms.citadel.value=ancient?1:0;trackMat.uniforms.harbor.value=night?1:0;trackMat.roughness=night?.28:.86;trackMat.metalness=night?.25:0;
  trackMat.uniforms.city.value=urban?1:0;
+ trackMat.uniforms.halloween.value=spooky?1:0;
+ showroom.setSeason?.(spooky?'halloween':'default');
  document.body.dataset.scene=selectedScene;
+ document.querySelector('#seasonNotice').textContent=spooky?'New circuit · Three laps · Personal records on this device':'Six circuits. One haunted detour.';
  document.querySelectorAll('button[data-scene]').forEach(b=>{const on=b.dataset.scene===selectedScene;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
  document.querySelector('.track-title').textContent=title;
- document.querySelector('#sceneCaption').textContent=urban?'ELEVEN CITY / PC CLASSIC RECONSTRUCTION':desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
- document.querySelector('.navigation .label').textContent=urban?'ELEVEN CITY / LIVE MAP':desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
- document.querySelector('.route-guide').textContent=urban?'PC city reconstruction · Four corner cuts · No express strips':'Green: narrow shortcuts · Cyan: express acceleration strips';
+ document.querySelector('#sceneCaption').textContent=spooky?'LANTERN HOLLOW / HALLOWEEN NIGHT RUN':urban?'ELEVEN CITY / PC CLASSIC RECONSTRUCTION':desert?'REDROCK CANYON / SUNSET PASS':night?'NEON HARBOR / MIDNIGHT RUN':ancient?'JADE CITADEL / ANCIENT WALL RUN':'BAY CIRCUIT / COASTAL GRAND PRIX';
+ document.querySelector('.navigation .label').textContent=spooky?'LANTERN HOLLOW / LIVE MAP':urban?'ELEVEN CITY / LIVE MAP':desert?'REDROCK CANYON / LIVE MAP':night?'NEON HARBOR / LIVE MAP':ancient?'JADE CITADEL / LIVE MAP':'BAY CIRCUIT / LIVE MAP';
+ document.querySelector('.route-guide').textContent=spooky?'Amber: circuit edges · Green: graveyard cut · Cyan: express strips':urban?'PC city reconstruction · Four corner cuts · No express strips':'Green: narrow shortcuts · Cyan: express acceleration strips';
  cacheRoute();
  if(changed){
   try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}
@@ -708,8 +729,8 @@ function finishRace(){
   const finishTime=race.racers[0].finishTime;
   const finishedRace=race;
   const notice=document.querySelector('#onlineNotice');
-  const eligible=!replayData&&!raceAssisted&&canSubmitRace(finishTime,raceLaps,raceValid);
-  notice.textContent=eligible?'成绩正在自动提交…':raceAssisted?'辅助模式成绩已保存在本地，不参与标准排行榜。':'';
+  const eligible=onlineClub.ranked(requestedScene)&&!replayData&&!raceAssisted&&canSubmitRace(finishTime,raceLaps,raceValid);
+  notice.textContent=requestedScene==='halloween'?tr('Lantern Hollow personal records are saved on this device.'):eligible?'成绩正在自动提交…':raceAssisted?'辅助模式成绩已保存在本地，不参与标准排行榜。':'';
   if(eligible){
     const completed={scene:requestedScene,assisted:raceAssisted,craft:craftIndex,time:finishTime,laps:raceLaps};
     onlineClub.submit(completed)
@@ -720,7 +741,7 @@ function finishRace(){
   const scores=teamScores(race,true),ordered=standings(race);
   const winner=scores.blue===scores.red?'DRAW':scores.blue>scores.red?'BLUE TEAM WINS':'RED TEAM WINS';
   document.querySelector('#resultTitle').textContent=race.mode==='team'?winner:ordered[0].id===0?'YOU WIN!':'Race complete';
-  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='eleven'?'Eleven City':selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
+  document.querySelector('#resultSubtitle').textContent=race.mode==='team'?`BLUE ${scores.blue} : ${scores.red} RED · Points awarded to finishers`:`Your position: P${state.rank} · ${selectedScene==='halloween'?'Lantern Hollow':selectedScene==='eleven'?'Eleven City':selectedScene==='canyon'?'Redrock Canyon':selectedScene==='harbor'?'Neon Harbor':selectedScene==='citadel'?'Jade Citadel':'Bay Circuit'} / 3 laps`;
   document.querySelector('#resultRows').innerHTML=ordered.map((r,i)=>`<tr class="${r.id===0?'you':''}"><td>${String(i+1).padStart(2,'0')}</td><td><i class="team-dot ${race.mode==='team'?r.team:'solo'}"></i>${r.name}${r.id===0?' / YOU':' / AI'}</td><td>${r.finishTime===null?'DNF':formatTime(r.finishTime)}</td><td>${r.finishTime===null?0:SCORE_TABLE[i]}</td></tr>`).join('');
 }
 function updateSprintHUD(){
@@ -745,8 +766,8 @@ ${tr('CUT BOOST')} ${sprint.cut}
   if(replayData){let output=document.querySelector('#replayReport');if(!output){output=document.createElement('output');output.id='replayReport';output.hidden=true;output.dataset.noTranslate='';document.body.append(output);}output.textContent=JSON.stringify({inputHash:replayData.inputHash,ticks:replayTick,sprint,performance:perf.exportReport()});}
 }
 function formatTime(t){return `${Math.floor(t/60).toString().padStart(2,'0')}:${(t%60).toFixed(2).padStart(5,'0')}`;}
-function returnLobby({keepRoom=false}={}){progression.flush();drivingChallenges.hide();if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureKart(a.mesh,craftDefs[i%craftDefs.length]);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
-document.querySelector('#raceStart').addEventListener('click',()=>{if(roomUI?.client.room){roomUI.open();return;}let trained=gateSlice;try{trained=trained||localStorage.getItem('apex-trained')==='yes';}catch{}beginLaunch(trained?reset:startLesson);});
+function returnLobby({keepRoom=false}={}){racePreparation.cancel();progression.flush();drivingChallenges.hide();if(!keepRoom)document.querySelectorAll('.scene-options button,.kart-options button,[data-mode],[data-team]').forEach(button=>button.disabled=false);if(roomUI?.client.room&&!keepRoom)roomUI.client.leave().catch(error=>roomUI.status(error.message));multiplayerActive=false;roomRound=null;roomPrediction=null;ai.forEach((a,i)=>{a.mesh.visible=true;configureOpponent(a,i%craftDefs.length);a.remoteCraft=null;a.remote=null;});pickups.forEach(p=>p.m.visible=true);document.querySelector('#roomConnection').hidden=true;document.querySelector('#sprintHUD').hidden=true;lesson=null;document.querySelector('#lessonHUD').hidden=true;document.body.classList.remove('in-lesson');ghost.visible=false;empRing.visible=false;race=null;helpOpen=false;keyboard.clear();actions.clear();mobile.clear();document.querySelector('#lobby').hidden=false;document.querySelector('#results').hidden=true;document.querySelector('#controlsPanel').hidden=true;document.body.classList.remove('in-race','boosting','drifting','charged');raceEffects.reset();streaks.material.opacity=0;setCraft(craftIndex);document.querySelector('#raceStart').focus();}
+document.querySelector('#raceStart').addEventListener('click',()=>{if(roomUI?.client.room){roomUI.open();return;}beginLaunch(reset);});
 document.querySelector('#raceAgain').addEventListener('click',()=>{if(multiplayerActive){roomDismissedRound=roomRound;returnLobby({keepRoom:true});roomUI.open();}else reset();});
 document.querySelectorAll('[data-lobby]').forEach(el=>el.addEventListener('click',returnLobby));
 document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{selectedMode=el.dataset.mode;document.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('active',b===el);b.setAttribute('aria-pressed',String(b===el));});document.querySelector('#teamChoice').hidden=selectedMode!=='team';setCraft(craftIndex);}));
@@ -755,6 +776,7 @@ function loop(){
   requestAnimationFrame(loop);const timing=frameTiming(clock.getDelta()),elapsed=timing.dt;
   uiWritesThisFrame=0;perf.beginFrame(timing.frameMs,{droppedMs:timing.droppedMs});if(diagnosticsEnabled)renderer.info.reset();
   if(multiplayerActive){loopRoom(elapsed);perf.endFrame({phase:'multiplayer'});return;}
+  if(racePreparation.busy){perf.endFrame({phase:'preparing'});return;}
   if(document.hidden||helpOpen||lesson?.timedOut){audio.update(0,false,false,false);perf.endFrame({phase:'paused'});return;}
   let dt=0;
   if(race?.phase==='countdown'){
@@ -804,7 +826,7 @@ function resetExperience(){
  try{const v=gateSlice?null:JSON.parse(localStorage.getItem(recordKey));bestLap=v&&Number.isFinite(v.time)&&Array.isArray(v.samples)&&v.samples.every(p=>Array.isArray(p)&&p.length===5&&p.every(Number.isFinite))?v:null;}catch{bestLap=null;}
 }
 function startLesson(){
- reset();lesson=createLesson();race.phase='racing';race.racers[0].progress=.002;state.t=.002;placeLesson();
+ reset({practice:true});lesson=createLesson();race.phase='racing';race.racers[0].progress=.002;state.t=.002;placeLesson();
  document.querySelector('#countdown').hidden=true;document.querySelector('#lessonHUD').hidden=false;document.querySelector('#retryLesson').hidden=true;document.body.classList.add('in-lesson');
  updateLesson(0,{steer:0,speed:0,brake:false,charge:0,fired:false});presentLesson();
 }
@@ -861,6 +883,39 @@ function setupExperience(){
  const rules=document.createElement('p');rules.className='challenge-rules';rules.textContent=tr('Bronze: finish. Silver: finish with ≤3 collisions. Gold: also complete 6 drifts and 6 mini boosts.');document.querySelector('[data-settings-panel="controls"]').append(rules);
 }
 
+const loadingScreen=document.querySelector('#loadingScreen');
+const racePreparation=createRacePreparation({
+ setBusy:busy=>{
+  loadingScreen.hidden=!busy;
+  document.body.classList.toggle('preparing-race',busy);
+  if(busy)loadingScreen.querySelector('span').textContent='Preparing your race…';
+ },
+ onError:error=>console.warn('Race preparation fell back to normal rendering:',error),
+ prepare:async({cached,isCurrent})=>{
+  if(!race||!isCurrent())return;
+  // Let the opaque preparation screen paint before CPU/GPU initialization.
+  if(!cached)await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  if(!race||!isCurrent())return;
+  const meta=presentPlayer(0,0);presentAI(0);updateCamera(1/60,meta);
+  scene.updateMatrixWorld(true);
+  if(cached)return;
+  if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
+  else renderer.compile(scene,camera);
+  if(!isCurrent())return;
+  // Warm the exact display pipeline behind the opaque loading screen, including
+  // shadow uploads and the final output colour-space shader. Race time is frozen.
+  const previousTarget=renderer.getRenderTarget();
+  try{
+   if(composer&&document.querySelector('#qualitySetting').value==='quality')composer.render(0);
+   else renderer.render(scene,camera);
+  }finally{renderer.setRenderTarget(previousTarget);}
+
+ }
+});
+function prepareRace(practice=false){
+ const key=`${requestedScene}/${craftIndex}/${document.querySelector('#qualitySetting').value}/${gateSlice||practice?'practice':'race'}`;
+ const startingRace=race;racePreparation.run(key).then(()=>{if(!racePreparation.busy&&race===startingRace){clock.getDelta();perf.startRun();}});
+}
 let launchElapsed=null,launchAction=null;
 function beginLaunch(action){
  mobile.prepareLaunch(()=>launchPrepared(action));
@@ -892,7 +947,7 @@ function updateScenePreview(){
 }
 function setupClubLobby(){
  showroom.scene.environment=scene.environment;
- for(const type of ['bay','citadel','harbor','canyon','eleven']){
+ for(const type of ['bay','citadel','harbor','canyon','eleven','halloween']){
   const route=new THREE.CatmullRomCurve3(circuitPoints(type).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(type));
   document.querySelector(`button[data-scene="${type}"] polyline`).setAttribute('points',Array.from({length:101},(_,i)=>{const p=route.getPointAt(i/100);return `${90+p.x/1350*63},${70+p.z/1350*63}`;}).join(' '));
   try{const cached=localStorage.getItem(`apex-lobby-preview-v3-${type}`);if(cached?.startsWith('data:image/png;base64,')){const image=document.querySelector(`button[data-scene="${type}"] img`);image.src=cached;image.hidden=false;}}catch{}
@@ -968,7 +1023,7 @@ function receiveRoom(room,client){
   if(!roomPrediction){roomPrediction=new RoomPrediction({state,stunts,racer:race.racers[0],craft:me.craft},multiplayerTrack(room.scene));}
   const wasFinished=race.phase==='finished';roomPrediction.player.racer=race.racers[0];roomPrediction.reconcile(me,room);race.phase=room.phase;race.elapsed=room.elapsed;race.firstFinish=room.firstFinish;simulationTime=room.elapsed;
   state.rank=standings(race).findIndex(r=>r.id===0)+1;
-  for(const [i,a] of ai.entries()){const p=ordered[i+1];a.remote=p||null;if(p&&a.remoteCraft!==p.craft){configureKart(a.mesh,craftDefs[p.craft]);colorKart(a.mesh,craftDefs[p.craft].color);a.remoteCraft=p.craft;}a.mesh.visible=!!p;}
+  for(const [i,a] of ai.entries()){const p=ordered[i+1];a.remote=p||null;if(p&&a.remoteCraft!==p.craft){configureOpponent(a,p.craft);colorKart(a.mesh,craftDefs[p.craft].color);a.remoteCraft=p.craft;}a.mesh.visible=!!p;}
   if(room.phase==='finished'&&!wasFinished)finishRoomRace();
 }
 function presentRoomOpponents(){
@@ -1021,3 +1076,10 @@ document.querySelectorAll('[data-settings]').forEach(button=>button.addEventList
 
 document.querySelector('.lobby-tools a[href*="garage.html"]').addEventListener('click',()=>{try{sessionStorage.setItem('apex-lobby-choice',JSON.stringify({craft:craftIndex,mode:selectedMode,team:selectedTeam}));}catch{}});
 addEventListener('storage',e=>{if(e.key===GARAGE_KEY&&!race)setCraft(craftIndex);});
+
+// Read-only runtime evidence is available only when diagnostics were requested.
+if(diagnosticsEnabled)globalThis.__THREE_GAME_DIAGNOSTICS__={
+ renderer:renderer.info,
+ get state(){return {scene:requestedScene,phase:race?.phase||'lobby',progress:race?.racers[0]?.progress??null,speed:state.speed,lap:state.lap,collisions:runStats?.collisions??0,routeId:state.routeId,scenery:halloween?.userData.diagnostics??null,preparing:racePreparation.busy,preparation:racePreparation.report()};},
+ performance:()=>perf.summary()
+};

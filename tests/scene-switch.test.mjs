@@ -7,19 +7,20 @@ import {createTrackRoutes} from '../track-routes.js';
 import {circuitPoints,roadHalfWidth,trackTension} from '../track-layout.js';
 const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
 function harness(){
- const nodes=new Map(),history=[],buttons=['bay','citadel','harbor','canyon','eleven'].map(name=>({dataset:{scene:name},classList:{toggle(){}},setAttribute(k,v){this[k]=v;}}));
+ const nodes=new Map(),history=[],buttons=['bay','citadel','harbor','canyon','eleven','halloween'].map(name=>({dataset:{scene:name},classList:{toggle(){}},setAttribute(k,v){this[k]=v;}}));
  const scene=new THREE.Scene();scene.background=new THREE.Color();scene.fog=new THREE.FogExp2();
  const context=vm.createContext({THREE,circuitPoints,roadHalfWidth,trackTension,createTrackRoutes,updateRouteMap(){},URL,URLSearchParams,gateSlice:false,up:new THREE.Vector3(0,1,0),scene,world:new THREE.Group(),location:{search:'',href:'https://game.test/?test=retained',assign(){throw Error('Map selection must not reload the document');}},history:{pushState(_s,_t,url){history.push(url.href);}},
  document:{body:{dataset:{}},querySelectorAll(){return buttons;},querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{setAttribute(k,v){this[k]=v;}});return nodes.get(selector);}},
- keyboard:{clear(){}},actions:new Set(),mobile:{clear(){}},ghost:new THREE.Group(),sea:new THREE.Group(),starMotes:new THREE.Group(),dir:{color:new THREE.Color()},ambientLight:{color:new THREE.Color()},race:null,craftIndex:4,launchElapsed:null,cameraReady:true});
+ keyboard:{clear(){}},actions:new Set(),mobile:{clear(){}},ghost:new THREE.Group(),sea:new THREE.Group(),starMotes:new THREE.Group(),dir:{color:new THREE.Color()},ambientLight:{color:new THREE.Color()},showroom:{setSeason(){}},race:null,craftIndex:4,launchElapsed:null,cameraReady:true});
  const geometry=source.slice(source.indexOf('let requestedScene='),source.indexOf('function createTrack()'));
  // Use real spline/physics samples and the production cache/switch functions. Builders are counted stand-ins for GPU assets.
  vm.runInContext(geometry+`
  let roadBuilds=0,decorBuilds=0,citadelBuilds=0,previews=0,records=0;
- let trackMat,bayTrackObjects,structureMat,bayDecor,citadel=null,harbor=null,canyon=null,city=null,selectedScene='bay';
+ let trackMat,bayTrackObjects,structureMat,bayDecor,citadel=null,harbor=null,canyon=null,city=null,halloween=null,selectedScene='bay';
  const pickups=[{t:.1,lane:12,m:new THREE.Object3D()}];
- function buildRoad(){roadBuilds++;trackMat={uniforms:{citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0}}};structureMat={};const road=new THREE.Group(),rails=new THREE.Group();world.add(road,rails);bayTrackObjects=[rails];}
+ function buildRoad(){roadBuilds++;trackMat={uniforms:{citadel:{value:0},harbor:{value:0},canyon:{value:0},city:{value:0},halloween:{value:0}}};structureMat={};const road=new THREE.Group(),rails=new THREE.Group();world.add(road,rails);bayTrackObjects=[rails];}
  function buildDecor(){decorBuilds++;const island=new THREE.Group(),sign=new THREE.Group();sign.userData.sharedTrack=true;scene.add(island,sign);bayDecor=[island];}
+ function createHalloween(){return new THREE.Group();}
  function createElevenCity(){return new THREE.Group();}
  function createCanyon(){return new THREE.Group();}
  function createHarbor(){return new THREE.Group();}
@@ -115,4 +116,17 @@ test('Eleven City restores its flat geometry, city material and cached scenery a
  assert(h.run('roadSamples.every(p=>p.y===10)'));assert.equal(h.run('trackRoutes.length'),4);
  h.run("selectScene('harbor');selectScene('eleven')");assert.equal(h.run('city'),city);assert.equal(h.run('curve'),curve);assert.equal(h.run('harbor'),null);assert.equal(h.run('trackMat.uniforms.harbor.value'),0);
  assert.equal(h.nodes.get('.route-guide').textContent,'PC city reconstruction · Four corner cuts · No express strips');
+});
+
+test('Halloween geometry, scenery, road signals and local record context survive cached switches',()=>{
+ const h=harness();h.run("selectScene('halloween')");const halloween=h.run('halloween'),curve=h.run('curve');
+ assert.equal(h.nodes.get('.track-title').textContent,'Lantern Hollow');
+ assert.equal(h.run('trackMat.uniforms.halloween.value'),1);
+ assert.equal(h.run('trackRoutes.length'),3);assert.equal(h.run('sea.visible'),false);
+ assert.equal(h.nodes.get('#seasonNotice').textContent,'New circuit · Three laps · Personal records on this device');
+ h.run("selectScene('bay')");assert.equal(halloween.visible,false);
+ assert.equal(h.run('trackMat.uniforms.halloween.value'),0);
+ assert.equal(h.run('sea.visible'),true);
+ h.run("selectScene('halloween')");assert.equal(h.run('halloween'),halloween);assert.equal(h.run('curve'),curve);
+ assert.equal(halloween.visible,true);assert.equal(h.run('sceneCache.size'),2);
 });

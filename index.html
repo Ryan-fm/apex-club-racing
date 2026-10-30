@@ -1,33 +1,50 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
+<head><link rel="icon" type="image/svg+xml" href="./assets/apex-season.svg">
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080e17"><meta name="description" content="APEX CLUB — 三圈竞速，六款赛车，五条赛道。">
-  <title>APEX CLUB — 为下一圈而来</title>
-  <link rel="stylesheet" href="./site.css">
-<link rel="stylesheet" href="./ui-polish.css"></head>
-<body data-page="home">
+  <meta name="theme-color" content="#101310"><meta name="description" content="APEX CLUB 万圣节夜赛：全新幽光南瓜赛道，穿过月下森林与古堡，开启三圈竞速。六条赛道，六款赛车，浏览器即刻开赛。">
+  <title>APEX CLUB — 幽光南瓜夜赛</title>
+  <link rel="stylesheet" href="./site.css"><link rel="stylesheet" href="./ui-polish.css"><link rel="stylesheet" href="./halloween-home.css">
+</head>
+<body data-page="home" data-season="halloween">
+  <a class="night-announcement" href="#nightCircuit"><span class="announcement-pumpkin" aria-hidden="true">✦</span><span data-zh="万圣夜集结 · 幽光南瓜谷现已开放" data-en="HALLOWEEN ASSEMBLY · LANTERN HOLLOW IS OPEN">万圣夜集结 · 幽光南瓜谷现已开放</span><span class="announcement-arrow" aria-hidden="true">↗</span></a>
   <header class="site-header shell">
     <a class="site-brand" href="./index.html" aria-label="APEX CLUB 首页"><span class="brand-mark" aria-hidden="true"></span><span>APEX <b>CLUB</b></span></a>
-    <nav class="site-nav" aria-label="主导航"><a href="./leaderboard.html" data-zh="排行榜" data-en="Leaderboard">排行榜</a><a href="./garage.html" data-zh="车库" data-en="Garage">车库</a><a id="accountNav" href="./account.html" data-zh="B站车手身份" data-en="Bilibili profile">B站车手身份</a></nav>
+    <nav class="site-nav" aria-label="主导航"><a class="season-nav" href="#nightCircuit" data-zh="万圣夜赛" data-en="Night race">万圣夜赛</a><a href="./leaderboard.html" data-zh="排行榜" data-en="Leaderboard">排行榜</a><a href="./garage.html" data-zh="车库" data-en="Garage">车库</a><a id="accountNav" href="./account.html" data-zh="B站车手身份" data-en="Bilibili profile">B站车手身份</a></nav>
     <div class="site-language" role="group" aria-label="Language / 语言"><button type="button" data-language="zh" aria-pressed="true">中</button><button type="button" data-language="en" aria-pressed="false">EN</button></div>
   </header>
   <main>
-    <section class="home-hero shell" aria-labelledby="heroTitle">
-      <img class="hero-art" src="./assets/home-hero.jpg" alt="TITAN 赛车停在夜色中的 APEX 维修车库" fetchpriority="high" draggable="false">
+    <section class="home-hero halloween-hero" aria-labelledby="heroTitle">
+      <img class="hero-art" src="./assets/halloween-hero.png" alt="万圣节夜赛概念图：月光下的赛车、南瓜灯与森林赛道" fetchpriority="high" decoding="async" width="1672" height="941" draggable="false">
       <video id="homePromo" class="hero-video" muted loop playsinline preload="none" aria-hidden="true" hidden></video>
       <div class="hero-shade" aria-hidden="true"></div>
+      <div class="halloween-grain" aria-hidden="true"></div>
+      <div class="night-atmosphere" aria-hidden="true"><i class="night-bat bat-one"></i><i class="night-bat bat-two"></i><i class="night-bat bat-three"></i><i class="ember ember-one"></i><i class="ember ember-two"></i><i class="ember ember-three"></i><i class="ember ember-four"></i></div>
       <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-line"></span> APEX MOTOR CLUB <span class="eyebrow-index">/ 001</span></div>
-        <h1 id="heroTitle"><span data-zh="速度，有自己的方向。" data-en="Drive your own line.">速度，有自己的方向。</span></h1>
-        <p class="hero-description" data-zh="五条赛道，六款赛车。一场三圈的较量，从你握住方向的那一刻开始。" data-en="Five circuits. Six machines. One three-lap race, driven your way.">五条赛道，六款赛车。一场三圈的较量，从你握住方向的那一刻开始。</p>
-        <div class="hero-actions"><a class="button button-primary" href="./race.html"><span data-zh="进入赛场" data-en="Enter the grid">进入赛场</span><span class="action-arrow" aria-hidden="true"></span></a><a class="button button-text" href="./leaderboard.html"><span data-zh="查看全球榜" data-en="Explore rankings">查看全球榜</span><span class="action-arrow" aria-hidden="true"></span></a></div>
+        <div class="eyebrow"><span class="season-spark" aria-hidden="true"></span> HALLOWEEN NIGHT RUN <span class="season-date">10.31</span></div>
+        <p class="hero-pretitle" data-zh="今夜，走一条不寻常的路。" data-en="Take the road after dark.">今夜，走一条不寻常的路。</p>
+        <h1 id="heroTitle"><span data-zh="幽光南瓜" data-en="PUMPKIN">幽光南瓜</span><span class="title-afterdark" data-zh="夜赛。" data-en="AFTERDARK.">夜赛。</span></h1>
+        <p class="hero-description" data-zh="南瓜灯亮起，古堡在下一弯等你。驶入全新万圣节赛道，把月光留在身后。" data-en="Follow the lanterns. Find the manor beyond the bend. A new Halloween circuit is yours to chase.">南瓜灯亮起，古堡在下一弯等你。驶入全新万圣节赛道，把月光留在身后。</p>
+        <div class="hero-actions"><a class="button button-primary" href="./race.html?scene=halloween"><span data-zh="驶入万圣夜" data-en="Enter the night race">驶入万圣夜</span><span class="action-arrow" aria-hidden="true"></span></a><a class="button button-text" href="./race.html"><span data-zh="全部赛道" data-en="All circuits">全部赛道</span><span class="action-arrow" aria-hidden="true"></span></a></div>
+        <div class="hero-play-note"><span class="night-dot" aria-hidden="true"></span><span data-zh="无需下载 · 教学可选 · 即刻上场" data-en="No download · Optional practice · Just drive">无需下载 · 教学可选 · 即刻上场</span></div>
       </div>
-      <div class="hero-rail"><span data-zh="独立制作 · 浏览器即刻开赛" data-en="Independent racing · Play in your browser">独立制作 · 浏览器即刻开赛</span><button id="heroMotionToggle" class="hero-motion-toggle" type="button" hidden><span data-zh="暂停动效" data-en="Pause motion">暂停动效</span> <span aria-hidden="true">Ⅱ</span></button></div>
+      <div class="night-stamp" aria-hidden="true"><svg viewBox="0 0 80 65" fill="none"><path d="M40 13C26-1 1 15 8 39c6 22 26 21 32 16 6 5 27 6 32-16 7-24-18-40-32-26Z" stroke="currentColor" stroke-width="2"/><path d="M39 13c-7 9-12 29 1 42m1-42c8 10 13 30-1 42M40 12c-2-7 0-10 7-11M21 29l10 2-8 7Zm37 0-10 2 8 7ZM26 44l7 1 3-3 5 4 5-4 7 2-4 7-19-2Z" fill="currentColor"/></svg><span>DRIVE<br>IF YOU DARE</span></div>
+      <div class="hero-rail"><span>APEX MOTOR CLUB / SEASONAL CIRCUIT</span><span class="rail-track" data-zh="新赛道 · 幽光南瓜夜赛" data-en="NEW CIRCUIT · PUMPKIN AFTERDARK">新赛道 · 幽光南瓜夜赛</span><button id="heroMotionToggle" class="hero-motion-toggle" type="button" hidden><span data-zh="暂停动效" data-en="Pause motion">暂停动效</span> <span aria-hidden="true">Ⅱ</span></button></div>
     </section>
-    <section class="home-facts shell" aria-label="游戏概览"><div><small data-zh="赛道" data-en="Circuits">赛道</small><strong>05</strong><span data-zh="海湾、古城、港湾、峡谷与十一城" data-en="Coast, citadel, harbor, canyon & Eleven City">海湾、古城、港湾、峡谷与十一城</span></div><div><small data-zh="赛车" data-en="Machines">赛车</small><strong>06</strong><span data-zh="选择你的驾驶风格" data-en="Find your driving style">选择你的驾驶风格</span></div><div><small data-zh="比赛" data-en="Race format">比赛</small><strong>03 <em>LAPS</em></strong><span data-zh="完整三圈，全球计时" data-en="Three laps, ranked worldwide">完整三圈，全球计时</span></div><a href="./race.html" class="facts-link"><span data-zh="准备出发" data-en="Get ready">准备出发</span><b class="action-arrow" aria-hidden="true"></b></a></section>
+    <div class="night-gridline" aria-hidden="true"><span>TRICK. TREAT. TURBO.</span><i></i><span>LANTERN HOLLOW / APEX CLUB</span></div>
+    <section id="nightCircuit" class="night-circuit shell" aria-labelledby="routeTitle">
+      <div class="circuit-intro"><span class="eyebrow" data-zh="万圣夜特别路线 / 06" data-en="HALLOWEEN SPECIAL CIRCUIT / 06">万圣夜特别路线 / 06</span><h2 id="routeTitle"><span data-zh="灯亮了。" data-en="Lanterns on.">灯亮了。</span><span data-zh="该你登场了。" data-en="Your night starts here.">该你登场了。</span></h2><p data-zh="一条被南瓜灯点亮的路线，三个截然不同的地标。先看清下一个弯，再把月光留在身后。" data-en="One lantern-lit circuit. Three landmarks to learn. Read the next bend, then leave the moonlight behind.">一条被南瓜灯点亮的路线，三个截然不同的地标。先看清下一个弯，再把月光留在身后。</p></div>
+      <div class="circuit-explorer">
+        <div class="circuit-map"><div class="map-caption"><span>LANTERN HOLLOW</span><span data-zh="赛道导览" data-en="CIRCUIT GUIDE">赛道导览</span></div><svg id="nightCircuitMap" viewBox="0 0 640 420" role="img" aria-label="幽光南瓜谷路线"><path id="nightCircuitGlow" class="circuit-glow"/><path id="nightCircuitPath" class="circuit-line"/><g id="nightCircuitMarkers"></g></svg><div class="map-legend"><span><i></i><span data-zh="主赛道" data-en="Main circuit">主赛道</span></span><span data-zh="点击地标，探索路线" data-en="Choose a landmark below">点击地标，探索路线</span></div></div>
+        <div class="circuit-story"><div class="circuit-tabs" role="tablist" aria-label="赛道地标"><button id="nightStop0" type="button" role="tab" data-night-stop="0" aria-selected="true" aria-controls="nightRoutePanel"><span>01</span><b data-zh="南瓜灯径" data-en="LANTERN TRAIL">南瓜灯径</b></button><button id="nightStop1" type="button" role="tab" data-night-stop="1" aria-selected="false" aria-controls="nightRoutePanel" tabindex="-1"><span>02</span><b data-zh="庄园长弯" data-en="MANOR SWEEP">庄园长弯</b></button><button id="nightStop2" type="button" role="tab" data-night-stop="2" aria-selected="false" aria-controls="nightRoutePanel" tabindex="-1"><span>03</span><b data-zh="墓园近道" data-en="GRAVEYARD CUT">墓园近道</b></button></div>
+        <div id="nightRoutePanel" class="circuit-detail" role="tabpanel" aria-labelledby="nightStop0" aria-live="polite"><span id="nightStopKicker" class="stop-kicker">THE LIGHTS ARE YOUR LINE</span><h3 id="nightStopTitle">循着灯光，驶入万圣夜。</h3><p id="nightStopDescription">从宽阔直道起步，让琥珀色护栏引出第一个弯。先稳住方向，再把加速留给出弯。</p><div class="stop-tip"><span aria-hidden="true">↗</span><span id="nightStopTip">琥珀色标记指引主路，青色标记指向快速路。</span></div></div>
+        <a class="circuit-start" href="./race.html?scene=halloween"><span data-zh="选择赛车，开始夜赛" data-en="CHOOSE YOUR KART. ENTER THE NIGHT.">选择赛车，开始夜赛</span><span class="action-arrow" aria-hidden="true"></span></a></div>
+      </div>
+    </section>
+    <section class="night-invitation shell" aria-labelledby="invitationTitle"><div class="invitation-pumpkin" aria-hidden="true"><svg viewBox="0 0 80 65" fill="none"><path d="M40 13C26-1 1 15 8 39c6 22 26 21 32 16 6 5 27 6 32-16 7-24-18-40-32-26Z" stroke="currentColor" stroke-width="2"/><path d="M39 13c-7 9-12 29 1 42m1-42c8 10 13 30-1 42M40 12c-2-7 0-10 7-11M21 29l10 2-8 7Zm37 0-10 2 8 7ZM26 44l7 1 3-3 5 4 5-4 7 2-4 7-19-2Z" fill="currentColor"/></svg></div><div><span class="eyebrow">NO TRICKS. JUST RACING.</span><h2 id="invitationTitle" data-zh="一个人闯夜，或与好友结伴。" data-en="Chase the night. Bring your crew.">一个人闯夜，或与好友结伴。</h2><p data-zh="三圈 AI 竞速，或在好友房集结最多四位车手。选择你的赛车，把下一个弯变成你的机会。" data-en="Race the AI over three laps, or gather up to four drivers in a friend room. Choose your machine. Make the next corner yours.">三圈 AI 竞速，或在好友房集结最多四位车手。选择你的赛车，把下一个弯变成你的机会。</p></div><a class="button button-primary" href="./race.html?scene=halloween"><span data-zh="今夜，发车位见" data-en="MEET ON THE GRID">今夜，发车位见</span><span class="action-arrow" aria-hidden="true"></span></a></section>
+    <section class="home-facts shell" aria-label="游戏概览"><div><small data-zh="赛道" data-en="Circuits">赛道</small><strong>06</strong><span data-zh="从晴湾到万圣夜" data-en="From the bay to afterdark">从晴湾到万圣夜</span></div><div><small data-zh="赛车" data-en="Machines">赛车</small><strong>06</strong><span data-zh="选择你的驾驶风格" data-en="Find your driving style">选择你的驾驶风格</span></div><div><small data-zh="比赛" data-en="Race format">比赛</small><strong>03 <em>LAPS</em></strong><span data-zh="三圈全力以赴" data-en="Every lap counts">三圈全力以赴</span></div><a href="./race.html" class="facts-link"><span data-zh="选择赛道" data-en="Choose a circuit">选择赛道</span><b class="action-arrow" aria-hidden="true"></b></a></section>
   </main>
-  <footer class="site-footer shell"><span>© APEX CLUB</span><span data-zh="把下一个弯，变成你的机会。" data-en="Make the next corner yours.">把下一个弯，变成你的机会。</span></footer>
+  <footer class="site-footer shell"><span>© APEX CLUB / HALLOWEEN NIGHT RUN</span><a href="./race.html?scene=halloween" data-zh="灯火未熄，夜赛继续。↗" data-en="LIGHTS ON. RACE ON. ↗">灯火未熄，夜赛继续。↗</a></footer>
   <script type="module" src="./site.js"></script>
 </body>
 </html>

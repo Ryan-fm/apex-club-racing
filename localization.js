@@ -1,4 +1,8 @@
 const dictionary={
+'Preparing your race…':'正在准备赛车与赛道…','Practice driving · Optional':'驾驶练习 · 可选教学',
+'New circuit · Three laps · Personal records on this device':'全新赛道 · 三圈竞速 · 成绩保存在本机',
+'Lantern Hollow':'幽光南瓜谷','06 / HALLOWEEN NIGHT':'06 / 万圣节夜赛','Pumpkin trail · Moonlit bends':'南瓜灯径 · 月下连续弯','LANTERN HOLLOW / HALLOWEEN NIGHT RUN':'幽光南瓜谷 / 万圣节夜赛','LANTERN HOLLOW / LIVE MAP':'幽光南瓜谷 / 实时地图','Amber: circuit edges · Green: graveyard cut · Cyan: express strips':'琥珀色：赛道边缘 · 绿色：墓园近道 · 青色：快速路','Lantern Hollow personal records are saved on this device.':'幽光南瓜谷个人成绩保存在当前设备。','APEX MOTOR CLUB / HALLOWEEN GARAGE':'APEX 赛车俱乐部 / 万圣节车库','READY FOR THE NIGHT':'夜赛就绪','HALLOWEEN NIGHT RUN / 10.31':'万圣节夜赛 / 10.31','Follow the lanterns. Find your line.':'循着南瓜灯，找到你的路线。','Six circuits. One haunted detour.':'六条赛道，一次奇妙的夜间冒险。',
+
 'Practice & challenges':'练习与挑战',
 'Eleven City':'十一城','05 / ELEVEN CITY':'05 / 端游十一城','Classic downtown · Four corner cuts':'城市街区 · 四处街角近道','ELEVEN CITY / PC CLASSIC RECONSTRUCTION':'十一城 / 端游经典重建','ELEVEN CITY / LIVE MAP':'十一城 / 实时地图','PC city reconstruction · Four corner cuts · No express strips':'端游城市重建 · 四处街角近道 · 无快速路加速带','Eleven City personal records are saved on this device.':'十一城个人成绩保存在当前设备。',
 'Redrock Canyon':'赤岩峡谷','04 / REDROCK DESERT':'04 / 赤岩荒漠','Canyon cuts · Sunset climbs':'峡谷近道 · 落日起伏','REDROCK CANYON / SUNSET PASS':'赤岩峡谷 / 落日穿行','REDROCK CANYON / LIVE MAP':'赤岩峡谷 / 实时地图',

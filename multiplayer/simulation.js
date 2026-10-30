@@ -6,7 +6,7 @@ import {createStunts} from '../stunt-model.js';
 import {stepPlayerSimulation} from '../runtime/player-simulation.js';
 import {advanceRacer} from '../race-rules.js';
 export const ROOM_LIMIT=4,PHYSICS_DT=1/60;
-export const SCENES=['bay','citadel','harbor','canyon','eleven'];
+export const SCENES=['bay','citadel','harbor','canyon','eleven','halloween'];
 export const idleInput=()=>({rawSteer:0,driftSteer:0,throttle:false,brake:false,driftHeld:false,commands:{}});
 export function sanitizeInput(value){
  if(!value||typeof value!=='object'||!Number.isFinite(value.rawSteer)||Math.abs(value.rawSteer)>1)throw Error('Invalid input.');
@@ -17,7 +17,7 @@ export function multiplayerTrack(scene){
  if(!SCENES.includes(scene))throw Error('Unknown circuit.');
  if(tracks.has(scene))return tracks.get(scene);
  const curve=new THREE.CatmullRomCurve3(circuitPoints(scene).map(p=>new THREE.Vector3(...p)),true,'catmullrom',trackTension(scene));
- if(scene==='harbor')curve.arcLengthDivisions=2400;
+ if(scene==='harbor'||scene==='halloween')curve.arcLengthDivisions=2400;
  if(scene==='eleven')curve.arcLengthDivisions=3200;
  const track={scene,routes:createTrackRoutes(scene,curve),curve,samples:Array.from({length:1601},(_,i)=>{const p=curve.getPointAt(i/1600);return {x:p.x,y:p.y,z:p.z};}),halfWidth:t=>roadHalfWidth(scene,t),ground:t=>curve.getPointAt(t).y};tracks.set(scene,track);return track;
 }

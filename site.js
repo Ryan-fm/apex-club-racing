@@ -3,7 +3,7 @@ import {onlineClub} from './online-club.js';
 
 const page=document.body.dataset.page;
 const local=(zh,en)=>getLanguage()==='zh'?zh:en;
-const sceneNames={bay:['晴湾赛道','Bay Circuit'],citadel:['玉城古道','Jade Citadel'],harbor:['霓虹港湾','Neon Harbor'],canyon:['赤岩峡谷','Redrock Canyon'],eleven:['十一城','Eleven City']};
+const sceneNames={bay:['晴湾赛道','Bay Circuit'],citadel:['玉城古道','Jade Citadel'],harbor:['霓虹港湾','Neon Harbor'],canyon:['赤岩峡谷','Redrock Canyon'],eleven:['十一城','Eleven City'],halloween:['幽光南瓜谷','Lantern Hollow']};
 let renderPage=()=>{};
 let renderHeroToggle=()=>{};
 function renderLanguage(){
@@ -21,7 +21,12 @@ async function loadNavAccount(){
   try{const profile=await onlineClub.current();if(profile){nav.textContent=profile.player_name;nav.removeAttribute('data-zh');nav.removeAttribute('data-en');}}catch{}
 }
 
-if(page==='home'){
+if(page==='home'&&document.body.dataset.season==='halloween'){
+  const {mountHalloweenHome}=await import('./halloween-home.js');
+  renderPage=mountHalloweenHome().render;
+}
+
+if(page==='home'&&document.body.dataset.season!=='halloween'){
   const video=document.querySelector('#homePromo');
   const toggle=document.querySelector('#heroMotionToggle');
   const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
@@ -56,6 +61,8 @@ if(page==='leaderboard'){
   let period='all';
   const rows=document.querySelector('#globalRows'),empty=document.querySelector('#boardEmpty'),status=document.querySelector('#boardStatus');
   function renderBoard(){
+    const ranked=onlineClub.ranked(scene);
+    for(const id of ['boardMine','boardRefresh','boardPeriod'])document.querySelector('#'+id).disabled=!ranked;
     document.querySelectorAll('[data-scene]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scene===scene)));
     document.querySelectorAll('[data-assisted]').forEach(button=>button.setAttribute('aria-pressed',String((button.dataset.assisted==='true')===assisted)));
     document.querySelector('#boardContext').textContent=`${sceneNames[scene][getLanguage()==='zh'?0:1]} / ${assisted?local('新手辅助','Assisted'):local('标准','Standard')} / ${period}`;
@@ -72,6 +79,7 @@ if(page==='leaderboard'){
   }
   async function load(refresh=false){
     const id=++requestId;records=[];empty.hidden=true;rows.replaceChildren();status.textContent=local('正在读取全球成绩…','Loading global records…');
+    if(!onlineClub.ranked(scene)){renderBoard();empty.hidden=true;status.textContent=local('幽光南瓜谷成绩保存在本机，暂不参与 Toy 全球榜。可在赛道大厅查看个人最佳成绩。','Lantern Hollow records stay on this device. View your personal best in the race lobby.');return;}
     try{const data=await onlineClub.leaderboard(scene,assisted,{refresh,period});if(id!==requestId)return;records=data;status.textContent=data.length?local(`共 ${data.length} 条完赛成绩`,`Showing ${data.length} completed races`):'';renderBoard();}
     catch(error){if(id!==requestId)return;status.textContent=error.message;empty.hidden=true;}
   }

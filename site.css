@@ -45,3 +45,156 @@
 .board-tabs button:disabled{opacity:.45;cursor:not-allowed}
 .board-period{display:flex;align-items:center;gap:12px;padding:18px 32px;color:#b5c6cf;font-size:12px}
 .board-period select{background:#152536;color:#d9e8e2;border:1px solid #63758555;padding:8px 12px;border-radius:4px}
+
+/* Halloween campaign: the same club, under a different moon. */
+body[data-season="halloween"]{--bg:#101310;--panel:#1c211a;--line:#c4ccb32b;--text:#f2f0df;--muted:#a7af9c;--gold:#ff9e4b;--mint:#bed8b3;background:var(--bg)}
+[data-season="halloween"] .site-header{height:86px;border-bottom:0;width:min(1440px,calc(100% - 96px))}
+[data-season="halloween"] .site-brand{letter-spacing:.06em}
+[data-season="halloween"] .brand-mark{background:#ff9e4b;color:#152019;border-radius:2px;box-shadow:none}
+[data-season="halloween"] .site-nav a{color:#c1c7b6;min-height:44px;display:inline-flex;align-items:center}
+[data-season="halloween"] .site-nav a:hover{color:#ffb26d}
+[data-season="halloween"] .site-language{border-radius:2px}
+[data-season="halloween"] .site-language button{min-width:32px;min-height:30px;border-radius:1px}
+[data-season="halloween"] .site-language button[aria-pressed=true]{background:#e1e6d7;color:#171e17}
+[data-season="halloween"] .halloween-hero{width:100%;height:min(840px,calc(100svh - 86px));min-height:680px;max-height:none;border-bottom:1px solid var(--line);isolation:isolate;background:#20281e}
+[data-season="halloween"] .hero-art{object-position:center right;pointer-events:none;user-select:none}
+[data-season="halloween"] .hero-shade{background:linear-gradient(90deg,#101610f5 0%,#111710d9 21%,#11171066 47%,#11171008 70%),linear-gradient(0deg,#101310ee 0%,transparent 31%,#10131030 100%)}
+.halloween-grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0px,transparent 3px,#fff1 4px);opacity:.08;mix-blend-mode:soft-light}
+[data-season="halloween"] .hero-copy{left:max(48px,calc((100% - 1344px)/2));top:48%;width:49%;max-width:640px;transform:translateY(-50%)}
+[data-season="halloween"] .eyebrow{font-size:11px;letter-spacing:.19em;color:#ffc08b;gap:12px}
+.season-spark{height:7px;width:7px;background:#ff9e4b;transform:rotate(45deg);box-shadow:0 0 16px #ff9e4b70;flex-shrink:0}
+.season-date{border-left:1px solid #d4bd8c66;padding-left:14px;color:#c6cdb9}
+.hero-pretitle{font-size:14px;letter-spacing:.12em;color:#c9cfbd;margin:34px 0 19px}
+[data-season="halloween"] .hero-copy h1{font-weight:850;font-size:clamp(64px,6.5vw,104px);line-height:1.06;letter-spacing:.025em;margin:0 0 28px;text-wrap:initial}
+[data-season="halloween"] .hero-copy h1>span{display:block}
+[data-season="halloween"] .title-afterdark{color:#ffac66}
+html[lang="en"] [data-season="halloween"] .hero-copy h1{font-family:Impact,"Arial Narrow",Arial,sans-serif;font-size:clamp(58px,6.2vw,98px);font-weight:800;line-height:.98;letter-spacing:.015em}
+[data-season="halloween"] .hero-description{max-width:395px;color:#bdc6b6;font-size:14px;line-height:1.95;margin-bottom:31px}
+[data-season="halloween"] .hero-actions{gap:26px;flex-wrap:wrap}
+[data-season="halloween"] .button-primary{background:#ff9e4b;background-image:none;color:#202218;border:1px solid #ff9e4b;border-radius:2px;min-width:220px;padding:18px 21px;box-shadow:none;font-size:14px;transition:background .18s,transform .18s}
+[data-season="halloween"] .button-primary:hover{background:#ffb771;border-color:#ffb771;transform:translateY(-2px)}
+[data-season="halloween"] .button-primary:active{transform:translateY(0)}
+[data-season="halloween"] .button-text{color:#e5e6d7;font-size:13px;border-bottom:1px solid #cad0b870;padding:17px 0;border-radius:0}
+[data-season="halloween"] .button-text:hover{color:#ffbc80}
+.hero-play-note{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.1em;color:#acb8a3;margin-top:20px}
+.night-dot{width:4px;height:4px;border-radius:50%;background:#bfd7a8}
+.night-stamp{position:absolute;right:max(48px,calc((100% - 1344px)/2));bottom:95px;display:flex;align-items:center;gap:14px;color:#ffba78;transform:rotate(-8deg);opacity:.9;pointer-events:none}
+.night-stamp svg{width:66px;height:58px}
+.night-stamp>span{font-size:12px;font-weight:850;line-height:1.35;letter-spacing:.14em}
+[data-season="halloween"] .hero-rail{bottom:27px;left:max(48px,calc((100% - 1344px)/2));right:max(48px,calc((100% - 1344px)/2));padding-top:19px;border-top:1px solid #d4d9bd2e;font-size:9px;letter-spacing:.13em;color:#b3bea7}
+.rail-track{color:#ffbe87}
+.night-route{display:grid;grid-template-columns:1fr 1fr;gap:100px;padding-block:70px;border-bottom:1px solid var(--line)}
+.night-route-heading h2{font-size:clamp(26px,2.7vw,38px);font-weight:700;line-height:1.4;letter-spacing:.01em;margin:17px 0 18px}
+.night-route-heading>p{font-size:13px;line-height:1.95;color:#9da994;max-width:460px;margin:0}
+.night-route-details{display:grid;grid-template-columns:1fr 1fr;column-gap:34px;row-gap:20px;align-content:start}
+.night-route-details>div{position:relative;padding-top:4px}
+.night-route-details b{font-size:12px;letter-spacing:.08em;color:#e3e7d6;display:block;margin:17px 0 9px}
+.night-route-details p{font-size:12px;line-height:1.85;color:#9da994;margin:0;max-width:240px}
+.route-signal{display:block;width:25px;height:25px;position:relative;color:#ffae6c}
+.lantern-signal{border:1px solid currentColor;border-radius:42% 42% 40% 40%;height:22px;margin-top:3px}
+.lantern-signal::before{content:"";position:absolute;top:-6px;left:11px;width:4px;height:5px;border-left:1px solid currentColor;transform:rotate(12deg)}
+.lantern-signal::after{content:"";position:absolute;top:7px;left:5px;width:13px;height:7px;border-top:2px solid currentColor;border-bottom:1px solid currentColor;clip-path:polygon(0 0,100% 0,100% 100%,65% 100%,50% 50%,35% 100%,0 100%)}
+.moon-signal{border-radius:50%;box-shadow:inset 7px -2px 0 0 #bdd0af;color:#bdd0af}
+.night-route-link{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px;color:#ffc08b;border-top:1px solid var(--line);padding-top:18px;min-height:44px;font-size:12px}
+.night-route-link:hover{color:#ffe2b9}
+[data-season="halloween"] .home-facts{min-height:146px;border-bottom:0}
+[data-season="halloween"] .home-facts>div{padding:28px 20px;grid-template-columns:100px 1fr}
+[data-season="halloween"] .home-facts strong{font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#e1e8d4}
+[data-season="halloween"] .home-facts div>span{font-size:10px;color:#8f9b86}
+[data-season="halloween"] .home-facts small{color:#b5c6a6}
+[data-season="halloween"] .site-footer{color:#818f79;letter-spacing:.06em;min-height:70px}
+@media(max-width:1100px){
+ [data-season="halloween"] .hero-copy{left:40px;width:53%}
+ [data-season="halloween"] .hero-copy h1{font-size:clamp(62px,7.2vw,82px)}
+ [data-season="halloween"] .hero-rail{left:40px;right:40px}
+ .night-route{gap:48px;padding-block:55px}
+ .night-route-details{column-gap:22px}
+ [data-season="halloween"] .home-facts>div{grid-template-columns:75px 1fr;padding-inline:15px}
+}
+@media(max-width:800px){
+ [data-season="halloween"] .site-header{width:calc(100% - 48px);height:76px;gap:20px}
+ [data-season="halloween"] .site-nav{gap:20px}
+ [data-season="halloween"] .halloween-hero{min-height:680px;height:calc(100svh - 76px)}
+ [data-season="halloween"] .hero-copy{left:24px;width:64%;top:47%}
+ [data-season="halloween"] .hero-copy h1{font-size:68px}
+ html[lang="en"] [data-season="halloween"] .hero-copy h1{font-size:70px}
+ [data-season="halloween"] .hero-shade{background:linear-gradient(90deg,#101610ed,#111710b8 35%,#11171020 90%),linear-gradient(0deg,#101310ee,transparent 50%)}
+ [data-season="halloween"] .hero-rail{left:24px;right:24px;font-size:8px}
+ .night-stamp{right:24px;bottom:90px;gap:8px}.night-stamp svg{width:51px}.night-stamp>span{font-size:10px}
+ .night-route{grid-template-columns:1fr;gap:28px;padding-block:44px}
+ .night-route-heading>p{max-width:560px}.night-route-details p{max-width:none}
+ [data-season="halloween"] .home-facts{grid-template-columns:repeat(3,1fr);min-height:130px}
+ [data-season="halloween"] .home-facts>div{grid-template-columns:1fr;grid-template-rows:auto auto;gap:9px;text-align:left;padding:24px 16px}
+ [data-season="halloween"] .home-facts strong{grid-column:1;grid-row:2;font-size:36px;align-self:auto}
+ [data-season="halloween"] .home-facts small{grid-column:1;grid-row:1}
+ [data-season="halloween"] .home-facts div>span{display:none}
+ [data-season="halloween"] .home-facts .facts-link{display:none}
+}
+@media(max-width:600px){
+ [data-season="halloween"] .site-header{height:70px;width:calc(100% - 36px);gap:14px}
+ [data-season="halloween"] .site-brand{font-size:12px;gap:8px}.site-brand .brand-mark{width:26px;height:26px}
+ [data-season="halloween"] .site-nav{gap:14px}
+ [data-season="halloween"] .site-nav a{font-size:11px}
+ [data-season="halloween"] .site-nav a::before{display:none}
+ [data-season="halloween"] .site-nav a[href="./leaderboard.html"]{display:none}
+ [data-season="halloween"] .site-language{margin-left:0;padding:2px}
+ [data-season="halloween"] .site-language button{min-width:25px;min-height:28px}
+ [data-season="halloween"] .halloween-hero{min-height:680px;height:calc(100svh - 70px);max-height:820px}
+ [data-season="halloween"] .hero-art{object-position:64% center;opacity:.85}
+ [data-season="halloween"] .hero-shade{background:linear-gradient(90deg,#101610bd,#11171070 75%,#11171020),linear-gradient(0deg,#101310 0%,#101310d9 21%,#11171030 58%,#10131070)}
+ [data-season="halloween"] .hero-copy{left:24px;right:24px;width:auto;max-width:none;top:44%;transform:translateY(-50%)}
+ [data-season="halloween"] .eyebrow{font-size:9px;gap:10px;letter-spacing:.12em}
+ .season-date{padding-left:10px}
+ .hero-pretitle{font-size:12px;letter-spacing:.08em;margin:29px 0 16px}
+ [data-season="halloween"] .hero-copy h1{font-size:clamp(57px,13vw,74px);letter-spacing:.015em;line-height:1.1;margin-bottom:23px}
+ html[lang="en"] [data-season="halloween"] .hero-copy h1{font-size:clamp(52px,13vw,74px);line-height:1.02}
+ [data-season="halloween"] .hero-description{font-size:13px;max-width:305px;margin-bottom:27px;line-height:1.9}
+ [data-season="halloween"] .hero-actions{gap:22px}
+ [data-season="halloween"] .button-primary{min-width:186px;padding:16px 17px;font-size:13px}
+ [data-season="halloween"] .button-text{font-size:12px;gap:13px;padding:14px 0}
+ .hero-play-note{font-size:9px;margin-top:18px}
+ .night-stamp{bottom:84px;right:25px;opacity:.65}.night-stamp svg{width:42px;height:43px}.night-stamp>span{font-size:8px}
+ [data-season="halloween"] .hero-rail{bottom:22px;left:24px;right:24px;font-size:7px;letter-spacing:.09em;align-items:flex-start;gap:15px;line-height:1.7}
+ .hero-rail .rail-track{text-align:right;max-width:120px}
+ .night-route{padding-block:37px;gap:27px}
+ .night-route-heading h2{font-size:26px;line-height:1.5;margin:13px 0}
+ .night-route-heading>p{font-size:12px}
+ .night-route-details{column-gap:22px;row-gap:23px}
+ .night-route-details b{font-size:11px;line-height:1.6;letter-spacing:.04em;margin-top:14px}
+ .night-route-details p{font-size:11px;line-height:1.9}
+ [data-season="halloween"] .home-facts>div{padding:22px 12px}
+ [data-season="halloween"] .home-facts strong{font-size:31px}
+ [data-season="halloween"] .home-facts small{font-size:10px}
+ [data-season="halloween"] .site-footer{font-size:9px;min-height:65px}
+}
+@media(max-width:370px){
+ [data-season="halloween"] .site-header{width:calc(100% - 28px);gap:10px}
+ [data-season="halloween"] .site-nav{gap:10px}
+ [data-season="halloween"] .site-brand{font-size:11px}
+ [data-season="halloween"] .hero-copy{left:20px;right:20px}
+ [data-season="halloween"] .hero-actions{gap:16px}
+ [data-season="halloween"] .button-primary{min-width:170px}
+ [data-season="halloween"] .hero-copy h1{font-size:56px}
+ html[lang="en"] [data-season="halloween"] .hero-copy h1{font-size:50px}
+}
+@media(orientation:landscape) and (max-height:550px) and (max-width:1100px){
+ [data-season="halloween"] .site-header{height:56px;width:calc(100% - 48px)}
+ [data-season="halloween"] .halloween-hero{height:calc(100svh - 56px);min-height:315px;max-height:none}
+ [data-season="halloween"] .hero-copy{top:46%;left:32px;width:53%}
+ [data-season="halloween"] .hero-copy h1{font-size:42px;line-height:1.05;margin-bottom:14px}
+ html[lang="en"] [data-season="halloween"] .hero-copy h1{font-size:40px}
+ .hero-pretitle{display:none}
+ [data-season="halloween"] .hero-copy .eyebrow{font-size:8px;margin-bottom:14px}
+ [data-season="halloween"] .hero-description{font-size:11px;line-height:1.65;max-width:330px;margin-bottom:15px}
+ [data-season="halloween"] .hero-actions{gap:20px}
+ [data-season="halloween"] .button-primary{padding:11px 15px;min-width:175px;font-size:12px}
+ [data-season="halloween"] .button-text{font-size:11px;padding:9px 0}
+ .hero-play-note{display:none}
+ [data-season="halloween"] .hero-rail{bottom:10px;left:32px;right:32px;padding-top:9px;font-size:7px}
+ .night-stamp{bottom:45px;right:32px}
+ [data-season="halloween"] .hero-art{object-position:center right}
+}
+@media(prefers-reduced-motion:reduce){
+ [data-season="halloween"] *,[data-season="halloween"] *::before,[data-season="halloween"] *::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
+ [data-season="halloween"] .button-primary:hover{transform:none}
+}

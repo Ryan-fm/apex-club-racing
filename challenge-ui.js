@@ -1,5 +1,17 @@
 import {CHALLENGES,CAREER_TIERS,careerProfile,careerTier,createChallenge,stepChallenge,challengeGoals,settleChallenge} from './race-challenges.js';
 import {getLanguage,onLanguageChange} from './localization.js';
+
+export function createChallengeNotice(){return {remaining:0,peaks:[0,0,0]};}
+// Only new capped goal milestones expand the mobile HUD. Chain decay, repeated
+// route entries, rank oscillation and ordinary frame updates remain quiet.
+export function stepChallengeNotice(notice,run,metrics,dt){
+ notice.remaining=Math.max(0,notice.remaining-(Number.isFinite(dt)?Math.max(0,dt):0));
+ const progress=run.id==='flow'?[Math.min(run.drifts,6),Math.min(run.minis,4),Math.min(run.bestChain,3)]:run.id==='explorer'?[Math.min(run.cuts.size,2),Math.min(run.express.size,2),Math.min(run.nitros,3)]:[Number(metrics.collisions<=2&&metrics.rank<=3),0,0];
+ let advanced=false;
+ progress.forEach((value,i)=>{if(value>notice.peaks[i])advanced=true;notice.peaks[i]=Math.max(notice.peaks[i],value);});
+ if(advanced)notice.remaining=2.6;
+ return notice.remaining>0;
+}
 export function createChallengeUI({enabled=true}={}){
  const local=a=>a[getLanguage()==='zh'?0:1];
  let profile=careerProfile(),selected='flow',run=null;
@@ -13,7 +25,8 @@ export function createChallengeUI({enabled=true}={}){
  const hud=document.createElement('aside');hud.id='challengeHUD';hud.hidden=true;hud.dataset.noTranslate='';hud.innerHTML='<div class="challenge-live"><b></b><span></span></div><div class="chain-live"><strong></strong><span></span><progress max="6"></progress></div>';document.querySelector('.race-ui').append(hud);
  const result=document.createElement('div');result.id='careerResult';result.dataset.noTranslate='';document.querySelector('#challengeResult').after(result);
  const write=(node,text)=>{if(node.textContent!==text)node.textContent=text;};
- let metrics={collisions:0,rank:8},lastReward=null,lastDraw=-Infinity;
+ let metrics={collisions:0,rank:8},lastReward=null,lastDraw=-Infinity,notice=createChallengeNotice(),noticeOpen=false;
+ const closeNotice=()=>{notice=createChallengeNotice();noticeOpen=false;hud.classList.remove('is-notice');};
  function render(){
   if(profile.xp>0)document.querySelector('#profileMedal').textContent=local(careerTier(profile).name);
   const definition=CHALLENGES.find(c=>c.id===selected),tier=careerTier(profile),next=CAREER_TIERS.find(t=>t.xp>profile.xp);
@@ -43,5 +56,5 @@ export function createChallengeUI({enabled=true}={}){
  }
  button.onclick=()=>{render();dialog.showModal();};dialog.querySelector('.challenge-close').onclick=()=>dialog.close();
  onLanguageChange(render);render();
- return {title:()=>profile.xp?local(careerTier(profile).name):null,reset(){run=createChallenge(selected);metrics={collisions:0,rank:8};lastReward=null;result.hidden=true;hud.hidden=true;},step({events,routeId,collisions,rank,dt}){if(!run)return;hud.hidden=false;metrics={collisions,rank};stepChallenge(run,{events,routeId,collisions},dt);draw();},finish(options){if(!run)return;lastReward=settleChallenge(run,profile,options);if(lastReward){profile=lastReward.profile;try{localStorage.setItem('apex-career-v1',JSON.stringify(profile));}catch{}renderReward();}hud.hidden=true;},hide(){hud.hidden=true;result.hidden=true;}};
+ return {title:()=>profile.xp?local(careerTier(profile).name):null,reset(){run=createChallenge(selected);metrics={collisions:0,rank:8};lastReward=null;lastDraw=-Infinity;result.hidden=true;hud.hidden=true;closeNotice();},step({events,routeId,collisions,rank,dt}){if(!run)return;hud.hidden=false;metrics={collisions,rank};stepChallenge(run,{events,routeId,collisions},dt);const expanded=stepChallengeNotice(notice,run,metrics,dt);if(expanded!==noticeOpen){noticeOpen=expanded;hud.classList.toggle('is-notice',expanded);}draw();},finish(options){if(!run)return;lastReward=settleChallenge(run,profile,options);if(lastReward){profile=lastReward.profile;try{localStorage.setItem('apex-career-v1',JSON.stringify(profile));}catch{}renderReward();}hud.hidden=true;closeNotice();},hide(){hud.hidden=true;result.hidden=true;closeNotice();}};
 }

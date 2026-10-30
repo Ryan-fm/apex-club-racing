@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createToyClub,raceScore} from '../toy-platform.js';
+import {createToyClub,raceScore,TOY_BOARDS} from '../toy-platform.js';
 const race={scene:'harbor',assisted:false,time:123.456,laps:Array.from({length:3},()=>({valid:true}))};
 test('Toy negative milliseconds preserve faster-wins order and reject unsupported records',()=>{
  assert.deepEqual(raceScore(race),{board:3,score:-123456});assert(raceScore({...race,time:120}).score>raceScore(race).score);
@@ -40,4 +40,17 @@ test('Eleven City uses board five without reading or writing the existing circui
  await club.submit({...race,scene:'eleven'});assert.deepEqual(scores,[{board:5,score:-123456}]);
  assert.deepEqual(reads,[{board:5,period:'week',limit:50}]);
  await assert.rejects(club.submit({...race,scene:'eleven',assisted:true}),/辅助/);assert.equal(scores.length,1);
+});
+
+test('Halloween stays local and never reaches an existing Toy board or the SDK',async()=>{
+ assert.deepEqual(TOY_BOARDS,{bay:1,citadel:2,harbor:3,canyon:4,eleven:5});
+ let loads=0;const club=createToyClub(async()=>{loads++;throw Error('SDK must not load');});
+ assert.equal(club.ranked('halloween'),false);assert.equal(club.ranked('eleven'),true);
+ for(const scene of ['halloween','unknown','toString','__proto__']){
+  assert.equal(club.ranked(scene),false);
+  await assert.rejects(club.submit({...race,scene}));
+  await assert.rejects(club.leaderboard(scene,false));
+  await assert.rejects(club.myRank(scene));
+ }
+ assert.equal(loads,0);
 });
